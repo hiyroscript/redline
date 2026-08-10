@@ -293,9 +293,10 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 .gauge .bar{height:3px;background:rgba(255,255,255,.22);border-radius:2px;overflow:hidden}
 .gauge i{display:block;height:100%;width:100%;border-radius:2px;background:var(--red)}
 #trackBar.soon i{background:#fff}
-#speedName{transform-origin:left center}
-#speedName.up{animation:lvUp .7s cubic-bezier(.2,.8,.25,1)}
-@keyframes lvUp{0%{transform:scale(1)}25%{transform:scale(1.22);color:#fff}100%{transform:scale(1)}}
+#speedBar{transform-origin:left center}
+#speedBar.up i{background:#fff}
+#speedBar.up{animation:gaugeUp .7s cubic-bezier(.2,.8,.25,1)}
+@keyframes gaugeUp{0%,100%{transform:scaleY(1)}30%{transform:scaleY(2.6)}}
 #boostWrap{position:absolute;left:16px;right:16px;bottom:calc(14px + var(--safe-b));height:4px;background:rgba(255,255,255,.16);border-radius:3px;overflow:hidden}
 #boostFill{height:100%;width:100%;background:var(--red);border-radius:3px;transition:background .2s ease}
 #boostWrap.full #boostFill{background:var(--red-press)}
@@ -480,7 +481,7 @@ body.desk .keys{display:flex}
       </div>
       <div id="gauges">
         <div class="gauge"><span id="trackName">City</span><div class="bar" id="trackBar"><i id="trackFill"></i></div></div>
-        <div class="gauge"><span id="speedName">Speed 1</span><div class="bar" id="speedBar"><i id="speedFill"></i></div></div>
+        <div class="gauge"><div class="bar" id="speedBar"><i id="speedFill"></i></div></div>
       </div>
       <div id="boostWrap"><div id="boostFill"></div></div>
     </div>
@@ -608,14 +609,12 @@ const STR = {
   pickLang:     {en:"Choose your language",        fr:"Choisissez votre langue"},
   pickLangSub:  {en:"You can change this at any time from the home screen.",
                  fr:"Vous pouvez la changer \u00e0 tout moment depuis l'accueil."},
-  speedLabel:   {en:"Speed",                       fr:"Vitesse"},
   trackCity:    {en:"City",                        fr:"Ville"},
   trackDesert:  {en:"Desert",                      fr:"D\u00e9sert"},
   trackSpace:   {en:"Rainbow space",               fr:"Espace arc-en-ciel"}
 };
 let lang = store.get("redline.lang") || null;
 let curTrackKey = "trackCity";
-let curSpeedLv = 1;
 function t(k){ return STR[k][lang || "en"]; }
 
 function applyLang(){
@@ -626,7 +625,6 @@ function applyLang(){
     if(s) el.textContent = s[L];
   });
   $("#trackName").textContent = STR[curTrackKey][L];
-  $("#speedName").textContent = STR.speedLabel[L] + " " + curSpeedLv;
 }
 
 /* ---------------- tiny helpers ----------------------------------- */
@@ -796,8 +794,9 @@ const TRACK_SECONDS = 60;
 const SPEED_SECONDS = 30;                 /* the road speeds up on this clock */
 const BASE_SPEED = 360, SPEED_STEP = 58, MAX_TIER = 12;
 const BLIND_TIME = 2.6;                   /* puddle: how long the view stays fouled */
-const DEAD_TIME = 3, IMMUNE_TIME = 2;     /* hole: wreck, then respawn untouchable */
+const DEAD_TIME = 3, IMMUNE_TIME = 2;     /* destroy: wreck, then respawn untouchable */
 const SLOW_TIME = 1.7;                    /* tumbleweed: how long it drags you down */
+const FALL_LEAD = 430, METEOR_ALT = 215;  /* meteor: the approach it falls through */
 const TRACKS = {
   city:   { key:"trackCity",   ground:"#C9CCD3", shoulder:"#EDEEF1", road:"#16171B",
             mark:"rgba(237,238,241,0.86)", edge:"rgba(237,238,241,0.5)", accent:"#E21B22" },
@@ -911,7 +910,6 @@ function startRace(){
   G.traps = []; G.fx = []; G.trapGap = 0; G.nextTrap = 620;
   G.tier = 0; G.speedT = SPEED_SECONDS; G.blind = 0; G.blindPts = [];
   G.dead = 0; G.immune = 0; G.slowT = 0;
-  curSpeedLv = 1; $("#speedName").textContent = t("speedLabel") + " 1";
   seedWorld();
   paintHUD(true);
   G.state = "countdown";
@@ -1216,10 +1214,9 @@ function spawnWave(){
    TRAPS  -  one hazard per track, placed at random
    ================================================================ */
 function speedUp(){
-  curSpeedLv = G.tier + 1;
-  const el = $("#speedName");
-  el.textContent = t("speedLabel") + " " + curSpeedLv;
+  const el = $("#speedBar");
   el.classList.remove("up"); void el.offsetWidth; el.classList.add("up");
+  later(function(){ el.classList.remove("up"); }, 720);
   tone(880, .09, "square", .09);
   later(function(){ tone(1320, .11, "square", .09); }, 100);
 }
@@ -1237,10 +1234,11 @@ function spawnTrap(){
     G.traps.push({ b:b, kind:"puddle", x:onRoad(laneCX(lane) + rand(-laneW*0.16, laneW*0.16), rx),
                    y:-ry-50, rx:rx, ry:ry, s:Math.random(), hit:false });
   } else if(b === "space"){
-    const w = rand(laneW*0.5, laneW*0.86), h = rand(70, 165), jag = [];
-    for(let i=0;i<20;i++) jag.push(rand(-6, 6));
-    G.traps.push({ b:b, kind:"hole", x:onRoad(laneCX(lane) + rand(-laneW*0.12, laneW*0.12), w/2),
-                   y:-h-50, w:w, h:h, jag:jag, s:Math.random() });
+    /* blast stays under three quarters of a lane so a neighbouring lane is always safe */
+    const y = -rand(120, 220);
+    G.traps.push({ b:b, kind:"meteor", x:onRoad(laneCX(lane) + rand(-laneW*0.06, laneW*0.06), 6),
+                   y:y, span:playerY - y, r:laneW*rand(0.42, 0.60), mr:rand(13, 21),
+                   s:Math.random(), phase:0, t:0 });
   } else {
     const dir = Math.random() < 0.5 ? 1 : -1, r = rand(15, 25);
     G.traps.push({ b:b, kind:"weed", r:r, s:Math.random(), age:0, rot:rand(0, 6.28),
@@ -1278,17 +1276,54 @@ function updateTraps(dt, d, st){
       }
       continue;
     }
+    if(o.kind === "meteor"){
+      o.y += d;
+      o.t += dt;
+      if(o.phase === 0){
+        const left = playerY - o.y;
+        if(left <= 0) detonate(o, live);
+        else if(live && left < FALL_LEAD){
+          const alt = METEOR_ALT*(left/FALL_LEAD);
+          if(alt < carH*0.55){                       /* a rock straight on the roof */
+            const my = o.y - alt;
+            const p2 = nearestOnCar(c, o.x, my);
+            const dx = p2.x - o.x, dy = p2.y - my;
+            if(dx*dx + dy*dy <= o.mr*o.mr) detonate(o, live);
+          }
+        }
+      } else if(o.phase === 1){
+        if(o.t > 0.4){ o.phase = 2; o.t = 0; }
+      } else if(o.t > 1.6){ G.traps.splice(i,1); continue; }
+      if(o.y > H + 400) G.traps.splice(i,1);
+      continue;
+    }
+
     o.y += d;
     if(o.y > H + 260){ G.traps.splice(i,1); continue; }
-    if(!live) continue;
-    if(o.kind === "puddle"){
-      if(o.hit) continue;
-      const p = nearestOnCar(c, o.x, o.y);
-      const ex = (p.x - o.x)/(o.rx*0.92), ey = (p.y - o.y)/(o.ry*0.92);
-      if(ex*ex + ey*ey <= 1){ o.hit = true; hitPuddle(); }
-    } else {
-      if(Math.abs(o.x - c.x) < o.w/2 + c.hw - 2 && Math.abs(o.y - c.y) < o.h/2 + c.hh - 2) hitHole();
-    }
+    if(!live || o.hit) continue;
+    const p = nearestOnCar(c, o.x, o.y);
+    const ex = (p.x - o.x)/(o.rx*0.92), ey = (p.y - o.y)/(o.ry*0.92);
+    if(ex*ex + ey*ey <= 1){ o.hit = true; hitPuddle(); }
+  }
+}
+
+/* The rock always reaches the ground. Anything caught in the blast goes with it. */
+function detonate(o, live){
+  o.phase = 1; o.t = 0;
+  G.shake = 18;
+  for(let i=0;i<26;i++){
+    const a = rand(0, 6.2832), sp = rand(60, 300);
+    addFx(o.x, o.y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.35,.85), rand(2,6),
+          i%3 === 0 ? "#FFE3B0" : (i%3 === 1 ? "#FF8A2B" : "#C6482A"));
+  }
+  for(let i=0;i<8;i++)
+    addFx(o.x, o.y, rand(-70,70), rand(-130,-20), rand(.6,1.1), rand(4,8), "#2E2A34");
+  noise(.5, .5); tone(70, .4, "sawtooth", .16);
+  if(live){
+    const c2 = carHit();
+    const p3 = nearestOnCar(c2, o.x, o.y);
+    const dx = p3.x - o.x, dy = p3.y - o.y;
+    if(dx*dx + dy*dy <= o.r*o.r) destroyCar();
   }
 }
 
@@ -1306,7 +1341,8 @@ function hitPuddle(){
   noise(.3, .3); tone(200, .16, "sine", .07);
 }
 
-function hitHole(){
+/* the destroy effect: wreck the car, then respawn it untouchable */
+function destroyCar(){
   G.dead = DEAD_TIME;
   G.shake = 22;
   for(let i=0;i<30;i++){
@@ -1670,42 +1706,95 @@ function drawPuddle(p){
   ctx.restore();
 }
 
-function holePath(h){
-  const x0 = h.x - h.w/2, y0 = h.y - h.h/2, x1 = h.x + h.w/2, y1 = h.y + h.h/2, seg = 4;
-  let k = 0;
-  ctx.beginPath();
-  for(let i=0;i<=seg;i++){ const x = x0 + h.w*i/seg, y = y0 + h.jag[k++]; i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); }
-  for(let i=1;i<=seg;i++) ctx.lineTo(x1 + h.jag[k++], y0 + h.h*i/seg);
-  for(let i=1;i<=seg;i++) ctx.lineTo(x1 - h.w*i/seg, y1 + h.jag[k++]);
-  for(let i=1;i<=seg;i++) ctx.lineTo(x0 + h.jag[k++], y1 - h.h*i/seg);
-  ctx.closePath();
-}
-function drawHole(h){
-  ctx.save();
-  holePath(h);
-  ctx.fillStyle = "#05050A"; ctx.fill();
-  holePath(h); ctx.clip();
-  for(let i=0;i<7;i++){
-    const f = (h.s*91.3 + i*33.37) % 1, g2 = (h.s*57.1 + i*71.77) % 1;
-    ctx.beginPath();
-    ctx.arc(h.x - h.w/2 + f*h.w, h.y - h.h/2 + g2*h.h, 0.7 + ((f*g2*5) % 1)*1.3, 0, 6.2832);
-    ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.fill();
-  }
-  const lip = ctx.createLinearGradient(0, h.y - h.h/2, 0, h.y - h.h/2 + 22);
-  lip.addColorStop(0, "rgba(255,255,255,0.16)"); lip.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = lip; ctx.fillRect(h.x - h.w/2, h.y - h.h/2, h.w, 22);
-  ctx.restore();
-  holePath(h);
-  ctx.strokeStyle = "rgba(255,255,255,0.30)"; ctx.lineWidth = 2; ctx.stroke();
-  for(let i=0;i<3;i++){                      /* slabs torn off the rim */
-    const f = (h.s*73.1 + i*41.3) % 1;
+/* A rock on the way down, the ground it is aimed at, and the crater after. */
+function drawMeteor(o){
+  if(o.phase === 0){
+    const left = playerY - o.y;
+    const prog = clamp(1 - left/Math.max(1, o.span), 0, 1);
+    const per = lerp(0.46, 0.13, prog);
+    const on = (o.t % per) < per*0.55;
+
     ctx.save();
-    ctx.translate(h.x - h.w/2 + f*h.w, i % 2 ? h.y + h.h/2 + 3 : h.y - h.h/2 - 3);
-    ctx.rotate((f - 0.5)*1.1);
-    ctx.fillStyle = "rgba(122,112,152,0.5)";
-    ctx.fillRect(-5 - f*4, -2.5, 10 + f*9, 5);
+    ctx.globalAlpha = on ? 0.30 : 0.12;
+    ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, 6.2832);
+    ctx.fillStyle = "#E21B22"; ctx.fill();
+    ctx.globalAlpha = on ? 0.95 : 0.38;
+    ctx.strokeStyle = "#E21B22"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, 6.2832); ctx.stroke();
+    ctx.globalAlpha = 0.8;                                   /* ring closing on impact */
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(o.x, o.y, 3 + o.r*(1 - prog)*0.9, 0, 6.2832); ctx.stroke();
+    ctx.globalAlpha = 1;
     ctx.restore();
+
+    if(left < FALL_LEAD){
+      const k = clamp(left/FALL_LEAD, 0, 1);
+      const alt = METEOR_ALT*k, sc = 1 + k*0.5;
+      const mx = o.x, my = o.y - alt, mr = o.mr*sc;
+
+      ctx.save();
+      ctx.globalAlpha = 0.14 + (1-k)*0.3;                    /* shadow closing in */
+      ctx.beginPath();
+      if(ctx.ellipse) ctx.ellipse(o.x, o.y, o.mr*(0.45 + (1-k)*0.6), o.mr*(0.3 + (1-k)*0.4), 0, 0, 6.2832);
+      else ctx.arc(o.x, o.y, o.mr*(0.45 + (1-k)*0.6), 0, 6.2832);
+      ctx.fillStyle = "#000"; ctx.fill();
+      ctx.globalAlpha = 1;
+
+      const len = 95 + 80*k;                                 /* fire trail */
+      const g2 = ctx.createLinearGradient(mx, my - len, mx, my);
+      g2.addColorStop(0, "rgba(255,120,40,0)");
+      g2.addColorStop(1, "rgba(255,176,74,0.8)");
+      ctx.fillStyle = g2;
+      ctx.beginPath();
+      ctx.moveTo(mx - mr*0.8, my); ctx.lineTo(mx, my - len); ctx.lineTo(mx + mr*0.8, my);
+      ctx.closePath(); ctx.fill();
+
+      ctx.beginPath();                                       /* glow */
+      ctx.arc(mx, my, mr*1.7, 0, 6.2832);
+      ctx.fillStyle = "rgba(255,140,50,0.22)"; ctx.fill();
+
+      ctx.beginPath();                                       /* the rock */
+      for(let i=0;i<9;i++){
+        const a = (i/9)*6.2832;
+        const rr = mr*(0.72 + ((o.s*83.1 + i*37.7) % 1)*0.5);
+        const px = mx + Math.cos(a)*rr, py = my + Math.sin(a)*rr;
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = "#2B2530"; ctx.fill();
+      ctx.strokeStyle = "rgba(255,150,60,0.75)"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(mx - mr*0.15, my - mr*0.1, mr*0.42, 0, 6.2832);
+      ctx.fillStyle = "#FFCE86"; ctx.fill();
+      ctx.restore();
+    }
+    return;
   }
+
+  if(o.phase === 1){
+    const k = clamp(o.t/0.4, 0, 1), rr = o.r*(0.4 + k*1.1);
+    ctx.save();
+    ctx.globalAlpha = (1-k)*0.8;
+    ctx.beginPath(); ctx.arc(o.x, o.y, rr, 0, 6.2832);
+    ctx.fillStyle = "#FFA24E"; ctx.fill();
+    ctx.globalAlpha = 1-k;
+    ctx.strokeStyle = "#FFE7C0"; ctx.lineWidth = 3 + (1-k)*6;
+    ctx.beginPath(); ctx.arc(o.x, o.y, rr, 0, 6.2832); ctx.stroke();
+    ctx.globalAlpha = Math.max(0, 1 - k*2.3);
+    ctx.beginPath(); ctx.arc(o.x, o.y, o.r*0.55*(1 - k*0.5), 0, 6.2832);
+    ctx.fillStyle = "#FFFFFF"; ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    return;
+  }
+
+  const k = clamp(o.t/1.6, 0, 1);                            /* scorched ground */
+  ctx.save();
+  ctx.globalAlpha = 0.6*(1-k);
+  ctx.fillStyle = "#0E0A12"; blob(o.x, o.y, o.r*0.78, o.s);
+  ctx.globalAlpha = 0.32*(1-k);
+  ctx.fillStyle = "#C6482A"; blob(o.x, o.y, o.r*0.4, o.s + 0.3);
+  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 function drawWeed(o){
@@ -1741,7 +1830,7 @@ function drawTraps(id){
     const o = G.traps[i];
     if(o.b !== id || o.y < -300 || o.y > H + 300) continue;
     if(o.kind === "puddle") drawPuddle(o);
-    else if(o.kind === "hole") drawHole(o);
+    else if(o.kind === "meteor") drawMeteor(o);
     else drawWeed(o);
   }
 }
