@@ -287,16 +287,15 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 .readout .k{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:#8D919A;text-transform:uppercase}
 .readout .v{font-family:var(--mono);font-weight:600;font-size:34px;color:#fff;line-height:1;margin-top:3px;text-shadow:0 2px 10px rgba(0,0,0,.6)}
 .readout .b{font-family:var(--mono);font-size:11px;color:#8D919A;margin-top:5px;letter-spacing:.1em}
-#trackPill{position:absolute;left:16px;top:calc(66px + var(--safe-t));width:126px;pointer-events:none}
-#trackName{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.85);margin-bottom:6px}
-#trackBar{height:3px;background:rgba(255,255,255,.22);border-radius:2px;overflow:hidden}
-#trackFill{display:block;height:100%;width:100%;background:var(--red);border-radius:2px}
-#trackBar.soon #trackFill{background:#fff}
-#swap{position:absolute;left:0;right:0;top:34%;text-align:center;opacity:0;pointer-events:none;padding:0 20px}
-#swapK{display:block;color:rgba(255,255,255,.7);margin-bottom:10px}
-#swapN{display:block;font-size:clamp(34px,11vw,50px);color:#fff;text-shadow:0 4px 26px rgba(0,0,0,.75)}
-#swap.on{animation:swapIn 2.7s cubic-bezier(.2,.8,.25,1) both}
-@keyframes swapIn{0%{opacity:0;transform:translateY(14px)}14%{opacity:1;transform:none}70%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-10px)}}
+#gauges{position:absolute;left:16px;top:calc(66px + var(--safe-t));width:124px;pointer-events:none}
+.gauge{margin-bottom:11px}
+.gauge span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.85);margin-bottom:6px}
+.gauge .bar{height:3px;background:rgba(255,255,255,.22);border-radius:2px;overflow:hidden}
+.gauge i{display:block;height:100%;width:100%;border-radius:2px;background:var(--red)}
+#trackBar.soon i{background:#fff}
+#speedName{transform-origin:left center}
+#speedName.up{animation:lvUp .7s cubic-bezier(.2,.8,.25,1)}
+@keyframes lvUp{0%{transform:scale(1)}25%{transform:scale(1.22);color:#fff}100%{transform:scale(1)}}
 #boostWrap{position:absolute;left:16px;right:16px;bottom:calc(14px + var(--safe-b));height:4px;background:rgba(255,255,255,.16);border-radius:3px;overflow:hidden}
 #boostFill{height:100%;width:100%;background:var(--red);border-radius:3px;transition:background .2s ease}
 #boostWrap.full #boostFill{background:var(--red-press)}
@@ -479,11 +478,10 @@ body.desk .keys{display:flex}
           <div class="b"><span data-i18n="bestShort">Best</span> <span id="hudBest">0</span></div>
         </div>
       </div>
-      <div id="trackPill">
-        <span id="trackName">City</span>
-        <div id="trackBar"><i id="trackFill"></i></div>
+      <div id="gauges">
+        <div class="gauge"><span id="trackName">City</span><div class="bar" id="trackBar"><i id="trackFill"></i></div></div>
+        <div class="gauge"><span id="speedName">Speed 1</span><div class="bar" id="speedBar"><i id="speedFill"></i></div></div>
       </div>
-      <div id="swap"><span id="swapK" class="eyebrow">New track</span><span id="swapN" class="display">City</span></div>
       <div id="boostWrap"><div id="boostFill"></div></div>
     </div>
     <div id="flash"></div>
@@ -610,13 +608,14 @@ const STR = {
   pickLang:     {en:"Choose your language",        fr:"Choisissez votre langue"},
   pickLangSub:  {en:"You can change this at any time from the home screen.",
                  fr:"Vous pouvez la changer \u00e0 tout moment depuis l'accueil."},
-  newTrack:     {en:"New track",                   fr:"Nouvelle piste"},
+  speedLabel:   {en:"Speed",                       fr:"Vitesse"},
   trackCity:    {en:"City",                        fr:"Ville"},
   trackDesert:  {en:"Desert",                      fr:"D\u00e9sert"},
   trackSpace:   {en:"Rainbow space",               fr:"Espace arc-en-ciel"}
 };
 let lang = store.get("redline.lang") || null;
 let curTrackKey = "trackCity";
+let curSpeedLv = 1;
 function t(k){ return STR[k][lang || "en"]; }
 
 function applyLang(){
@@ -627,6 +626,7 @@ function applyLang(){
     if(s) el.textContent = s[L];
   });
   $("#trackName").textContent = STR[curTrackKey][L];
+  $("#speedName").textContent = STR.speedLabel[L] + " " + curSpeedLv;
 }
 
 /* ---------------- tiny helpers ----------------------------------- */
@@ -758,7 +758,9 @@ const G = {
   charge:1, boosting:false, keyBoost:false, ptrBoost:false,
   traffic:[], build:[[],[]], props:[], walks:[],
   shake:0, timers:[], relGap:0, nextGap:420,
-  biome:"city", next:null, seam:null, trackT:60, seamPts:[], seamBits:[]
+  biome:"city", next:null, seam:null, trackT:60, seamPts:[], seamBits:[],
+  traps:[], fx:[], trapGap:0, nextTrap:600,
+  tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0
 };
 
 function layout(){
@@ -791,6 +793,11 @@ window.addEventListener("orientationchange", function(){ setTimeout(resize, 250)
 
 /* ---------------- tracks ----------------------------------------- */
 const TRACK_SECONDS = 60;
+const SPEED_SECONDS = 30;                 /* the road speeds up on this clock */
+const BASE_SPEED = 360, SPEED_STEP = 58, MAX_TIER = 12;
+const BLIND_TIME = 2.6;                   /* puddle: how long the view stays fouled */
+const DEAD_TIME = 3, IMMUNE_TIME = 2;     /* hole: wreck, then respawn untouchable */
+const SLOW_TIME = 1.7;                    /* tumbleweed: how long it drags you down */
 const TRACKS = {
   city:   { key:"trackCity",   ground:"#C9CCD3", shoulder:"#EDEEF1", road:"#16171B",
             mark:"rgba(237,238,241,0.86)", edge:"rgba(237,238,241,0.5)", accent:"#E21B22" },
@@ -880,11 +887,6 @@ function switchTrack(){
   for(let i=0;i<G.props.length;i++) if(G.props[i].y < G.seam) G.props[i].b = G.next;
   for(let i=0;i<G.walks.length;i++) if(G.walks[i].y < G.seam) G.walks[i].b = G.next;
   G.trackT = TRACK_SECONDS;
-  const w = $("#swap");
-  $("#swapK").textContent = t("newTrack");
-  $("#swapN").textContent = t(TRACKS[G.next].key);
-  w.classList.remove("on"); void w.offsetWidth; w.classList.add("on");
-  later(function(){ w.classList.remove("on"); }, 2800);
   tone(760, .12, "sine", .1);
   later(function(){ tone(1140, .16, "sine", .1); }, 140);
 }
@@ -904,9 +906,12 @@ function startRace(){
   G.biome = "city"; G.next = null; G.seam = null; G.trackT = TRACK_SECONDS;
   curTrackKey = TRACKS.city.key;
   $("#trackName").textContent = t(curTrackKey);
-  $("#swap").classList.remove("on");
   G.charge = 1; G.boosting = false; G.keyBoost = false; G.ptrBoost = false;
   G.traffic = []; G.shake = 0; G.relGap = 0; G.nextGap = 430;
+  G.traps = []; G.fx = []; G.trapGap = 0; G.nextTrap = 620;
+  G.tier = 0; G.speedT = SPEED_SECONDS; G.blind = 0; G.blindPts = [];
+  G.dead = 0; G.immune = 0; G.slowT = 0;
+  curSpeedLv = 1; $("#speedName").textContent = t("speedLabel") + " 1";
   seedWorld();
   paintHUD(true);
   G.state = "countdown";
@@ -1058,9 +1063,11 @@ function update(dt){
   let target;
   if(st === "countdown") target = 0;          /* the car holds still on the line */
   else if(st === "over") target = Math.max(0, G.speed - 900*dt);
+  else if(G.dead > 0) target = 0;                      /* wrecked: the road stops */
   else {
-    const ramp = clamp(G.meters/2600, 0, 1);
-    target = lerp(360, 780, ramp) * (G.boosting ? 1.5 : 1);
+    target = BASE_SPEED + Math.min(G.tier, MAX_TIER)*SPEED_STEP;
+    if(G.slowT > 0) target *= 0.5;
+    if(G.boosting) target *= 1.5;
   }
   G.speed = lerp(G.speed, target, 1 - Math.pow(0.001, dt));
   G.scroll += G.speed*dt;
@@ -1107,15 +1114,33 @@ function update(dt){
   for(let i=0;i<G.walks.length;i++) topWalk = Math.min(topWalk, G.walks[i].y);
   if(!G.walks.length || topWalk > -1300) G.walks.push(makeFeature(topBiome(), topWalk - rand(1500,2600)));
 
-  /* track rotation */
-  if(st === "running"){
+  /* clocks only run while the car is actually racing */
+  if(st === "running" && G.dead <= 0){
     G.trackT -= dt;
     if(G.trackT <= 0 && G.seam === null) switchTrack();
+    if(G.tier < MAX_TIER){
+      G.speedT -= dt;
+      if(G.speedT <= 0){ G.speedT = SPEED_SECONDS; G.tier++; speedUp(); }
+    } else G.speedT = SPEED_SECONDS;
+    G.trapGap += d;
+    if(G.trapGap >= G.nextTrap){ G.trapGap = 0; spawnTrap(); G.nextTrap = rand(430, 900); }
   }
+
+  /* hit states */
+  if(G.blind > 0)  G.blind  = Math.max(0, G.blind - dt);
+  if(G.slowT > 0)  G.slowT  = Math.max(0, G.slowT - dt);
+  if(G.immune > 0) G.immune = Math.max(0, G.immune - dt);
+  if(G.dead > 0){
+    G.dead -= dt;
+    if(G.dead <= 0){ G.dead = 0; G.immune = IMMUNE_TIME; respawnFx(); }
+  }
+  updateTraps(dt, d, st);
+  updateFx(dt, d);
   if(G.seam !== null){
     G.seam += d;
     if(G.seam > H + 60){
       G.biome = G.next; G.next = null; G.seam = null;
+      G.traps = G.traps.filter(function(o){ return o.b === G.biome; });
       curTrackKey = TRACKS[G.biome].key;
       $("#trackName").textContent = t(curTrackKey);
     }
@@ -1144,7 +1169,7 @@ function update(dt){
     if(G.relGap >= G.nextGap){
       G.relGap = 0;
       spawnWave();
-      const ramp = clamp(G.meters/2600, 0, 1);
+      const ramp = clamp(G.tier/MAX_TIER, 0, 1);
       G.nextGap = lerp(372, 268, ramp) * rand(0.92, 1.34);
     }
   }
@@ -1172,7 +1197,7 @@ function spawnWave(){
     if(ok) free.push(l);
   }
   if(free.length < 2) return;                       /* never seal the road */
-  const ramp = clamp(G.meters/2600, 0, 1);
+  const ramp = clamp(G.tier/MAX_TIER, 0, 1);
   let count = (free.length === 3 && Math.random() < 0.35 + ramp*0.35) ? 2 : 1;
   count = Math.min(count, free.length - 1);
   for(let n=0;n<count;n++){
@@ -1184,6 +1209,148 @@ function spawnWave(){
       w:w, h:w*rand(1.8, 2.35),
       spd:rand(155, 285), paint:p, passed:false
     });
+  }
+}
+
+/* ================================================================
+   TRAPS  -  one hazard per track, placed at random
+   ================================================================ */
+function speedUp(){
+  curSpeedLv = G.tier + 1;
+  const el = $("#speedName");
+  el.textContent = t("speedLabel") + " " + curSpeedLv;
+  el.classList.remove("up"); void el.offsetWidth; el.classList.add("up");
+  tone(880, .09, "square", .09);
+  later(function(){ tone(1320, .11, "square", .09); }, 100);
+}
+
+/* keep a hazard fully on the asphalt so it is always possible to avoid */
+function onRoad(x, half){
+  return clamp(x, roadX + 8 + half, roadX + roadW - 8 - half);
+}
+
+function spawnTrap(){
+  if(G.seam !== null) return;              /* leave the handover clear */
+  const b = G.biome, lane = randi(0, 2);
+  if(b === "city"){
+    const rx = rand(laneW*0.30, laneW*0.48), ry = rx*rand(0.52, 0.82);
+    G.traps.push({ b:b, kind:"puddle", x:onRoad(laneCX(lane) + rand(-laneW*0.16, laneW*0.16), rx),
+                   y:-ry-50, rx:rx, ry:ry, s:Math.random(), hit:false });
+  } else if(b === "space"){
+    const w = rand(laneW*0.5, laneW*0.86), h = rand(70, 165), jag = [];
+    for(let i=0;i<20;i++) jag.push(rand(-6, 6));
+    G.traps.push({ b:b, kind:"hole", x:onRoad(laneCX(lane) + rand(-laneW*0.12, laneW*0.12), w/2),
+                   y:-h-50, w:w, h:h, jag:jag, s:Math.random() });
+  } else {
+    const dir = Math.random() < 0.5 ? 1 : -1, r = rand(15, 25);
+    G.traps.push({ b:b, kind:"weed", r:r, s:Math.random(), age:0, rot:rand(0, 6.28),
+                   x: dir > 0 ? roadX - 46 : roadX + roadW + 46,
+                   y: -70,
+                   vx: dir*(roadW + 92)/rand(2.1, 3.1),
+                   fall: rand(0.48, 0.66) });
+  }
+}
+
+/* --- collision. Tight shapes, tested against the car body only, so the
+       wheels and the spoiler overhang never trigger a false hit. --- */
+function carHit(){
+  return { x:G.x, y:playerY, hw:carW*0.40, hh:carH*0.42 };
+}
+function nearestOnCar(c, px, py){
+  return { x:clamp(px, c.x - c.hw, c.x + c.hw), y:clamp(py, c.y - c.hh, c.y + c.hh) };
+}
+
+function updateTraps(dt, d, st){
+  const live = st === "running" && G.dead <= 0 && G.immune <= 0;
+  const c = carHit();
+  for(let i=G.traps.length-1;i>=0;i--){
+    const o = G.traps[i];
+    if(o.kind === "weed"){
+      o.age += dt;
+      o.x += o.vx*dt;
+      o.y += d*o.fall;
+      o.rot += o.vx*dt/o.r;
+      if(o.x < roadX-100 || o.x > roadX+roadW+100 || o.y > H+100){ G.traps.splice(i,1); continue; }
+      if(live && !o.hit){
+        const p = nearestOnCar(c, o.x, o.y);
+        const dx = p.x - o.x, dy = p.y - o.y;
+        if(dx*dx + dy*dy <= o.r*o.r*0.86){ hitWeed(o); G.traps.splice(i,1); continue; }
+      }
+      continue;
+    }
+    o.y += d;
+    if(o.y > H + 260){ G.traps.splice(i,1); continue; }
+    if(!live) continue;
+    if(o.kind === "puddle"){
+      if(o.hit) continue;
+      const p = nearestOnCar(c, o.x, o.y);
+      const ex = (p.x - o.x)/(o.rx*0.92), ey = (p.y - o.y)/(o.ry*0.92);
+      if(ex*ex + ey*ey <= 1){ o.hit = true; hitPuddle(); }
+    } else {
+      if(Math.abs(o.x - c.x) < o.w/2 + c.hw - 2 && Math.abs(o.y - c.y) < o.h/2 + c.hh - 2) hitHole();
+    }
+  }
+}
+
+function hitPuddle(){
+  G.blind = BLIND_TIME;
+  G.blindPts = [];
+  for(let i=0;i<54;i++)
+    G.blindPts.push({ x:rand(-0.06, 1.06), y:rand(-0.06, 1.06), r:rand(4, 26), s:Math.random() });
+  for(let i=0;i<16;i++){
+    const a = rand(-2.6, -0.5);
+    addFx(G.x + rand(-carW*0.4, carW*0.4), playerY, Math.cos(a)*rand(70,220), Math.sin(a)*rand(70,240),
+          rand(.3,.6), rand(2,5), "#BBD4E4");
+  }
+  G.shake = 6;
+  noise(.3, .3); tone(200, .16, "sine", .07);
+}
+
+function hitHole(){
+  G.dead = DEAD_TIME;
+  G.shake = 22;
+  for(let i=0;i<30;i++){
+    const a = rand(0, 6.2832), sp = rand(70, 340);
+    addFx(G.x, playerY, Math.cos(a)*sp, Math.sin(a)*sp, rand(.45,1.0), rand(2,7),
+          i%3 === 0 ? "#FFD9A0" : (i%3 === 1 ? "#FF7A3A" : "#E21B22"));
+  }
+  for(let i=0;i<10;i++)
+    addFx(G.x, playerY, rand(-110,110), rand(-190,-40), rand(.6,1.2), rand(3,7), "#2A2C33");
+  noise(.6, .55); tone(90, .45, "sawtooth", .17);
+}
+
+function hitWeed(o){
+  G.slowT = SLOW_TIME;
+  G.shake = 8;
+  for(let i=0;i<14;i++){
+    const a = rand(0, 6.2832), sp = rand(40, 170);
+    addFx(o.x, o.y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.3,.7), rand(2,5),
+          i%2 ? "#A8895C" : "#D8C49A");
+  }
+  noise(.24, .24); tone(170, .13, "square", .07);
+}
+
+function respawnFx(){
+  for(let i=0;i<18;i++){
+    const a = (i/18)*6.2832;
+    addFx(G.x + Math.cos(a)*carW*0.6, playerY + Math.sin(a)*carH*0.4,
+          Math.cos(a)*70, Math.sin(a)*70, .45, 3, "#FF7A7F");
+  }
+  tone(660, .1, "sine", .09);
+  later(function(){ tone(990, .12, "sine", .09); }, 90);
+}
+
+function addFx(x, y, vx, vy, life, r, c){
+  G.fx.push({ x:x, y:y, vx:vx, vy:vy, life:life, max:life, r:r, c:c });
+}
+function updateFx(dt, d){
+  for(let i=G.fx.length-1;i>=0;i--){
+    const f = G.fx[i];
+    f.life -= dt;
+    if(f.life <= 0){ G.fx.splice(i,1); continue; }
+    f.x += f.vx*dt;
+    f.y += f.vy*dt + d*0.55;
+    f.vx *= 0.94; f.vy *= 0.94;
   }
 }
 
@@ -1458,6 +1625,127 @@ function drawFeatures(id){
   }
 }
 
+/* ---- how each hazard looks ---- */
+function smoothPath(pts){
+  const n = pts.length;
+  ctx.beginPath();
+  ctx.moveTo((pts[0].x + pts[n-1].x)/2, (pts[0].y + pts[n-1].y)/2);
+  for(let i=0;i<n;i++){
+    const a = pts[i], b = pts[(i+1) % n];
+    ctx.quadraticCurveTo(a.x, a.y, (a.x + b.x)/2, (a.y + b.y)/2);
+  }
+  ctx.closePath();
+}
+function puddlePath(p, k){
+  const n = 11, pts = [];
+  for(let i=0;i<n;i++){
+    const a = (i/n)*6.2832;
+    const j = 0.68 + ((p.s*131.7 + i*47.31) % 1)*0.56;
+    pts.push({ x:p.x + Math.cos(a)*p.rx*j*k, y:p.y + Math.sin(a)*p.ry*j*k });
+  }
+  smoothPath(pts);
+}
+function drawPuddle(p){
+  ctx.save();
+  puddlePath(p, 1.0);
+  ctx.fillStyle = "rgba(22,34,45,0.62)"; ctx.fill();
+  puddlePath(p, 0.66);
+  ctx.fillStyle = "rgba(12,20,28,0.5)"; ctx.fill();
+  ctx.beginPath();
+  if(ctx.ellipse) ctx.ellipse(p.x - p.rx*0.24, p.y - p.ry*0.28, p.rx*0.36, p.ry*0.19, -0.35, 0, 6.2832);
+  else ctx.arc(p.x - p.rx*0.24, p.y - p.ry*0.28, p.rx*0.28, 0, 6.2832);
+  ctx.fillStyle = "rgba(196,220,236,0.30)"; ctx.fill();
+  ctx.beginPath();
+  if(ctx.ellipse) ctx.ellipse(p.x + p.rx*0.30, p.y + p.ry*0.24, p.rx*0.17, p.ry*0.10, 0.4, 0, 6.2832);
+  else ctx.arc(p.x + p.rx*0.30, p.y + p.ry*0.24, p.rx*0.12, 0, 6.2832);
+  ctx.fillStyle = "rgba(196,220,236,0.18)"; ctx.fill();
+  puddlePath(p, 1.0);
+  ctx.strokeStyle = "rgba(208,228,242,0.34)"; ctx.lineWidth = 1.6; ctx.stroke();
+  for(let i=0;i<2;i++){
+    const a = p.s*6.28 + i*2.4;
+    ctx.beginPath();
+    ctx.arc(p.x + Math.cos(a)*p.rx*1.35, p.y + Math.sin(a)*p.ry*1.4, 2.4 + ((p.s*17 + i) % 1)*2.6, 0, 6.2832);
+    ctx.fillStyle = "rgba(22,34,45,0.5)"; ctx.fill();
+  }
+  ctx.restore();
+}
+
+function holePath(h){
+  const x0 = h.x - h.w/2, y0 = h.y - h.h/2, x1 = h.x + h.w/2, y1 = h.y + h.h/2, seg = 4;
+  let k = 0;
+  ctx.beginPath();
+  for(let i=0;i<=seg;i++){ const x = x0 + h.w*i/seg, y = y0 + h.jag[k++]; i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); }
+  for(let i=1;i<=seg;i++) ctx.lineTo(x1 + h.jag[k++], y0 + h.h*i/seg);
+  for(let i=1;i<=seg;i++) ctx.lineTo(x1 - h.w*i/seg, y1 + h.jag[k++]);
+  for(let i=1;i<=seg;i++) ctx.lineTo(x0 + h.jag[k++], y1 - h.h*i/seg);
+  ctx.closePath();
+}
+function drawHole(h){
+  ctx.save();
+  holePath(h);
+  ctx.fillStyle = "#05050A"; ctx.fill();
+  holePath(h); ctx.clip();
+  for(let i=0;i<7;i++){
+    const f = (h.s*91.3 + i*33.37) % 1, g2 = (h.s*57.1 + i*71.77) % 1;
+    ctx.beginPath();
+    ctx.arc(h.x - h.w/2 + f*h.w, h.y - h.h/2 + g2*h.h, 0.7 + ((f*g2*5) % 1)*1.3, 0, 6.2832);
+    ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.fill();
+  }
+  const lip = ctx.createLinearGradient(0, h.y - h.h/2, 0, h.y - h.h/2 + 22);
+  lip.addColorStop(0, "rgba(255,255,255,0.16)"); lip.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = lip; ctx.fillRect(h.x - h.w/2, h.y - h.h/2, h.w, 22);
+  ctx.restore();
+  holePath(h);
+  ctx.strokeStyle = "rgba(255,255,255,0.30)"; ctx.lineWidth = 2; ctx.stroke();
+  for(let i=0;i<3;i++){                      /* slabs torn off the rim */
+    const f = (h.s*73.1 + i*41.3) % 1;
+    ctx.save();
+    ctx.translate(h.x - h.w/2 + f*h.w, i % 2 ? h.y + h.h/2 + 3 : h.y - h.h/2 - 3);
+    ctx.rotate((f - 0.5)*1.1);
+    ctx.fillStyle = "rgba(122,112,152,0.5)";
+    ctx.fillRect(-5 - f*4, -2.5, 10 + f*9, 5);
+    ctx.restore();
+  }
+}
+
+function drawWeed(o){
+  const a = Math.min(1, o.age/0.45);
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.beginPath();
+  if(ctx.ellipse) ctx.ellipse(o.x + 3, o.y + o.r*0.55, o.r*0.92, o.r*0.34, 0, 0, 6.2832);
+  else ctx.arc(o.x + 3, o.y + o.r*0.55, o.r*0.6, 0, 6.2832);
+  ctx.fillStyle = "rgba(60,44,22,0.24)"; ctx.fill();
+  ctx.translate(o.x, o.y);
+  ctx.rotate(o.rot);
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#8E7043"; ctx.lineWidth = 2.1;
+  for(let i=0;i<9;i++){
+    const ang = (i/9)*6.2832 + ((o.s*77.3 + i*13.71) % 1)*0.55;
+    const rr = o.r*(0.5 + ((o.s*41.1 + i*29.13) % 1)*0.52);
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(ang)*rr*0.12, Math.sin(ang)*rr*0.12);
+    ctx.lineTo(Math.cos(ang)*rr, Math.sin(ang)*rr);
+    ctx.lineTo(Math.cos(ang + 0.75)*rr*0.72, Math.sin(ang + 0.75)*rr*0.72);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "#C2A067"; ctx.lineWidth = 1.4;
+  for(let i=0;i<3;i++){
+    ctx.beginPath(); ctx.arc(0, 0, o.r*(0.62 + i*0.16), i*1.7, i*1.7 + 4.2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawTraps(id){
+  for(let i=0;i<G.traps.length;i++){
+    const o = G.traps[i];
+    if(o.b !== id || o.y < -300 || o.y > H + 300) continue;
+    if(o.kind === "puddle") drawPuddle(o);
+    else if(o.kind === "hole") drawHole(o);
+    else drawWeed(o);
+  }
+}
+
 /* ---- the meeting point of two tracks ---- */
 function seamClip(above){
   const p = G.seamPts;
@@ -1494,6 +1782,7 @@ function drawWorldLayer(id, mode){
   drawEdges(id, T);
   drawMarks(id, T);
   drawFeatures(id);
+  drawTraps(id);
   drawProps(id);
   ctx.restore();
 }
@@ -1566,9 +1855,18 @@ function render(){
     drawCar(t2.x, t2.y, t2.w, t2.h, t2.paint, 0, false, false);
   }
 
-  if(G.state !== "idle"){
+  const blink = G.immune > 0 && Math.floor(G.immune*9) % 2 === 0;
+  if(G.state !== "idle" && G.dead <= 0 && !blink){
     drawCar(G.x, playerY, carW, carH, {body:"#E21B22", dark:"#101116", glass:"#3B404A"}, G.tilt, true, G.boosting);
   }
+
+  for(let i=0;i<G.fx.length;i++){
+    const f = G.fx[i];
+    ctx.globalAlpha = clamp(f.life/f.max, 0, 1);
+    ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.2832);
+    ctx.fillStyle = f.c; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 
   const sr = clamp((G.speed-420)/700, 0, 1);
   if(sr > 0.02){
@@ -1582,7 +1880,29 @@ function render(){
   }
 
   ctx.fillStyle = vign; ctx.fillRect(0,0,W,H);
+  if(G.blind > 0) drawBlind();
   ctx.restore();
+}
+
+/* water thrown over the view, running off as it clears */
+function drawBlind(){
+  const hold = BLIND_TIME - 0.55;
+  const a = G.blind > hold ? 1 : clamp(G.blind/hold, 0, 1);
+  ctx.globalAlpha = a*0.6;
+  ctx.fillStyle = "#C3D5E2"; ctx.fillRect(0, 0, W, H);
+  for(let i=0;i<G.blindPts.length;i++){
+    const p = G.blindPts[i];
+    const x = p.x*W, y = p.y*H, r = p.r*(0.75 + a*0.35);
+    ctx.globalAlpha = a*0.85;
+    ctx.beginPath();
+    if(ctx.ellipse) ctx.ellipse(x, y, r, r*(0.6 + p.s*0.7), p.s*3, 0, 6.2832);
+    else ctx.arc(x, y, r, 0, 6.2832);
+    ctx.fillStyle = "rgba(232,242,249,0.9)"; ctx.fill();
+    ctx.globalAlpha = a*0.55;
+    ctx.beginPath(); ctx.arc(x - r*0.3, y - r*0.34, r*0.34, 0, 6.2832);
+    ctx.fillStyle = "#FFFFFF"; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 }
 
 /* ---------------- HUD -------------------------------------------- */
@@ -1595,6 +1915,7 @@ function paintHUD(force){
   $("#boostWrap").classList.toggle("full", G.charge > 0.98);
   $("#trackFill").style.width = (clamp(G.trackT/TRACK_SECONDS, 0, 1)*100).toFixed(1) + "%";
   $("#trackBar").classList.toggle("soon", G.trackT < 6);
+  $("#speedFill").style.width = (clamp(G.speedT/SPEED_SECONDS, 0, 1)*100).toFixed(1) + "%";
 }
 
 /* ---------------- loop ------------------------------------------- */
