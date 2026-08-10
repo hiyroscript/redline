@@ -287,6 +287,16 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 .readout .k{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:#8D919A;text-transform:uppercase}
 .readout .v{font-family:var(--mono);font-weight:600;font-size:34px;color:#fff;line-height:1;margin-top:3px;text-shadow:0 2px 10px rgba(0,0,0,.6)}
 .readout .b{font-family:var(--mono);font-size:11px;color:#8D919A;margin-top:5px;letter-spacing:.1em}
+#trackPill{position:absolute;left:16px;top:calc(66px + var(--safe-t));width:126px;pointer-events:none}
+#trackName{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.85);margin-bottom:6px}
+#trackBar{height:3px;background:rgba(255,255,255,.22);border-radius:2px;overflow:hidden}
+#trackFill{display:block;height:100%;width:100%;background:var(--red);border-radius:2px}
+#trackBar.soon #trackFill{background:#fff}
+#swap{position:absolute;left:0;right:0;top:34%;text-align:center;opacity:0;pointer-events:none;padding:0 20px}
+#swapK{display:block;color:rgba(255,255,255,.7);margin-bottom:10px}
+#swapN{display:block;font-size:clamp(34px,11vw,50px);color:#fff;text-shadow:0 4px 26px rgba(0,0,0,.75)}
+#swap.on{animation:swapIn 2.7s cubic-bezier(.2,.8,.25,1) both}
+@keyframes swapIn{0%{opacity:0;transform:translateY(14px)}14%{opacity:1;transform:none}70%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-10px)}}
 #boostWrap{position:absolute;left:16px;right:16px;bottom:calc(14px + var(--safe-b));height:4px;background:rgba(255,255,255,.16);border-radius:3px;overflow:hidden}
 #boostFill{height:100%;width:100%;background:var(--red);border-radius:3px;transition:background .2s ease}
 #boostWrap.full #boostFill{background:var(--red-press)}
@@ -295,8 +305,8 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 /* countdown gantry */
 #count{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;background:rgba(11,11,12,.42)}
 #count.on{display:flex}
-.gantry{display:flex;gap:10px;padding:14px 16px;background:var(--black);border-radius:var(--r-md);box-shadow:0 14px 34px rgba(0,0,0,.5)}
-.gantry i{width:20px;height:20px;border-radius:50%;background:#26282D;transition:background .16s ease,box-shadow .16s ease}
+.gantry{display:flex;gap:12px;padding:14px 18px;background:var(--black);border-radius:var(--r-md);box-shadow:0 14px 34px rgba(0,0,0,.5)}
+.gantry i{width:22px;height:22px;border-radius:50%;background:#26282D;transition:background .16s ease,box-shadow .16s ease}
 .gantry i.lit{background:var(--red);box-shadow:0 0 16px rgba(226,27,34,.85)}
 .gantry i.go{background:var(--green);box-shadow:0 0 16px rgba(47,191,99,.8)}
 #countNum{font-family:var(--mono);font-weight:600;font-size:84px;color:#fff;line-height:1;text-shadow:0 4px 24px rgba(0,0,0,.7)}
@@ -469,12 +479,17 @@ body.desk .keys{display:flex}
           <div class="b"><span data-i18n="bestShort">Best</span> <span id="hudBest">0</span></div>
         </div>
       </div>
+      <div id="trackPill">
+        <span id="trackName">City</span>
+        <div id="trackBar"><i id="trackFill"></i></div>
+      </div>
+      <div id="swap"><span id="swapK" class="eyebrow">New track</span><span id="swapN" class="display">City</span></div>
       <div id="boostWrap"><div id="boostFill"></div></div>
     </div>
     <div id="flash"></div>
 
     <div id="count">
-      <div class="gantry"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="gantry"><i></i><i></i><i></i></div>
       <div id="countNum">3</div>
     </div>
 
@@ -557,6 +572,10 @@ const SPLASH_IMAGE = "";
 
 const SPLASH_MS = 2600;   // how long the splash stays up
 
+/* Other cars are switched off for now. Flip this to true to bring
+   them back - nothing else needs to change. */
+const TRAFFIC_ENABLED = false;
+
 /* ---------------- storage (falls back to memory if blocked) ------ */
 const mem = {};
 const store = {
@@ -590,9 +609,15 @@ const STR = {
   home:         {en:"Home",                        fr:"Accueil"},
   pickLang:     {en:"Choose your language",        fr:"Choisissez votre langue"},
   pickLangSub:  {en:"You can change this at any time from the home screen.",
-                 fr:"Vous pouvez la changer \u00e0 tout moment depuis l'accueil."}
+                 fr:"Vous pouvez la changer \u00e0 tout moment depuis l'accueil."},
+  newTrack:     {en:"New track",                   fr:"Nouvelle piste"},
+  trackCity:    {en:"City",                        fr:"Ville"},
+  trackDesert:  {en:"Desert",                      fr:"D\u00e9sert"},
+  trackSpace:   {en:"Rainbow space",               fr:"Espace arc-en-ciel"}
 };
 let lang = store.get("redline.lang") || null;
+let curTrackKey = "trackCity";
+function t(k){ return STR[k][lang || "en"]; }
 
 function applyLang(){
   const L = lang || "en";
@@ -601,6 +626,7 @@ function applyLang(){
     const s = STR[el.getAttribute("data-i18n")];
     if(s) el.textContent = s[L];
   });
+  $("#trackName").textContent = STR[curTrackKey][L];
 }
 
 /* ---------------- tiny helpers ----------------------------------- */
@@ -731,7 +757,8 @@ const G = {
   scroll:0, speed:0, dist:0, meters:0,
   charge:1, boosting:false, keyBoost:false, ptrBoost:false,
   traffic:[], build:[[],[]], props:[], walks:[],
-  shake:0, timers:[], relGap:0, nextGap:420
+  shake:0, timers:[], relGap:0, nextGap:420,
+  biome:"city", next:null, seam:null, trackT:60, seamPts:[], seamBits:[]
 };
 
 function layout(){
@@ -743,6 +770,7 @@ function layout(){
   carH   = carW*1.86;
   playerY= H - carH*0.62 - H*0.15;
   G.x    = laneCX(G.lane);
+  if(G.seam !== null) buildSeamShape();
   vign = ctx.createRadialGradient(W/2, H*0.55, H*0.28, W/2, H*0.55, H*0.9);
   vign.addColorStop(0, "rgba(0,0,0,0)");
   vign.addColorStop(1, "rgba(0,0,0,0.55)");
@@ -761,28 +789,104 @@ function resize(){
 window.addEventListener("resize", function(){ if($("#race").classList.contains("on")) resize(); });
 window.addEventListener("orientationchange", function(){ setTimeout(resize, 250); });
 
+/* ---------------- tracks ----------------------------------------- */
+const TRACK_SECONDS = 60;
+const TRACKS = {
+  city:   { key:"trackCity",   ground:"#C9CCD3", shoulder:"#EDEEF1", road:"#16171B",
+            mark:"rgba(237,238,241,0.86)", edge:"rgba(237,238,241,0.5)", accent:"#E21B22" },
+  desert: { key:"trackDesert", ground:"#D6BC90", shoulder:"#BFA372", road:"#2B2722",
+            mark:"rgba(233,214,158,0.82)", edge:"rgba(233,214,158,0.42)", accent:"#D9822B" },
+  space:  { key:"trackSpace",  ground:"#07070D", shoulder:"#5CE1E6", road:"#0D0D15",
+            mark:"rgba(255,255,255,0.92)", edge:"rgba(255,255,255,0.5)", accent:"#9B5CFF" }
+};
+const TRACK_IDS = ["city","desert","space"];
+const RAINBOW = ["#FF3B4E","#FF8A2B","#FFD23B","#4FD46B","#3BC2FF","#5A6BFF","#B45CFF"];
+
+/* scenery generated above the seam already belongs to the incoming track */
+function topBiome(){ return G.seam === null ? G.biome : G.next; }
+
+/* Where two tracks meet, the ground interlocks instead of butting up against
+   a line: a wandering edge, calm across the driving surface so the lanes stay
+   readable, wide and irregular out on the shoulders where terrain would. */
+function buildSeamShape(){
+  const N = 11;
+  G.seamPts = [];
+  for(let i=0;i<N;i++){
+    const x = (W/(N-1))*i;
+    const onRoad = x > roadX - sideW*0.5 && x < roadX + roadW + sideW*0.5;
+    const amp = onRoad ? 14 : 54;
+    G.seamPts.push({ x:x, o:(Math.random()*2-1)*amp });
+  }
+  G.seamPts[0].o *= 0.6;
+  G.seamPts[N-1].o *= 0.6;
+
+  /* patches of each ground scattered into the other, thinning out with distance */
+  G.seamBits = [];
+  const lw = Math.max(0, roadX - 4), rx = roadX + roadW + 4;
+  for(let i=0;i<34;i++){
+    const left = Math.random() < 0.5;
+    if(left && lw < 8) continue;
+    if(!left && W - rx < 8) continue;
+    G.seamBits.push({
+      x: left ? rand(0, lw) : rand(rx, W),
+      dy:(Math.random()*2-1)*180,
+      r: rand(7, 27),
+      s: Math.random()
+    });
+  }
+}
+
 /* ---------------- world seeding ---------------------------------- */
-function makeBuilding(){
-  return { y:0, h:rand(80,210), tone:randi(0,2), s:Math.random(), tank:Math.random()<0.28, helipad:Math.random()<0.12 };
+function makeBuilding(b){
+  return { b:b, y:0, h:rand(80,210), tone:randi(0,2), s:Math.random(), tank:Math.random()<0.3, extra:Math.random()<0.13 };
 }
-function makeProp(side, y){
-  const r = Math.random();
-  return { side:side, y:y, kind: r<0.24 ? "hydrant" : (r<0.62 ? "tree" : "hatch"), s:Math.random() };
+function makeProp(b, side, y){
+  return { b:b, side:side, y:y, kind:randi(0,2), s:Math.random() };
 }
+function makeFeature(b, y){ return { b:b, y:y }; }
 function seedWorld(){
+  const b = G.biome;
   G.build = [[],[]]; G.props = []; G.walks = [];
   for(let s=0;s<2;s++){          /* index 0 = lowest on screen, last = highest */
     let edge = H + 60;
     while(edge > -260){
-      const b = makeBuilding();
-      b.y = edge - b.h;
-      G.build[s].push(b);
-      edge = b.y - rand(8,26);
+      const o = makeBuilding(b);
+      o.y = edge - o.h;
+      G.build[s].push(o);
+      edge = o.y - rand(8,26);
     }
   }
   let py = H + 40;
-  while(py > -220){ G.props.push(makeProp(randi(0,1), py)); py -= rand(120,260); }
-  G.walks = [-700, -2400];
+  while(py > -220){ G.props.push(makeProp(b, randi(0,1), py)); py -= rand(120,260); }
+  G.walks = [makeFeature(b,-700), makeFeature(b,-2400)];
+}
+
+/* Hand over to a new track. The seam is planted just above the last piece
+   of the old scenery, so the two worlds meet without a gap. */
+function switchTrack(){
+  const opts = TRACK_IDS.filter(function(id){ return id !== G.biome; });
+  G.next = opts[randi(0, opts.length-1)];
+  /* anchor on the contiguous scenery only - crossings are queued far ahead
+     and would otherwise push the seam several screens out of sight */
+  let top = -200;
+  for(let s=0;s<2;s++){ const a = G.build[s]; if(a.length) top = Math.min(top, a[a.length-1].y); }
+  if(G.props.length) top = Math.min(top, G.props[G.props.length-1].y);
+  G.seam = top - 8;
+  buildSeamShape();
+  for(let s=0;s<2;s++){
+    const a = G.build[s];
+    for(let i=0;i<a.length;i++) if(a[i].y + a[i].h <= G.seam) a[i].b = G.next;
+  }
+  for(let i=0;i<G.props.length;i++) if(G.props[i].y < G.seam) G.props[i].b = G.next;
+  for(let i=0;i<G.walks.length;i++) if(G.walks[i].y < G.seam) G.walks[i].b = G.next;
+  G.trackT = TRACK_SECONDS;
+  const w = $("#swap");
+  $("#swapK").textContent = t("newTrack");
+  $("#swapN").textContent = t(TRACKS[G.next].key);
+  w.classList.remove("on"); void w.offsetWidth; w.classList.add("on");
+  later(function(){ w.classList.remove("on"); }, 2800);
+  tone(760, .12, "sine", .1);
+  later(function(){ tone(1140, .16, "sine", .1); }, 140);
 }
 
 /* ---------------- race lifecycle --------------------------------- */
@@ -796,7 +900,11 @@ function startRace(){
   $("#newBest").classList.remove("on");
   resize();
   G.lane = 1; G.x = laneCX(1); G.tilt = 0;
-  G.scroll = 0; G.speed = 95; G.meters = 0; G.dist = 0;
+  G.scroll = 0; G.speed = 0; G.meters = 0; G.dist = 0;      /* standing start */
+  G.biome = "city"; G.next = null; G.seam = null; G.trackT = TRACK_SECONDS;
+  curTrackKey = TRACKS.city.key;
+  $("#trackName").textContent = t(curTrackKey);
+  $("#swap").classList.remove("on");
   G.charge = 1; G.boosting = false; G.keyBoost = false; G.ptrBoost = false;
   G.traffic = []; G.shake = 0; G.relGap = 0; G.nextGap = 430;
   seedWorld();
@@ -817,9 +925,9 @@ function runCountdown(){
     for(let i=0;i<litTo;i++) lights[i].className = "lit";
     tone(n === "GO" ? 900 : 420, .12, "square", .13);
   };
-  step("3", 2);
-  later(function(){ step("2", 4); }, 1000);
-  later(function(){ step("1", 5); }, 2000);
+  step("3", 1);
+  later(function(){ step("2", 2); }, 1000);
+  later(function(){ step("1", 3); }, 2000);
   later(function(){
     lights.forEach(function(l){ l.className = "go"; });
     step("GO", 0);
@@ -839,6 +947,11 @@ function pause(on){
 
 function leave(){
   clearTimers();
+  if((G.state === "running" || G.state === "paused") && Math.floor(G.meters) > best){
+    best = Math.floor(G.meters);
+    store.set("redline.best", best);
+    paintBest();
+  }
   G.state = "idle";
   engineStop();
   loopStop();
@@ -943,7 +1056,7 @@ function update(dt){
 
   /* speed */
   let target;
-  if(st === "countdown") target = 95;
+  if(st === "countdown") target = 0;          /* the car holds still on the line */
   else if(st === "over") target = Math.max(0, G.speed - 900*dt);
   else {
     const ramp = clamp(G.meters/2600, 0, 1);
@@ -975,7 +1088,7 @@ function update(dt){
     while(arr.length && arr[0].y > H+60) arr.shift();
     let top = arr.length ? arr[arr.length-1] : null;
     while(!top || top.y > -260){
-      const b = makeBuilding();
+      const b = makeBuilding(topBiome());
       b.y = (top ? top.y : -260) - rand(8,26) - b.h;
       arr.push(b); top = b;
     }
@@ -985,13 +1098,28 @@ function update(dt){
     if(G.props[i].y > H+60) G.props.splice(i,1);
   }
   if(!G.props.length || G.props[G.props.length-1].y > -140)
-    G.props.push(makeProp(randi(0,1), (G.props.length ? G.props[G.props.length-1].y : 0) - rand(120,260)));
+    G.props.push(makeProp(topBiome(), randi(0,1), (G.props.length ? G.props[G.props.length-1].y : 0) - rand(120,260)));
   for(let i=G.walks.length-1;i>=0;i--){
-    G.walks[i] += d;
-    if(G.walks[i] > H+80) G.walks.splice(i,1);
+    G.walks[i].y += d;
+    if(G.walks[i].y > H+80) G.walks.splice(i,1);
   }
-  const topWalk = G.walks.length ? Math.min.apply(null, G.walks) : 0;
-  if(!G.walks.length || topWalk > -1300) G.walks.push(topWalk - rand(1500,2600));
+  let topWalk = 0;
+  for(let i=0;i<G.walks.length;i++) topWalk = Math.min(topWalk, G.walks[i].y);
+  if(!G.walks.length || topWalk > -1300) G.walks.push(makeFeature(topBiome(), topWalk - rand(1500,2600)));
+
+  /* track rotation */
+  if(st === "running"){
+    G.trackT -= dt;
+    if(G.trackT <= 0 && G.seam === null) switchTrack();
+  }
+  if(G.seam !== null){
+    G.seam += d;
+    if(G.seam > H + 60){
+      G.biome = G.next; G.next = null; G.seam = null;
+      curTrackKey = TRACKS[G.biome].key;
+      $("#trackName").textContent = t(curTrackKey);
+    }
+  }
 
   /* traffic */
   for(let i=G.traffic.length-1;i>=0;i--){
@@ -1008,7 +1136,7 @@ function update(dt){
        Math.abs(t.y - playerY) < (carH + t.h)*0.44) crash();
   }
 
-  if(st === "running"){
+  if(st === "running" && TRAFFIC_ENABLED){
     breakWalls();
     /* pace spawns by how fast we are closing on traffic, so the gap the
        player actually sees stays readable at every speed */
@@ -1158,59 +1286,260 @@ function drawCar(x,y,w,h,p,tilt,isPlayer,boosting){
 }
 
 const ROOF = ["#22242A", "#1A1C21", "#2B2E35"];
+const ROCK = ["#B08A5E", "#9C7550", "#C4A277"];
 
-function drawSide(s){
+/* ---- side scenery: one silhouette per track ---- */
+function roofBlock(b, x0, bw){
+  ctx.fillStyle = ROOF[b.tone];
+  ctx.fillRect(x0, b.y, bw, b.h);
+  ctx.fillStyle = "rgba(255,255,255,0.07)"; ctx.fillRect(x0, b.y, bw, 3);
+  ctx.fillStyle = "rgba(0,0,0,0.35)";       ctx.fillRect(x0, b.y + b.h - 4, bw, 4);
+  ctx.fillStyle = "rgba(255,255,255,0.045)";
+  for(let v=0; v<3; v++){
+    const vy = b.y + 16 + v*(b.h-32)/3 + b.s*10;
+    if(vy > b.y+6 && vy < b.y+b.h-14) ctx.fillRect(x0+bw*0.18, vy, bw*0.28, 8);
+  }
+  const cx = x0 + bw/2;
+  if(b.tank && b.h > 110){
+    ctx.beginPath(); ctx.arc(cx + bw*0.18, b.y + b.h*0.62, Math.min(bw*0.16, 13), 0, 6.2832);
+    ctx.fillStyle = "#3A3D44"; ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,.4)"; ctx.lineWidth = 2; ctx.stroke();
+  }
+  if(b.extra && b.h > 150){
+    ctx.beginPath(); ctx.arc(cx, b.y + b.h*0.4, Math.min(bw*0.3, 20), 0, 6.2832);
+    ctx.strokeStyle = "rgba(226,27,34,0.75)"; ctx.lineWidth = 3; ctx.stroke();
+  }
+}
+
+function rockBlock(b, x0, bw){
+  const pad = bw*0.05, r = Math.min(bw*0.34, 26);
+  fillRR(x0+pad+3, b.y+9, bw-pad*2, b.h-14, r, "rgba(120,92,58,0.35)");
+  fillRR(x0+pad,   b.y,   bw-pad*2, b.h-10, r, ROCK[b.tone]);
+  fillRR(x0+pad+bw*0.10, b.y + b.h*0.10, (bw-pad*2)*0.52, (b.h-10)*0.38, r*0.7, "rgba(255,255,255,0.12)");
+  ctx.fillStyle = "rgba(0,0,0,0.16)";
+  for(let i=0;i<2;i++){
+    const yy = b.y + b.h*(0.42 + i*0.26) + b.s*10;
+    if(yy > b.y+8 && yy < b.y+b.h-16) ctx.fillRect(x0+pad+bw*0.16, yy, (bw-pad*2)*0.58, 3);
+  }
+  if(b.tank && b.h > 120){
+    ctx.beginPath(); ctx.arc(x0+bw*0.5, b.y+b.h*0.72, Math.min(bw*0.14, 9), 0, 6.2832);
+    ctx.fillStyle = "#8A6A46"; ctx.fill();
+  }
+}
+
+function starBlock(b, x0, bw){
+  for(let i=0;i<9;i++){
+    const f = (b.s*97.3 + i*37.77) % 1, g2 = (b.s*53.1 + i*61.31) % 1;
+    const x = x0 + 3 + f*(bw-6), y = b.y + g2*b.h;
+    if(y < -4 || y > H+4) continue;
+    ctx.beginPath(); ctx.arc(x, y, 0.7 + ((f*g2*7) % 1)*1.5, 0, 6.2832);
+    ctx.fillStyle = i % 4 === 0 ? "rgba(178,200,255,0.9)" : "rgba(255,255,255," + (0.32 + f*0.5).toFixed(2) + ")";
+    ctx.fill();
+  }
+}
+
+function drawSide(s, id){
   const arr = G.build[s];
   const x0 = s === 0 ? 0 : roadX + roadW + sideW;
   const bw = s === 0 ? roadX - sideW : W - x0;
   if(bw <= 2) return;
   for(let i=0;i<arr.length;i++){
     const b = arr[i];
-    if(b.y > H+10 || b.y + b.h < -10) continue;
-    ctx.fillStyle = ROOF[b.tone];
-    ctx.fillRect(x0, b.y, bw, b.h);
-    ctx.fillStyle = "rgba(255,255,255,0.07)";
-    ctx.fillRect(x0, b.y, bw, 3);
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
-    ctx.fillRect(x0, b.y + b.h - 4, bw, 4);
-    const cx = x0 + bw/2;
-    ctx.fillStyle = "rgba(255,255,255,0.045)";
-    for(let v=0; v<3; v++){
-      const vy = b.y + 16 + v*(b.h-32)/3 + b.s*10;
-      if(vy > b.y+6 && vy < b.y+b.h-14) ctx.fillRect(x0+bw*0.18, vy, bw*0.28, 8);
-    }
-    if(b.tank && b.h > 110){
-      ctx.beginPath();
-      ctx.arc(cx + bw*0.18, b.y + b.h*0.62, Math.min(bw*0.16, 13), 0, 6.2832);
-      ctx.fillStyle = "#3A3D44"; ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,.4)"; ctx.lineWidth = 2; ctx.stroke();
-    }
-    if(b.helipad && b.h > 150){
-      ctx.beginPath();
-      ctx.arc(cx, b.y + b.h*0.4, Math.min(bw*0.3, 20), 0, 6.2832);
-      ctx.strokeStyle = "rgba(226,27,34,0.75)"; ctx.lineWidth = 3; ctx.stroke();
+    if(b.b !== id || b.y > H+10 || b.y + b.h < -10) continue;
+    if(id === "city") roofBlock(b, x0, bw);
+    else if(id === "desert") rockBlock(b, x0, bw);
+    else starBlock(b, x0, bw);
+  }
+}
+
+/* ---- roadside props ---- */
+function drawProps(id){
+  if(id === "space") return;          /* the void stays empty apart from stars */
+  for(let i=0;i<G.props.length;i++){
+    const p = G.props[i];
+    if(p.b !== id || p.y < -30 || p.y > H+30) continue;
+    const cx = p.side === 0 ? roadX - sideW/2 : roadX + roadW + sideW/2;
+    const rad = Math.min(sideW*0.38, 11);
+    if(id === "city"){
+      if(p.kind === 0){
+        fillRR(cx-3, p.y-6, 6, 12, 3, "#E21B22");
+        fillRR(cx-5, p.y-2, 10, 3, 1.5, "#B3151B");
+      } else if(p.kind === 1){
+        ctx.beginPath(); ctx.arc(cx, p.y, rad, 0, 6.2832); ctx.fillStyle = "#5C6B58"; ctx.fill();
+        ctx.beginPath(); ctx.arc(cx-2, p.y-2, rad*0.45, 0, 6.2832); ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.fill();
+      } else {
+        ctx.beginPath(); ctx.arc(cx, p.y, rad*0.7, 0, 6.2832); ctx.fillStyle = "rgba(0,0,0,.22)"; ctx.fill();
+      }
+    } else if(id === "desert"){
+      if(p.kind === 0){                                   /* cactus */
+        fillRR(cx-3.5, p.y-10, 7, 20, 3.5, "#5F7A55");
+        fillRR(cx-9, p.y-3, 5.5, 10, 2.7, "#546D4B");
+        fillRR(cx+3.5, p.y-7, 5.5, 11, 2.7, "#546D4B");
+      } else if(p.kind === 1){                            /* shoulder marker */
+        fillRR(cx-2, p.y-7, 4, 14, 2, "#EDEEF1");
+        fillRR(cx-2, p.y-7, 4, 5, 2, "#E21B22");
+      } else {                                            /* scrub */
+        ctx.fillStyle = "rgba(120,96,60,0.5)";
+        for(let k=0;k<4;k++){
+          const a = p.s*6.28 + k*1.57;
+          ctx.beginPath(); ctx.arc(cx + Math.cos(a)*5, p.y + Math.sin(a)*5, 2.6, 0, 6.2832); ctx.fill();
+        }
+      }
     }
   }
 }
 
-function drawProps(){
-  for(let i=0;i<G.props.length;i++){
-    const p = G.props[i];
-    if(p.y < -30 || p.y > H+30) continue;
-    const cx = p.side === 0 ? roadX - sideW/2 : roadX + roadW + sideW/2;
-    if(p.kind === "hydrant"){
-      fillRR(cx-3, p.y-6, 6, 12, 3, "#E21B22");
-      fillRR(cx-5, p.y-2, 10, 3, 1.5, "#B3151B");
-    } else if(p.kind === "tree"){
-      ctx.beginPath(); ctx.arc(cx, p.y, Math.min(sideW*0.38, 11), 0, 6.2832);
-      ctx.fillStyle = "#5C6B58"; ctx.fill();
-      ctx.beginPath(); ctx.arc(cx-2, p.y-2, Math.min(sideW*0.2, 5), 0, 6.2832);
-      ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.fill();
-    } else {
-      ctx.beginPath(); ctx.arc(cx, p.y, Math.min(sideW*0.3, 8), 0, 6.2832);
-      ctx.fillStyle = "rgba(0,0,0,.22)"; ctx.fill();
+/* ---- road surface, markings, crossings ---- */
+function drawRoad(id, T){
+  ctx.fillStyle = T.road; ctx.fillRect(roadX, 0, roadW, H);
+  if(id === "space"){
+    const bh = 58, per = bh*RAINBOW.length, base = -(G.scroll % per) - per;
+    ctx.globalAlpha = 0.52;
+    for(let i=0; base + i*bh < H; i++){
+      const y = base + i*bh;
+      if(y + bh < 0) continue;
+      ctx.fillStyle = RAINBOW[i % RAINBOW.length];
+      ctx.fillRect(roadX, y, roadW, bh+1);
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "rgba(6,6,14,0.36)"; ctx.fillRect(roadX, 0, roadW, H);
+    return;
+  }
+  const gap = 190, off = G.scroll % gap;
+  ctx.fillStyle = id === "desert" ? "rgba(216,190,146,0.06)" : "rgba(255,255,255,0.028)";
+  for(let y = off - gap; y < H; y += gap) ctx.fillRect(roadX, y, roadW, 2);
+  if(id === "desert"){
+    const p = 330, o2 = G.scroll % p;
+    ctx.fillStyle = "rgba(214,188,144,0.14)";
+    for(let y = o2 - p; y < H; y += p){
+      ctx.fillRect(roadX, y, roadW*0.2, 58);
+      ctx.fillRect(roadX + roadW*0.74, y + 150, roadW*0.26, 42);
     }
   }
+}
+
+function drawEdges(id, T){
+  if(id === "space"){
+    ctx.fillStyle = "rgba(92,225,230,0.16)";
+    ctx.fillRect(roadX-10, 0, 10, H); ctx.fillRect(roadX+roadW, 0, 10, H);
+    ctx.fillStyle = T.shoulder;
+    ctx.fillRect(roadX-4, 0, 4, H); ctx.fillRect(roadX+roadW, 0, 4, H);
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.fillRect(roadX-2.5, 0, 1.5, H); ctx.fillRect(roadX+roadW+1, 0, 1.5, H);
+  } else {
+    ctx.fillStyle = T.shoulder;
+    ctx.fillRect(roadX-4, 0, 4, H); ctx.fillRect(roadX+roadW, 0, 4, H);
+  }
+}
+
+function drawMarks(id, T){
+  const dash = 46, gap = 44, per = dash+gap, d0 = G.scroll % per;
+  ctx.fillStyle = T.mark;
+  for(let l=1;l<3;l++){
+    const lx = roadX + laneW*l - 2.5;
+    for(let y = d0 - per; y < H; y += per) ctx.fillRect(lx, y, 5, dash);
+  }
+  if(id !== "space"){
+    ctx.fillStyle = T.edge;
+    ctx.fillRect(roadX + 7, 0, 3, H);
+    ctx.fillRect(roadX + roadW - 10, 0, 3, H);
+  }
+}
+
+/* only the city has anything crossing the road */
+function drawFeatures(id){
+  if(id !== "city") return;
+  for(let i=0;i<G.walks.length;i++){
+    const f = G.walks[i];
+    if(f.b !== id || f.y < -70 || f.y > H+10) continue;
+    ctx.fillStyle = "rgba(237,238,241,0.82)";
+    const n = 7, sw2 = roadW/(n*2-1);
+    for(let k=0;k<n;k++) ctx.fillRect(roadX + k*sw2*2, f.y, sw2, 46);
+  }
+}
+
+/* ---- the meeting point of two tracks ---- */
+function seamClip(above){
+  const p = G.seamPts;
+  if(!p.length) buildSeamShape();
+  const n = G.seamPts.length, y = G.seam, far = above ? -900 : H + 900;
+  ctx.beginPath();
+  ctx.moveTo(0, far);
+  ctx.lineTo(0, y + G.seamPts[0].o);
+  for(let i=0;i<n-1;i++){
+    const mx = (G.seamPts[i].x + G.seamPts[i+1].x)/2;
+    const my = y + (G.seamPts[i].o + G.seamPts[i+1].o)/2;
+    ctx.quadraticCurveTo(G.seamPts[i].x, y + G.seamPts[i].o, mx, my);
+  }
+  ctx.lineTo(W, y + G.seamPts[n-1].o);
+  ctx.lineTo(W, far);
+  ctx.closePath();
+  ctx.clip();
+}
+
+function drawGroundLayer(id, mode){
+  ctx.save();
+  if(mode) seamClip(mode === "above");
+  ctx.fillStyle = TRACKS[id].ground;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+}
+
+function drawWorldLayer(id, mode){
+  const T = TRACKS[id];
+  ctx.save();
+  if(mode) seamClip(mode === "above");
+  drawSide(0, id); drawSide(1, id);
+  drawRoad(id, T);
+  drawEdges(id, T);
+  drawMarks(id, T);
+  drawFeatures(id);
+  drawProps(id);
+  ctx.restore();
+}
+
+function blob(x, y, r, s){
+  ctx.beginPath();
+  for(let i=0;i<7;i++){
+    const a = (i/7)*6.2832;
+    const rr2 = r*(0.6 + ((s*97.1 + i*29.37) % 1)*0.66);
+    const px = x + Math.cos(a)*rr2, py = y + Math.sin(a)*rr2*0.7;
+    if(i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* each ground creeps into the other before giving way completely */
+function drawBlend(){
+  const oldG = TRACKS[G.biome].ground, newG = TRACKS[G.next].ground;
+  for(let i=0;i<G.seamBits.length;i++){
+    const b = G.seamBits[i];
+    const y = G.seam + b.dy;
+    if(y < -50 || y > H+50) continue;
+    const f = 1 - Math.abs(b.dy)/190;
+    if(f <= 0.02) continue;
+    ctx.globalAlpha = 0.1 + f*0.85;
+    ctx.fillStyle = b.dy < 0 ? oldG : newG;
+    blob(b.x, y, b.r*(0.4 + f*0.8), b.s);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function withA(hex, a){
+  const n = parseInt(hex.slice(1), 16);
+  return "rgba(" + ((n>>16)&255) + "," + ((n>>8)&255) + "," + (n&255) + "," + a + ")";
+}
+
+/* the driving surface changes over a stretch rather than at a step */
+function drawRoadFade(){
+  const oldR = TRACKS[G.biome].road, newR = TRACKS[G.next].road, y = G.seam, d = 84;
+  const down = ctx.createLinearGradient(0, y, 0, y + d);
+  down.addColorStop(0, withA(newR, 0.5)); down.addColorStop(1, withA(newR, 0));
+  ctx.fillStyle = down; ctx.fillRect(roadX, y, roadW, d);
+  const up = ctx.createLinearGradient(0, y, 0, y - d);
+  up.addColorStop(0, withA(oldR, 0.5)); up.addColorStop(1, withA(oldR, 0));
+  ctx.fillStyle = up; ctx.fillRect(roadX, y - d, roadW, d);
 }
 
 function render(){
@@ -1219,62 +1548,28 @@ function render(){
     ctx.translate(rand(-G.shake, G.shake)*0.5, rand(-G.shake, G.shake)*0.5);
   }
 
-  /* pavement base */
-  ctx.fillStyle = "#C9CCD3";
-  ctx.fillRect(0, 0, W, H);
-
-  drawSide(0); drawSide(1);
-
-  /* curbs */
-  ctx.fillStyle = "#EDEEF1";
-  ctx.fillRect(roadX - 4, 0, 4, H);
-  ctx.fillRect(roadX + roadW, 0, 4, H);
-
-  /* asphalt */
-  ctx.fillStyle = "#16171B";
-  ctx.fillRect(roadX, 0, roadW, H);
-
-  /* seams */
-  const seam = 190, off = G.scroll % seam;
-  ctx.fillStyle = "rgba(255,255,255,0.028)";
-  for(let y = off - seam; y < H; y += seam) ctx.fillRect(roadX, y, roadW, 2);
-
-  /* crosswalks */
-  for(let i=0;i<G.walks.length;i++){
-    const y = G.walks[i];
-    if(y < -60 || y > H+10) continue;
-    ctx.fillStyle = "rgba(237,238,241,0.82)";
-    const n = 7, sw2 = roadW/(n*2-1);
-    for(let k=0;k<n;k++) ctx.fillRect(roadX + k*sw2*2, y, sw2, 46);
+  if(G.seam === null){
+    drawGroundLayer(G.biome, null);
+    drawWorldLayer(G.biome, null);
+  } else {
+    drawGroundLayer(G.next, "above");
+    drawGroundLayer(G.biome, "below");
+    drawBlend();
+    drawWorldLayer(G.next, "above");
+    drawWorldLayer(G.biome, "below");
+    drawRoadFade();
   }
 
-  /* lane dashes */
-  const dash = 46, gap = 44, per = dash+gap, d0 = G.scroll % per;
-  ctx.fillStyle = "rgba(237,238,241,0.86)";
-  for(let l=1;l<3;l++){
-    const lx = roadX + laneW*l - 2.5;
-    for(let y = d0 - per; y < H; y += per) ctx.fillRect(lx, y, 5, dash);
-  }
-  /* edge lines */
-  ctx.fillStyle = "rgba(237,238,241,0.5)";
-  ctx.fillRect(roadX + 7, 0, 3, H);
-  ctx.fillRect(roadX + roadW - 10, 0, 3, H);
-
-  drawProps();
-
-  /* traffic */
   for(let i=0;i<G.traffic.length;i++){
-    const t = G.traffic[i];
-    if(t.y < -t.h*1.5 || t.y > H+t.h) continue;
-    drawCar(t.x, t.y, t.w, t.h, t.paint, 0, false, false);
+    const t2 = G.traffic[i];
+    if(t2.y < -t2.h*1.5 || t2.y > H+t2.h) continue;
+    drawCar(t2.x, t2.y, t2.w, t2.h, t2.paint, 0, false, false);
   }
 
-  /* player */
   if(G.state !== "idle"){
     drawCar(G.x, playerY, carW, carH, {body:"#E21B22", dark:"#101116", glass:"#3B404A"}, G.tilt, true, G.boosting);
   }
 
-  /* speed streaks */
   const sr = clamp((G.speed-420)/700, 0, 1);
   if(sr > 0.02){
     ctx.strokeStyle = "rgba(255,255,255," + (0.05 + sr*0.16).toFixed(3) + ")";
@@ -1298,6 +1593,8 @@ function paintHUD(force){
   const f = $("#boostFill");
   f.style.width = (G.charge*100).toFixed(1) + "%";
   $("#boostWrap").classList.toggle("full", G.charge > 0.98);
+  $("#trackFill").style.width = (clamp(G.trackT/TRACK_SECONDS, 0, 1)*100).toFixed(1) + "%";
+  $("#trackBar").classList.toggle("soon", G.trackT < 6);
 }
 
 /* ---------------- loop ------------------------------------------- */
