@@ -321,6 +321,8 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   color:rgba(255,255,255,.7);text-shadow:0 1px 8px rgba(0,0,0,.85);
 }
 #ultPct.ready{animation:ultPulse 1.05s ease-in-out infinite}
+#ultPct.gain{animation:ultGain .5s ease}
+@keyframes ultGain{0%{transform:scale(1)}35%{transform:scale(1.35);color:#fff}100%{transform:scale(1)}}
 @keyframes ultPulse{0%,100%{opacity:1}50%{opacity:.45}}
 
 /* ============================================================
@@ -1254,7 +1256,7 @@ const G = {
   traps:[], fx:[], trapGap:0, nextTrap:600,
   tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0,
   car:"redd", ult:0, ultOn:false, ultKey:false, ultArmed:true,
-  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9,
+  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9, dodgeFlash:0,
   mode:"endless", diff:"medium",
   orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
   frozenT:0, orderedT:0, bloomT:0, cleanseT:0, petals:[], freezeT:0, bloomOwner:null, effLog:[],
@@ -2003,7 +2005,7 @@ function startRace(){
   G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.bumpCD = 0; G.ultFast = false;
   G.frozenT = 0; G.orderedT = 0; G.bloomT = 0; G.cleanseT = 0; G.petals = [];
   G.freezeOwner = null; G.sirenOwner = null; G.effLog = [];
-  G.prevLane = -1; G.laneT = 9;
+  G.prevLane = -1; G.laneT = 9; G.dodgeFlash = 0;
   G.raceT = 0; G.finishAt = 0; G.finished = null; G.results = [];
   G.tracksLeft = -1;
   $("#ovTitle").textContent = t("over");
@@ -2580,6 +2582,7 @@ function update(dt){
 
   if(G.shake > 0) G.shake = Math.max(0, G.shake - dt*38);
   if(G.stepFlash > 0) G.stepFlash = Math.max(0, G.stepFlash - dt);
+  if(G.dodgeFlash > 0) G.dodgeFlash = Math.max(0, G.dodgeFlash - dt);
 }
 
 const TRAFFIC_PAINT = [
@@ -2709,12 +2712,11 @@ function dodgeCheck(o, box, bit, who, prevLane, since){
   if(o.hit & bit) return;                        /* you drove through it, not round it */
   const half = o.kind === "puddle" ? o.rx : (o.kind === "meteor" ? o.r : o.r);
   const lane = clamp(Math.floor((o.x - roadX)/laneW), 0, 2);
-  const squeeze = Math.abs(o.x - box.x) < box.hw + half + carW*0.4;
+  const squeeze = Math.abs(o.x - box.x) < box.hw + half + carW*0.12;
   const swerved = prevLane >= 0 && lane === prevLane && since < 0.9;
   if(squeeze || swerved){
     ultDelta(who, ULT_ON_DODGE);
-    for(let i=0;i<6;i++)
-      addFx(box.x, box.y - carH*0.3, rand(-60,60), rand(-120,-30), .35, 2.5, "#FFFFFF");
+    if(who === "me") G.dodgeFlash = 0.5;         /* the meter pulses; no splash */
   }
 }
 
@@ -2974,17 +2976,8 @@ function drawGT(w, h, p, isPlayer, boosting){
   fillRR(-w/2-ww*0.30,  h*0.13, ww, wh, ww*0.4, "#0C0D10");
   fillRR( w/2-ww*0.70,  h*0.13, ww, wh, ww*0.4, "#0C0D10");
 
-  ctx.beginPath();                                   /* tapered nose, wide hips */
-  ctx.moveTo(0, -h*0.52);
-  ctx.quadraticCurveTo( w*0.34, -h*0.48,  w*0.40, -h*0.18);
-  ctx.lineTo( w*0.48, h*0.30);
-  ctx.quadraticCurveTo( w*0.48, h*0.52,  w*0.30, h*0.52);
-  ctx.lineTo(-w*0.30, h*0.52);
-  ctx.quadraticCurveTo(-w*0.48, h*0.52, -w*0.48, h*0.30);
-  ctx.lineTo(-w*0.40, -h*0.18);
-  ctx.quadraticCurveTo(-w*0.34, -h*0.48, 0, -h*0.52);
-  ctx.closePath();
-  ctx.fillStyle = p.body; ctx.fill();
+  fillRR(-w/2, -h/2, w, h, w*0.26, p.body);
+  rr(-w/2, -h/2, w, h, w*0.26);
   ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = Math.max(1, w*0.03); ctx.stroke();
 
   fillRR(-w*0.42, -h/2+h*0.012, w*0.84, h*0.062, w*0.08, p.dark);
@@ -4183,6 +4176,7 @@ function paintHUD(force){
   up.textContent = Math.round(G.ult*100) + "%";
   up.style.color = ready ? CARS[G.car].accent : "rgba(255,255,255,.7)";
   up.classList.toggle("ready", G.ult >= 1 && !G.ultOn);
+  up.classList.toggle("gain", G.dodgeFlash > 0);
 }
 
 /* ---------------- loop ------------------------------------------- */
