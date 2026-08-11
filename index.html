@@ -271,6 +271,33 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 .mode-desc{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
 .soon{margin:14px 2px 0;font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono);letter-spacing:.06em}
 
+.car-opt{
+  appearance:none;border:0;cursor:pointer;width:100%;text-align:left;
+  background:var(--gray-100);border-radius:var(--r-md);
+  padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;
+  transition:background .12s ease,transform .09s ease;
+}
+.car-opt:active{background:var(--red-press);transform:scale(.985)}
+.car-opt:active .mode-name,.car-opt:active .mode-desc,.car-opt:active .ult-tag{color:#fff}
+.car-opt:active .car-art{background:#fff}
+.car-opt:focus-visible{outline:3px solid var(--black);outline-offset:2px}
+.car-art{
+  width:56px;height:70px;flex:0 0 auto;border-radius:var(--r-sm);
+  background:var(--black);display:flex;align-items:center;justify-content:center;
+}
+.car-art svg{width:34px;height:60px;display:block}
+.ult-tag{
+  display:block;font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--red);margin:4px 0 3px;
+}
+.car-opt.phantom .ult-tag{color:#1E5FA8}
+#ultPct{
+  display:block;margin-top:9px;font-family:var(--mono);font-weight:600;font-size:15px;
+  color:rgba(255,255,255,.7);text-shadow:0 1px 8px rgba(0,0,0,.85);
+}
+#ultPct.ready{animation:ultPulse 1.05s ease-in-out infinite}
+@keyframes ultPulse{0%,100%{opacity:1}50%{opacity:.45}}
+
 /* ============================================================
    5. Race
    ============================================================ */
@@ -286,20 +313,16 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 .readout{text-align:right}
 .readout .k{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:#8D919A;text-transform:uppercase}
 .readout .v{font-family:var(--mono);font-weight:600;font-size:34px;color:#fff;line-height:1;margin-top:3px;text-shadow:0 2px 10px rgba(0,0,0,.6)}
-.readout .b{font-family:var(--mono);font-size:11px;color:#8D919A;margin-top:5px;letter-spacing:.1em}
-#gauges{position:absolute;left:16px;top:calc(66px + var(--safe-t));width:124px;pointer-events:none}
-.gauge{margin-bottom:11px}
-.gauge span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.85);margin-bottom:6px}
-.gauge .bar{height:3px;background:rgba(255,255,255,.22);border-radius:2px;overflow:hidden}
-.gauge i{display:block;height:100%;width:100%;border-radius:2px;background:var(--red)}
-#trackBar.soon i{background:#fff}
-#speedBar{transform-origin:left center}
-#speedBar.up i{background:#fff}
-#speedBar.up{animation:gaugeUp .7s cubic-bezier(.2,.8,.25,1)}
-@keyframes gaugeUp{0%,100%{transform:scaleY(1)}30%{transform:scaleY(2.6)}}
+.readout .b{font-family:var(--mono);font-size:11px;color:#8D919A;margin-top:7px;letter-spacing:.1em}
+.readout .pos{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:6px;font-family:var(--mono)}
+.readout .pos .p{font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+.readout .pos .n{font-size:14px;font-weight:600;min-width:52px;text-align:right}
+#gauges{position:absolute;left:16px;top:calc(66px + var(--safe-t));pointer-events:none}
+#trackName{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.85)}
 #boostWrap{position:absolute;left:16px;right:16px;bottom:calc(14px + var(--safe-b));height:4px;background:rgba(255,255,255,.16);border-radius:3px;overflow:hidden}
 #boostFill{height:100%;width:100%;background:var(--red);border-radius:3px;transition:background .2s ease}
 #boostWrap.full #boostFill{background:var(--red-press)}
+#boostWrap.locked #boostFill{background:rgba(255,255,255,.34)}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 
 /* countdown gantry */
@@ -464,6 +487,72 @@ body.desk .keys{display:flex}
   </section>
 
   <!-- ============================================================
+       3b. CAR SELECT
+       ============================================================ -->
+  <section id="cars" class="screen">
+    <div id="modeCard">
+      <div class="sheet-head">
+        <h2 class="display" data-i18n="chooseCar">Choose your car</h2>
+        <button class="icon-btn" id="btnCloseCars" aria-label="Back">
+          <svg class="ic" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>
+        </button>
+      </div>
+
+      <button class="car-opt" id="carRedd">
+        <span class="car-art">
+          <svg viewBox="0 0 76 132" aria-hidden="true">
+            <g fill="#0C0D10"><rect x="0" y="26" width="13" height="22" rx="5"/><rect x="63" y="26" width="13" height="22" rx="5"/><rect x="0" y="86" width="13" height="24" rx="5"/><rect x="63" y="86" width="13" height="24" rx="5"/></g>
+            <rect x="7" y="4" width="62" height="124" rx="17" fill="#E21B22"/>
+            <rect x="12" y="6" width="52" height="12" rx="6" fill="#101116"/>
+            <rect x="16" y="9" width="10" height="5" rx="2.5" fill="#FFE9C4"/><rect x="50" y="9" width="10" height="5" rx="2.5" fill="#FFE9C4"/>
+            <rect x="19" y="30" width="38" height="26" rx="9" fill="#101116"/>
+            <rect x="23" y="34" width="30" height="17" rx="6" fill="#31343B"/>
+            <rect x="19" y="62" width="38" height="30" rx="9" fill="#101116"/>
+            <rect x="20" y="16" width="8" height="24" rx="2" fill="#101116"/><rect x="48" y="16" width="8" height="24" rx="2" fill="#101116"/>
+            <rect x="6" y="112" width="64" height="10" rx="5" fill="#101116"/>
+            <rect x="14" y="114" width="12" height="5" rx="2.5" fill="#FF5157"/><rect x="50" y="114" width="12" height="5" rx="2.5" fill="#FF5157"/>
+          </svg>
+        </span>
+        <span style="flex:1">
+          <span class="mode-name" data-i18n="redd">Redd</span>
+          <span class="ult-tag" data-i18n="ultimate">Ultimate</span>
+          <span class="mode-desc" data-i18n="reddUlt">Bursts into flame.</span>
+        </span>
+      </button>
+
+      <button class="car-opt phantom" id="carPhantom">
+        <span class="car-art">
+          <svg viewBox="0 0 76 132" aria-hidden="true">
+            <g fill="#0C0D10"><rect x="1" y="26" width="12" height="21" rx="5"/><rect x="63" y="26" width="12" height="21" rx="5"/><rect x="1" y="86" width="12" height="21" rx="5"/><rect x="63" y="86" width="12" height="21" rx="5"/></g>
+            <path d="M17 4 Q38 -3 59 4 Q68 8 69 22 L70 84 Q70 124 59 128 L17 128 Q6 124 6 84 L7 22 Q8 8 17 4 Z" fill="#EDF1F6"/>
+            <path d="M38 1 L64 45 L12 45 Z" fill="#1E5FA8"/>
+            <rect x="5" y="52" width="7" height="34" fill="#1E5FA8"/><rect x="64" y="52" width="7" height="34" fill="#1E5FA8"/>
+            <rect x="27" y="4" width="7" height="124" fill="#1E5FA8"/><rect x="42" y="4" width="7" height="124" fill="#1E5FA8"/>
+            <rect x="14" y="14" width="15" height="4" rx="2" fill="#8FE3FF"/><rect x="47" y="14" width="15" height="4" rx="2" fill="#8FE3FF"/>
+            <rect x="14" y="46" width="48" height="42" rx="12" fill="#16305A"/>
+            <path d="M18 58 H58 L54 50 H22 Z" fill="#7FB3E8"/>
+            <path d="M20 76 H56 L53 84 H23 Z" fill="#7FB3E8"/>
+            <rect x="5" y="106" width="66" height="9" rx="4" fill="#1E5FA8"/>
+            <rect x="12" y="108" width="16" height="4" rx="2" fill="#8FE3FF"/><rect x="48" y="108" width="16" height="4" rx="2" fill="#8FE3FF"/>
+            <circle cx="27" cy="123" r="5" fill="#16305A"/><circle cx="49" cy="123" r="5" fill="#16305A"/>
+          </svg>
+        </span>
+        <span style="flex:1">
+          <span class="mode-name" data-i18n="phantom">Phantom</span>
+          <span class="ult-tag" data-i18n="ultimate">Ultimate</span>
+          <span class="mode-desc" data-i18n="phantomUlt">Turns to vapour.</span>
+        </span>
+      </button>
+
+      <button class="btn btn-ghost" id="carRandom">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h5l6 10h5"/><path d="M4 17h5l2.2-3.6"/><path d="M16.5 4.5 20 7l-3.5 2.5"/><path d="M16.5 14.5 20 17l-3.5 2.5"/></svg>
+        <span data-i18n="randomCar">Surprise me</span>
+      </button>
+      <p class="soon" id="ultHint" data-i18n="holdTwo">Hold two fingers to unleash it</p>
+    </div>
+  </section>
+
+  <!-- ============================================================
        4. RACE
        ============================================================ -->
   <section id="race" class="screen">
@@ -476,13 +565,12 @@ body.desk .keys{display:flex}
         <div class="readout">
           <div class="k" data-i18n="distance">Distance</div>
           <div class="v"><span id="hudDist">0</span></div>
+          <div class="pos" id="posRow1"><span class="p" id="pos1">1st</span><span class="n" id="pos1n">0</span></div>
+          <div class="pos" id="posRow2"><span class="p" id="pos2">2nd</span><span class="n" id="pos2n">0</span></div>
           <div class="b"><span data-i18n="bestShort">Best</span> <span id="hudBest">0</span></div>
         </div>
       </div>
-      <div id="gauges">
-        <div class="gauge"><span id="trackName">City</span><div class="bar" id="trackBar"><i id="trackFill"></i></div></div>
-        <div class="gauge"><div class="bar" id="speedBar"><i id="speedFill"></i></div></div>
-      </div>
+      <div id="gauges"><span id="trackName">City</span><span id="ultPct">0%</span></div>
       <div id="boostWrap"><div id="boostFill"></div></div>
     </div>
     <div id="flash"></div>
@@ -611,7 +699,21 @@ const STR = {
                  fr:"Vous pouvez la changer \u00e0 tout moment depuis l'accueil."},
   trackCity:    {en:"City",                        fr:"Ville"},
   trackDesert:  {en:"Desert",                      fr:"D\u00e9sert"},
-  trackSpace:   {en:"Rainbow space",               fr:"Espace arc-en-ciel"}
+  trackSpace:   {en:"Rainbow space",               fr:"Espace arc-en-ciel"},
+  chooseCar:    {en:"Choose your car",             fr:"Choisissez votre voiture"},
+  ultimate:     {en:"Ultimate",                    fr:"Ultime"},
+  redd:         {en:"Redd",                        fr:"Redd"},
+  reddUlt:      {en:"Bursts into flame. Everything it touches is blown apart.",
+                 fr:"S'embrase. Tout ce qu'elle touche vole en \u00e9clats."},
+  phantom:      {en:"Phantom",                     fr:"Phantom"},
+  phantomUlt:   {en:"Turns to vapour and slips straight through every hazard.",
+                 fr:"Se change en vapeur et traverse tous les obstacles."},
+  randomCar:    {en:"Surprise me",                 fr:"Au hasard"},
+  place1:       {en:"1st",                         fr:"1er"},
+  place2:       {en:"2nd",                         fr:"2e"},
+  holdTwo:      {en:"Hold two fingers to unleash it",
+                 fr:"Maintenez deux doigts pour la d\u00e9clencher"},
+  holdKey:      {en:"Hold Shift to unleash it",    fr:"Maintenez Maj pour la d\u00e9clencher"}
 };
 let lang = store.get("redline.lang") || null;
 let curTrackKey = "trackCity";
@@ -625,6 +727,7 @@ function applyLang(){
     if(s) el.textContent = s[L];
   });
   $("#trackName").textContent = STR[curTrackKey][L];
+  $("#ultHint").textContent = STR[DESKTOP ? "holdKey" : "holdTwo"][L];
 }
 
 /* ---------------- tiny helpers ----------------------------------- */
@@ -635,8 +738,9 @@ const rand  = function(a,b){ return a+Math.random()*(b-a); };
 const randi = function(a,b){ return Math.floor(rand(a,b+1)); };
 
 function show(id){
-  $("#home").classList.toggle("on", id === "home" || id === "modes");
+  $("#home").classList.toggle("on", id === "home" || id === "modes" || id === "cars");
   $("#modes").classList.toggle("on", id === "modes");
+  $("#cars").classList.toggle("on", id === "cars");
   $("#race").classList.toggle("on", id === "race");
 }
 
@@ -709,7 +813,8 @@ if(SPLASH_IMAGE){
   const holder = $("#splashArt");
   img.onload = function(){ holder.innerHTML = ""; holder.appendChild(img); };
 }
-if(window.matchMedia && window.matchMedia("(hover:hover) and (pointer:fine)").matches) document.body.classList.add("desk");
+const DESKTOP = !!(window.matchMedia && window.matchMedia("(hover:hover) and (pointer:fine)").matches);
+if(DESKTOP) document.body.classList.add("desk");
 applyLang();
 paintBest();
 setSound(soundOn);
@@ -736,7 +841,13 @@ $("#btnSound").addEventListener("click", function(){ setSound(!soundOn); if(soun
 $("#btnStart").addEventListener("click", function(){ audio(); show("modes"); });
 $("#btnCloseModes").addEventListener("click", function(){ show("home"); });
 $("#modes").addEventListener("click", function(e){ if(e.target === $("#modes")) show("home"); });
-$("#modeEndless").addEventListener("click", function(){ show("race"); startRace(); });
+$("#modeEndless").addEventListener("click", function(){ show("cars"); });
+$("#btnCloseCars").addEventListener("click", function(){ show("modes"); });
+$("#cars").addEventListener("click", function(e){ if(e.target === $("#cars")) show("modes"); });
+function pickCar(id){ G.car = id; show("race"); startRace(); }
+$("#carRedd").addEventListener("click", function(){ pickCar("redd"); });
+$("#carPhantom").addEventListener("click", function(){ pickCar("phantom"); });
+$("#carRandom").addEventListener("click", function(){ pickCar(CAR_IDS[Math.random() < 0.5 ? 0 : 1]); });
 $("#btnPause").addEventListener("click", function(){ pause(true); });
 $("#btnResume").addEventListener("click", function(){ pause(false); });
 $("#btnQuit").addEventListener("click", function(){ leave(); });
@@ -755,10 +866,12 @@ const G = {
   scroll:0, speed:0, dist:0, meters:0,
   charge:1, boosting:false, keyBoost:false, ptrBoost:false,
   traffic:[], build:[[],[]], props:[], walks:[],
-  shake:0, timers:[], relGap:0, nextGap:420,
+  shake:0, timers:[], relGap:0, nextGap:420, swipeLock:0,
   biome:"city", next:null, seam:null, trackT:60, seamPts:[], seamBits:[],
   traps:[], fx:[], trapGap:0, nextTrap:600,
-  tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0
+  tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0,
+  car:"redd", ult:0, ultOn:false, twoHold:0, ultKey:false,
+  boostLock:false, rival:null
 };
 
 function layout(){
@@ -792,11 +905,13 @@ window.addEventListener("orientationchange", function(){ setTimeout(resize, 250)
 /* ---------------- tracks ----------------------------------------- */
 const TRACK_SECONDS = 60;
 const SPEED_SECONDS = 30;                 /* the road speeds up on this clock */
-const BASE_SPEED = 360, SPEED_STEP = 58, MAX_TIER = 12;
+const BASE_SPEED = 360;                   /* 1.00x */
+const MULT_STEP = 0.05, MAX_MULT = 2.00;  /* +5% every SPEED_SECONDS, up to double */
+const MAX_TIER = Math.round((MAX_MULT - 1)/MULT_STEP);
 const BLIND_TIME = 2.6;                   /* puddle: how long the view stays fouled */
 const DEAD_TIME = 3, IMMUNE_TIME = 2;     /* destroy: wreck, then respawn untouchable */
 const SLOW_TIME = 1.7;                    /* tumbleweed: how long it drags you down */
-const FALL_LEAD = 430, METEOR_ALT = 215;  /* meteor: the approach it falls through */
+const FALL_LEAD = 700, METEOR_ALT = 300;  /* meteor: the approach it falls through */
 const TRACKS = {
   city:   { key:"trackCity",   ground:"#C9CCD3", shoulder:"#EDEEF1", road:"#16171B",
             mark:"rgba(237,238,241,0.86)", edge:"rgba(237,238,241,0.5)", accent:"#E21B22" },
@@ -886,8 +1001,195 @@ function switchTrack(){
   for(let i=0;i<G.props.length;i++) if(G.props[i].y < G.seam) G.props[i].b = G.next;
   for(let i=0;i<G.walks.length;i++) if(G.walks[i].y < G.seam) G.walks[i].b = G.next;
   G.trackT = TRACK_SECONDS;
-  tone(760, .12, "sine", .1);
-  later(function(){ tone(1140, .16, "sine", .1); }, 140);
+}
+
+/* ================================================================
+   RIVAL  -  a second racer, under exactly the same rules as you
+   ================================================================ */
+function spawnRival(){
+  const other = G.car === CAR_IDS[0] ? CAR_IDS[1] : CAR_IDS[0];
+  const lane = Math.random() < 0.5 ? 0 : 2;          /* alongside, never on top of you */
+  G.rival = {
+    car:other, lane:lane, x:laneCX(lane), y:playerY, tilt:0,
+    abs:0, target:1, paceT:0, changeT:1.2,
+    slow:0, blind:0, dead:0, immune:0,
+    ult:0, ultOn:false, ultWait:rand(.5, 3),
+    charge:1, boostLock:false, boosting:false
+  };
+}
+function rivalMeters(){
+  return G.rival ? G.meters + (playerY - G.rival.y)*0.075 : 0;
+}
+function rivalSafe(){
+  const R = G.rival;
+  return !R || R.dead > 0 || R.immune > 0 || R.ultOn;
+}
+function playerSafe(){
+  return G.dead > 0 || G.immune > 0 || G.ultOn;
+}
+/* is the player alongside, in this lane, and solid? */
+function playerIn(lane, R){
+  return G.dead <= 0 && G.lane === lane && Math.abs(R.y - playerY) < carH*0.95;
+}
+
+/* lanes the rival should stay out of, hazards only */
+function laneRisk(R){
+  const risk = [0,0,0];
+  for(let i=0;i<G.traps.length;i++){
+    const o = G.traps[i];
+    if(o.kind === "meteor" && o.phase !== 0) continue;
+    const ahead = R.y - o.y;
+    if(ahead < -40 || ahead > 360) continue;
+    risk[clamp(Math.floor((o.x - roadX)/laneW), 0, 2)] = 1;
+  }
+  for(let i=0;i<G.traffic.length;i++){
+    const t2 = G.traffic[i], ahead = R.y - t2.y;
+    if(ahead > -60 && ahead < 340) risk[t2.lane] = 1;
+  }
+  return risk;
+}
+
+/* the rival taking a lane - shouldering you aside if you are in it */
+function rivalLaneTo(R, lane){
+  const dir = lane > R.lane ? 1 : -1;
+  if(playerIn(lane, R)){
+    if(playerSafe()){ R.slow = Math.max(R.slow, 1.0); }
+    else {
+      const shoved = G.lane + dir;
+      sideSwipe(R);
+      if(shoved < 0 || shoved > 2) destroyCar();     /* nowhere for you to go */
+      else { G.lane = shoved; G.slowT = Math.max(G.slowT, 1.2); }
+    }
+  }
+  R.lane = lane;
+  R.changeT = 0.7;
+}
+
+function updateRival(dt, st){
+  const R = G.rival;
+  if(!R || st !== "running") return;
+
+  if(R.slow > 0)   R.slow   = Math.max(0, R.slow - dt);
+  if(R.blind > 0)  R.blind  = Math.max(0, R.blind - dt);
+  if(R.immune > 0) R.immune = Math.max(0, R.immune - dt);
+  if(R.changeT > 0) R.changeT -= dt;
+
+  if(R.dead > 0){
+    R.dead -= dt;
+    if(R.dead <= 0){ R.dead = 0; R.immune = IMMUNE_TIME; }
+    R.abs = 0;                              /* wreck sits still while you race on */
+    R.y += G.speed*dt;
+    return;
+  }
+
+  /* ultimate, charged and spent on the same terms as yours */
+  if(R.ultOn){
+    R.ult -= dt/ULT_TIME;
+    if(R.ult <= 0){ R.ult = 0; R.ultOn = false; }
+  } else {
+    R.ult = Math.min(1, R.ult + dt/ULT_CHARGE);
+    if(R.ult >= 1){
+      R.ultWait -= dt;
+      if(R.ultWait <= 0){ R.ultOn = true; R.ultWait = rand(.5, 3); ultBurst(R.car, R.x, R.y); }
+    }
+  }
+
+  /* boost, with the same empty-means-locked rule */
+  const behind = R.y > playerY;
+  if(R.boosting){
+    R.charge = clamp(R.charge - dt*0.4, 0, 1);
+    if(R.charge <= 0.001){ R.charge = 0; R.boostLock = true; R.boosting = false; }
+  } else {
+    R.charge = clamp(R.charge + dt*0.14, 0, 1);
+    if(R.charge >= 1) R.boostLock = false;
+    if(!R.boostLock && R.charge > 0.35 && behind && !laneRisk(R)[R.lane] && Math.random() < 0.02)
+      R.boosting = true;
+  }
+  if(R.boosting && (!behind || R.charge <= 0)) R.boosting = false;
+
+  /* pace wanders, pulled back toward you so the race stays a contest */
+  R.paceT -= dt;
+  if(R.paceT <= 0){
+    R.paceT = rand(2.2, 4.5);
+    const lead = (playerY - R.y)/H;
+    const k = lead < 0 ? 1.4 : 0.5;
+    const far = Math.abs(lead) > 0.5;
+    R.target = clamp(1.0 - lead*k + rand(-0.12, 0.12), far ? 0.5 : 0.82, far ? 1.6 : 1.24);
+  }
+
+  let want = BASE_SPEED*speedMult()*R.target;
+  if(R.ultOn) want *= ULT_SPEED;
+  else if(R.slow > 0) want *= 0.5;
+  if(R.boosting) want *= 1.5;
+  R.abs = lerp(R.abs, want, 1 - Math.pow(0.02, dt));
+  R.y += (G.speed - R.abs)*dt;              /* both cars move under their own steam */
+
+  if(G.dead <= 0 && R.dead <= 0) R.y = clamp(R.y, H*0.08, H*0.90);
+  else R.y = clamp(R.y, -2600, H + 2600);
+
+  /* steering */
+  if(R.changeT <= 0 && R.blind <= 0){
+    const risk = laneRisk(R);
+    const opts = [R.lane-1, R.lane+1].filter(function(l){ return l >= 0 && l <= 2; });
+    const clean = opts.filter(function(l){ return !risk[l] && !playerIn(l, R); });
+    const contest = opts.filter(function(l){ return !risk[l] && playerIn(l, R); });
+    if(risk[R.lane]){
+      if(clean.length) rivalLaneTo(R, clean[randi(0, clean.length-1)]);
+      else if(contest.length) rivalLaneTo(R, contest[0]);
+    } else if(clean.length && Math.random() < 0.015){
+      rivalLaneTo(R, clean[randi(0, clean.length-1)]);
+    } else if(contest.length && R.y > playerY && Math.random() < 0.008){
+      rivalLaneTo(R, contest[0]);           /* muscling past from behind */
+    }
+  }
+  const tx = laneCX(R.lane);
+  const nx = lerp(R.x, tx, 1 - Math.pow(0.00006, dt));
+  R.tilt = clamp((nx - R.x)/dt/2600, -0.28, 0.28) || 0;
+  R.x = nx;
+
+  /* hazards treat the rival exactly as they treat you */
+  const smash = R.ultOn && CARS[R.car].power === "burn";
+  if(R.immune <= 0 || smash){
+    const rc = { x:R.x, y:R.y, hw:carW*0.40, hh:carH*0.42 };
+    for(let i=G.traps.length-1;i>=0;i--){
+      const o = G.traps[i];
+      if(o.kind === "meteor") continue;                 /* dealt with when it lands */
+      const p = nearestOnCar(rc, o.x, o.y);
+      const dx = p.x - o.x, dy = p.y - o.y;
+      const hit = o.kind === "puddle"
+        ? (dx/(o.rx*0.92))*(dx/(o.rx*0.92)) + (dy/(o.ry*0.92))*(dy/(o.ry*0.92)) <= 1
+        : dx*dx + dy*dy <= o.r*o.r*0.86;
+      if(!hit) continue;
+      if(smash){ smashFx(o.x, o.y, (o.rx || o.r)*1.1, "#D8C49A", R.car); G.traps.splice(i,1); continue; }
+      if(R.ultOn) continue;                             /* Phantom slips through */
+      if(o.kind === "weed"){ R.slow = SLOW_TIME; puffFx(o.x, o.y); G.traps.splice(i,1); }
+      else { R.blind = BLIND_TIME; o.hit = true; puffFx(o.x, o.y); }
+      break;
+    }
+  }
+}
+
+function puffFx(x, y){
+  for(let i=0;i<12;i++){
+    const a = rand(0, 6.2832), sp = rand(50, 190);
+    addFx(x, y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.3,.6), rand(2,5), "#B9BEC6");
+  }
+}
+
+function destroyRival(){
+  const R = G.rival;
+  if(!R || R.dead > 0 || R.immune > 0 || R.ultOn) return;
+  R.dead = DEAD_TIME;
+  R.ultOn = false; R.boosting = false; R.slow = 0; R.blind = 0;
+  for(let i=0;i<30;i++){
+    const a = rand(0, 6.2832), sp = rand(70, 340);
+    addFx(R.x, R.y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.45,1.0), rand(2,7),
+          i%3 === 0 ? "#FFD9A0" : (i%3 === 1 ? "#FF7A3A" : CARS[R.car].accent));
+  }
+  for(let i=0;i<10;i++)
+    addFx(R.x, R.y, rand(-110,110), rand(-190,-40), rand(.6,1.2), rand(3,7), "#2A2C33");
+  G.shake = Math.max(G.shake, 12);
+  noise(.55, .45); tone(95, .4, "sawtooth", .14);
 }
 
 /* ---------------- race lifecycle --------------------------------- */
@@ -909,7 +1211,9 @@ function startRace(){
   G.traffic = []; G.shake = 0; G.relGap = 0; G.nextGap = 430;
   G.traps = []; G.fx = []; G.trapGap = 0; G.nextTrap = 620;
   G.tier = 0; G.speedT = SPEED_SECONDS; G.blind = 0; G.blindPts = [];
-  G.dead = 0; G.immune = 0; G.slowT = 0;
+  G.dead = 0; G.immune = 0; G.slowT = 0; G.swipeLock = 0;
+  G.ult = 0; G.ultOn = false; G.twoHold = 0; G.boostLock = false;
+  spawnRival();
   seedWorld();
   paintHUD(true);
   G.state = "countdown";
@@ -995,14 +1299,62 @@ function flash(a, ms){
 
 /* ---------------- input ------------------------------------------ */
 function move(dir){
-  if(G.state !== "running") return;
+  if(G.state !== "running" || G.dead > 0) return;
   const n = clamp(G.lane + dir, 0, 2);
   if(n === G.lane) return;
+
+  /* Barge into the lane you want. If the other car has room it is shoved
+     across and left labouring; if it is already against a barrier the hit
+     wrecks it instead. Either way the lane is yours. */
+  const R = G.rival;
+  if(R && R.dead <= 0 && Math.abs(R.y - playerY) < carH*0.95 && R.lane === n){
+    const shoved = n + dir;
+    sideSwipe(R);
+    if(shoved < 0 || shoved > 2) destroyRival();
+    else if(!rivalSafe()){
+      R.lane = shoved;
+      R.x = lerp(R.x, laneCX(shoved), 0.35);
+      R.slow = Math.max(R.slow, BUMP_SLOW);
+      R.changeT = 0.7;
+    }
+  }
   G.lane = n;
-  tone(520 + dir*90, .05, "square", .07);
 }
+
+/* paint and sparks where the two cars trade a lane */
+function sideSwipe(R){
+  const cx = (G.x + R.x)/2, cy = (playerY + R.y)/2;
+  for(let i=0;i<14;i++){
+    const a = rand(0, 6.2832), sp = rand(60, 240);
+    addFx(cx, cy, Math.cos(a)*sp, Math.sin(a)*sp, rand(.25,.55), rand(2,4),
+          i % 2 ? "#FFE8C0" : CARS[R.car].accent);
+  }
+  G.shake = Math.max(G.shake, 8);
+  noise(.16, .25);
+}
+function ultBurst(carId, x, y){
+  const car = CARS[carId];
+  for(let i=0;i<26;i++){
+    const a = (i/26)*6.2832;
+    addFx(x + Math.cos(a)*carW*0.7, y + Math.sin(a)*carH*0.45,
+          Math.cos(a)*210, Math.sin(a)*210, rand(.4,.8), rand(3,6),
+          i % 2 ? car.flame[0] : car.flame[1]);
+  }
+  G.shake = Math.max(G.shake, 9);
+  tone(car.power === "burn" ? 180 : 520, .5, car.power === "burn" ? "sawtooth" : "sine", .1);
+  later(function(){ tone(car.power === "burn" ? 260 : 780, .45, "sine", .08); }, 120);
+}
+
+function fireUlt(){
+  if(G.state !== "running" || G.ultOn || G.dead > 0 || G.ult < 1) return;
+  G.ultOn = true;
+  G.twoHold = 0;
+  ultBurst(G.car, G.x, playerY);
+}
+
 function setBoost(){
-  G.boosting = (G.keyBoost || G.ptrBoost) && G.charge > 0.06 && G.state === "running";
+  G.boosting = (G.keyBoost || G.ptrBoost) && !G.boostLock && G.charge > 0
+               && G.state === "running" && G.dead <= 0;
 }
 
 document.addEventListener("keydown", function(e){
@@ -1012,59 +1364,93 @@ document.addEventListener("keydown", function(e){
   if(k === " " || k === "enter"){
     if(G.state === "over"){ e.preventDefault(); startRace(); return; }
     if($("#home").classList.contains("on") && !$("#langWrap").classList.contains("on")){ e.preventDefault(); show("modes"); return; }
-    if($("#modes").classList.contains("on")){ e.preventDefault(); show("race"); startRace(); return; }
+    if($("#modes").classList.contains("on")){ e.preventDefault(); show("cars"); return; }
+    if($("#cars").classList.contains("on")){ e.preventDefault(); pickCar(CAR_IDS[Math.random() < 0.5 ? 0 : 1]); return; }
   }
   if(!racing) return;
   if(k === "arrowleft" || k === "a"){ e.preventDefault(); move(-1); }
   else if(k === "arrowright" || k === "d"){ e.preventDefault(); move(1); }
   else if(k === "arrowup" || k === "w"){ e.preventDefault(); G.keyBoost = true; setBoost(); }
   else if(k === "p" || k === "escape"){ e.preventDefault(); pause(G.state === "running"); }
+  else if(k === "shift" || k === " "){ e.preventDefault(); G.ultKey = true; }
 });
 document.addEventListener("keyup", function(e){
   if(!e.key) return;
   const k = e.key.toLowerCase();
   if(k === "arrowup" || k === "w"){ G.keyBoost = false; setBoost(); }
+  if(k === "shift" || k === " ") G.ultKey = false;
 });
 
 let ptr = {on:false, x:0, y:0, sx:0, sy:0, moved:false};
+let ptrCount = 0;
+const ptrDown = {};
 cv.addEventListener("pointerdown", function(e){
+  if(!ptrDown[e.pointerId]){ ptrDown[e.pointerId] = true; ptrCount++; }
   ptr.on = true; ptr.x = ptr.sx = e.clientX; ptr.y = ptr.sy = e.clientY; ptr.moved = false;
   if(cv.setPointerCapture) try{ cv.setPointerCapture(e.pointerId); }catch(err){}
 });
 cv.addEventListener("pointermove", function(e){
-  if(!ptr.on) return;
+  if(!ptr.on || ptrCount >= 2) return;      /* two fingers down is the ultimate, not a swipe */
   const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y;
-  if(Math.abs(dx) > 26 && Math.abs(dx) > Math.abs(dy)){
-    move(dx > 0 ? 1 : -1);
+  if(Math.abs(dx) > SWIPE_STEP && Math.abs(dx) > Math.abs(dy)){
+    /* Each step of travel is one lane, but a flick covers several steps in
+       one instant - the lock keeps that to a single lane, while a drag held
+       and continued keeps stepping across. */
+    if(G.swipeLock <= 0){
+      move(dx > 0 ? 1 : -1);
+      G.swipeLock = SWIPE_LOCK;
+    }
     ptr.x = e.clientX; ptr.y = e.clientY; ptr.moved = true;
   } else if(dy < -34 && Math.abs(dy) > Math.abs(dx)){
     G.ptrBoost = true; setBoost(); ptr.moved = true;
   }
 });
-function endPtr(){
-  if(ptr.on && !ptr.moved && G.state === "running"){
-    const rect = cv.getBoundingClientRect();
-    if(ptr.sy - rect.top > H*0.22) move(ptr.sx - rect.left < W/2 ? -1 : 1);
-  }
-  ptr.on = false; G.ptrBoost = false; setBoost();
+function endPtr(e){
+  if(e && ptrDown[e.pointerId]){ delete ptrDown[e.pointerId]; ptrCount = Math.max(0, ptrCount - 1); }
+  else { ptrCount = 0; for(const k in ptrDown) delete ptrDown[k]; }
+  if(ptrCount === 0){ ptr.on = false; G.ptrBoost = false; setBoost(); }
 }
 cv.addEventListener("pointerup", endPtr);
 cv.addEventListener("pointercancel", endPtr);
 cv.addEventListener("contextmenu", function(e){ e.preventDefault(); });
 
 /* ---------------- update ----------------------------------------- */
+const SWIPE_STEP = 42, SWIPE_LOCK = 0.18;
+const ULT_CHARGE = 45;                    /* seconds from empty to ready */
+const ULT_TIME = 5;                       /* seconds it lasts */
+const ULT_SPEED = 2.0;                    /* how much faster it makes you */
+const TWO_FINGER_HOLD = 0.22;
+const BUMP_SLOW = 1.3;                    /* both cars lose the same time to a bump */
+
+const CARS = {
+  redd: {
+    key:"redd", style:"gt", accent:"#FF4A50",
+    body:"#E21B22", dark:"#101116", glass:"#3B404A",
+    flame:["#FF7A3A","#FFD9A0"], power:"burn"
+  },
+  phantom: {
+    key:"phantom", style:"jet", accent:"#6FC8FF",
+    body:"#EDF1F6", dark:"#16305A", glass:"#7FB3E8", trim:"#1E5FA8",
+    flame:["#2FA8F0","#CFEFFF"], power:"phase"
+  }
+};
+const CAR_IDS = ["redd","phantom"];
+
 function update(dt){
   const st = G.state;
+  if(G.swipeLock > 0) G.swipeLock = Math.max(0, G.swipeLock - dt);
   if(st === "paused" || st === "idle") return;
 
   /* speed */
   let target;
   if(st === "countdown") target = 0;          /* the car holds still on the line */
   else if(st === "over") target = Math.max(0, G.speed - 900*dt);
-  else if(G.dead > 0) target = 0;                      /* wrecked: the road stops */
+  else if(G.dead > 0) target = 0;             /* wrecked: you stop dead and the world
+                                                 stops with you, while the race goes on */
   else {
-    target = BASE_SPEED + Math.min(G.tier, MAX_TIER)*SPEED_STEP;
-    if(G.slowT > 0) target *= 0.5;
+    target = BASE_SPEED*speedMult();
+    if(G.ultOn) target *= ULT_SPEED;
+    else if(G.slowT > 0) target *= 0.5;
     if(G.boosting) target *= 1.5;
   }
   G.speed = lerp(G.speed, target, 1 - Math.pow(0.001, dt));
@@ -1075,8 +1461,16 @@ function update(dt){
   }
 
   /* boost charge */
-  if(G.boosting){ G.charge = clamp(G.charge - dt*0.4, 0, 1); if(G.charge <= 0.001) { G.ptrBoost = G.keyBoost = false; setBoost(); } }
-  else if(st === "running"){ G.charge = clamp(G.charge + dt*0.14, 0, 1); }
+  if(G.boosting){
+    G.charge = clamp(G.charge - dt*0.4, 0, 1);
+    if(G.charge <= 0.001){                       /* run it dry and it locks out */
+      G.charge = 0; G.boostLock = true;
+      G.ptrBoost = G.keyBoost = false;
+    }
+  } else if(st === "running"){
+    G.charge = clamp(G.charge + dt*0.14, 0, 1);
+    if(G.charge >= 1) G.boostLock = false;       /* only back once it is full */
+  }
   setBoost();
 
   /* lateral */
@@ -1113,15 +1507,29 @@ function update(dt){
   if(!G.walks.length || topWalk > -1300) G.walks.push(makeFeature(topBiome(), topWalk - rand(1500,2600)));
 
   /* clocks only run while the car is actually racing */
-  if(st === "running" && G.dead <= 0){
+  if(st === "running"){
     G.trackT -= dt;
     if(G.trackT <= 0 && G.seam === null) switchTrack();
     if(G.tier < MAX_TIER){
       G.speedT -= dt;
-      if(G.speedT <= 0){ G.speedT = SPEED_SECONDS; G.tier++; speedUp(); }
+      if(G.speedT <= 0){ G.speedT = SPEED_SECONDS; G.tier++; }
     } else G.speedT = SPEED_SECONDS;
     G.trapGap += d;
     if(G.trapGap >= G.nextTrap){ G.trapGap = 0; spawnTrap(); G.nextTrap = rand(430, 900); }
+  }
+
+  /* ultimate: charges slowly, then burns down over its five seconds */
+  if(st === "running"){
+    if(G.ultOn){
+      G.ult -= dt/ULT_TIME;
+      if(G.ult <= 0){ G.ult = 0; G.ultOn = false; }
+    } else if(G.ult < 1){
+      G.ult = Math.min(1, G.ult + dt/ULT_CHARGE);
+    }
+    if(ptrCount >= 2 || G.ultKey){
+      G.twoHold += dt;
+      if(G.twoHold >= TWO_FINGER_HOLD) fireUlt();
+    } else G.twoHold = 0;
   }
 
   /* hit states */
@@ -1133,6 +1541,7 @@ function update(dt){
     if(G.dead <= 0){ G.dead = 0; G.immune = IMMUNE_TIME; respawnFx(); }
   }
   updateTraps(dt, d, st);
+  updateRival(dt, st);
   updateFx(dt, d);
   if(G.seam !== null){
     G.seam += d;
@@ -1213,12 +1622,8 @@ function spawnWave(){
 /* ================================================================
    TRAPS  -  one hazard per track, placed at random
    ================================================================ */
-function speedUp(){
-  const el = $("#speedBar");
-  el.classList.remove("up"); void el.offsetWidth; el.classList.add("up");
-  later(function(){ el.classList.remove("up"); }, 720);
-  tone(880, .09, "square", .09);
-  later(function(){ tone(1320, .11, "square", .09); }, 100);
+function speedMult(){
+  return Math.min(1 + Math.min(G.tier, MAX_TIER)*MULT_STEP, MAX_MULT);
 }
 
 /* keep a hazard fully on the asphalt so it is always possible to avoid */
@@ -1235,7 +1640,7 @@ function spawnTrap(){
                    y:-ry-50, rx:rx, ry:ry, s:Math.random(), hit:false });
   } else if(b === "space"){
     /* blast stays under three quarters of a lane so a neighbouring lane is always safe */
-    const y = -rand(120, 220);
+    const y = -rand(300, 460);          /* warning first, then the long drop */
     G.traps.push({ b:b, kind:"meteor", x:onRoad(laneCX(lane) + rand(-laneW*0.06, laneW*0.06), 6),
                    y:y, span:playerY - y, r:laneW*rand(0.42, 0.60), mr:rand(13, 21),
                    s:Math.random(), phase:0, t:0 });
@@ -1259,7 +1664,10 @@ function nearestOnCar(c, px, py){
 }
 
 function updateTraps(dt, d, st){
-  const live = st === "running" && G.dead <= 0 && G.immune <= 0;
+  const racing = st === "running" && G.dead <= 0;
+  const power = G.ultOn ? CARS[G.car].power : null;
+  const live = racing && G.immune <= 0 && !G.ultOn;   /* can still be hurt */
+  const smash = racing && power === "burn";           /* Redd wrecks what it touches */
   const c = carHit();
   for(let i=G.traps.length-1;i>=0;i--){
     const o = G.traps[i];
@@ -1269,10 +1677,14 @@ function updateTraps(dt, d, st){
       o.y += d*o.fall;
       o.rot += o.vx*dt/o.r;
       if(o.x < roadX-100 || o.x > roadX+roadW+100 || o.y > H+100){ G.traps.splice(i,1); continue; }
-      if(live && !o.hit){
+      if((live || smash) && !o.hit){
         const p = nearestOnCar(c, o.x, o.y);
         const dx = p.x - o.x, dy = p.y - o.y;
-        if(dx*dx + dy*dy <= o.r*o.r*0.86){ hitWeed(o); G.traps.splice(i,1); continue; }
+        if(dx*dx + dy*dy <= o.r*o.r*0.86){
+          if(smash) smashFx(o.x, o.y, o.r*1.2, "#D8C49A");
+          else hitWeed(o);
+          G.traps.splice(i,1); continue;
+        }
       }
       continue;
     }
@@ -1282,7 +1694,7 @@ function updateTraps(dt, d, st){
       if(o.phase === 0){
         const left = playerY - o.y;
         if(left <= 0) detonate(o, live);
-        else if(live && left < FALL_LEAD){
+        else if(racing && left < FALL_LEAD){
           const alt = METEOR_ALT*(left/FALL_LEAD);
           if(alt < carH*0.55){                       /* a rock straight on the roof */
             const my = o.y - alt;
@@ -1300,10 +1712,14 @@ function updateTraps(dt, d, st){
 
     o.y += d;
     if(o.y > H + 260){ G.traps.splice(i,1); continue; }
-    if(!live || o.hit) continue;
+    if((!live && !smash) || o.hit) continue;
     const p = nearestOnCar(c, o.x, o.y);
     const ex = (p.x - o.x)/(o.rx*0.92), ey = (p.y - o.y)/(o.ry*0.92);
-    if(ex*ex + ey*ey <= 1){ o.hit = true; hitPuddle(); }
+    if(ex*ex + ey*ey <= 1){
+      o.hit = true;
+      if(smash){ smashFx(o.x, o.y, o.rx*1.1, "#7FC2EC", G.car); G.traps.splice(i,1); }
+      else hitPuddle();
+    }
   }
 }
 
@@ -1325,6 +1741,13 @@ function detonate(o, live){
     const dx = p3.x - o.x, dy = p3.y - o.y;
     if(dx*dx + dy*dy <= o.r*o.r) destroyCar();
   }
+  const R = G.rival;
+  if(R && !rivalSafe()){
+    const rc = { x:R.x, y:R.y, hw:carW*0.40, hh:carH*0.42 };
+    const p4 = nearestOnCar(rc, o.x, o.y);
+    const rx = p4.x - o.x, ry = p4.y - o.y;
+    if(rx*rx + ry*ry <= o.r*o.r) destroyRival();
+  }
 }
 
 function hitPuddle(){
@@ -1335,7 +1758,7 @@ function hitPuddle(){
   for(let i=0;i<16;i++){
     const a = rand(-2.6, -0.5);
     addFx(G.x + rand(-carW*0.4, carW*0.4), playerY, Math.cos(a)*rand(70,220), Math.sin(a)*rand(70,240),
-          rand(.3,.6), rand(2,5), "#BBD4E4");
+          rand(.3,.6), rand(2,5), "#7FC2EC");
   }
   G.shake = 6;
   noise(.3, .3); tone(200, .16, "sine", .07);
@@ -1366,6 +1789,18 @@ function hitWeed(o){
   noise(.24, .24); tone(170, .13, "square", .07);
 }
 
+/* Redd blowing a hazard apart on contact */
+function smashFx(x, y, r, tint, whose){
+  const car = CARS[whose || G.car];
+  for(let i=0;i<20;i++){
+    const a = rand(0, 6.2832), sp = rand(70, 300);
+    addFx(x, y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.3,.7), rand(2,6),
+          i % 3 === 0 ? tint : (i % 3 === 1 ? car.flame[0] : car.flame[1]));
+  }
+  G.shake = Math.max(G.shake, 7);
+  noise(.22, .3);
+}
+
 function respawnFx(){
   for(let i=0;i<18;i++){
     const a = (i/18)*6.2832;
@@ -1377,6 +1812,7 @@ function respawnFx(){
 }
 
 function addFx(x, y, vx, vy, life, r, c){
+  if(G.fx.length > 240) G.fx.shift();          /* two cars can throw a lot of sparks */
   G.fx.push({ x:x, y:y, vx:vx, vy:vy, life:life, max:life, r:r, c:c });
 }
 function updateFx(dt, d){
@@ -1433,59 +1869,127 @@ function rr(x,y,w,h,r){
 }
 function fillRR(x,y,w,h,r,c){ rr(x,y,w,h,r); ctx.fillStyle=c; ctx.fill(); }
 
-function drawCar(x,y,w,h,p,tilt,isPlayer,boosting){
+function drawCar(x, y, w, h, p, tilt, isPlayer, boosting){
   ctx.save();
-  ctx.translate(x,y);
+  ctx.translate(x, y);
   if(tilt) ctx.rotate(tilt);
+  if(p.style === "jet") drawJet(w, h, p, isPlayer, boosting);
+  else drawGT(w, h, p, isPlayer, boosting);
+  ctx.restore();
+}
 
-  /* ground shadow */
+function flames(w, h, hot, cool){
+  ctx.globalAlpha = 0.75;
+  fillRR(-w*0.30, h*0.50, w*0.18, h*0.30, w*0.09, hot);
+  fillRR( w*0.12, h*0.50, w*0.18, h*0.30, w*0.09, hot);
+  ctx.globalAlpha = 0.5;
+  fillRR(-w*0.26, h*0.50, w*0.10, h*0.46, w*0.05, cool);
+  fillRR( w*0.16, h*0.50, w*0.10, h*0.46, w*0.05, cool);
+  ctx.globalAlpha = 1;
+}
+
+/* Redd and all traffic: a squat, square-shouldered muscle car */
+function drawGT(w, h, p, isPlayer, boosting){
   fillRR(-w/2+3, -h/2+7, w, h, w*0.26, "rgba(0,0,0,0.42)");
 
-  /* wheels */
   const ww = w*0.17, wh = h*0.16;
-  ctx.fillStyle = "#0C0D10";
   fillRR(-w/2-ww*0.30, -h*0.29, ww, wh, ww*0.4, "#0C0D10");
   fillRR( w/2-ww*0.70, -h*0.29, ww, wh, ww*0.4, "#0C0D10");
   fillRR(-w/2-ww*0.30,  h*0.13, ww, wh, ww*0.4, "#0C0D10");
   fillRR( w/2-ww*0.70,  h*0.13, ww, wh, ww*0.4, "#0C0D10");
 
-  /* body */
   fillRR(-w/2, -h/2, w, h, w*0.26, p.body);
   rr(-w/2, -h/2, w, h, w*0.26);
   ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = Math.max(1, w*0.03); ctx.stroke();
 
-  /* front bumper + lights */
   fillRR(-w*0.42, -h/2+h*0.012, w*0.84, h*0.062, w*0.08, p.dark);
   fillRR(-w*0.34, -h/2+h*0.022, w*0.20, h*0.038, w*0.04, "#FFE8C0");
   fillRR( w*0.14, -h/2+h*0.022, w*0.20, h*0.038, w*0.04, "#FFE8C0");
 
-  /* canopy: windshield, roof, rear glass */
   fillRR(-w*0.34, -h*0.20, w*0.68, h*0.42, w*0.16, p.dark);
   fillRR(-w*0.29, -h*0.17, w*0.58, h*0.13, w*0.08, p.glass);
   fillRR(-w*0.29,  h*0.09, w*0.58, h*0.10, w*0.07, p.glass);
 
   if(isPlayer){
-    ctx.fillStyle = "#101116";
+    ctx.fillStyle = p.dark;
     ctx.fillRect(-w*0.16, -h*0.46, w*0.09, h*0.24);
     ctx.fillRect( w*0.07, -h*0.46, w*0.09, h*0.24);
-    fillRR(-w*0.06, h*0.24, w*0.12, h*0.16, w*0.05, "#101116");
+    fillRR(-w*0.06, h*0.24, w*0.12, h*0.16, w*0.05, p.dark);
   }
 
-  /* rear deck + spoiler + tail lights */
   fillRR(-w*0.46, h*0.40, w*0.92, h*0.075, w*0.06, p.dark);
   fillRR(-w*0.36, h*0.415, w*0.22, h*0.036, w*0.03, "#FF4A50");
   fillRR( w*0.14, h*0.415, w*0.22, h*0.036, w*0.03, "#FF4A50");
 
-  if(boosting){
-    ctx.globalAlpha = 0.75;
-    fillRR(-w*0.30, h*0.50, w*0.18, h*0.30, w*0.09, "#FF7A3A");
-    fillRR( w*0.12, h*0.50, w*0.18, h*0.30, w*0.09, "#FF7A3A");
-    ctx.globalAlpha = 0.5;
-    fillRR(-w*0.26, h*0.50, w*0.10, h*0.46, w*0.05, "#FFD9A0");
-    fillRR( w*0.16, h*0.50, w*0.10, h*0.46, w*0.05, "#FFD9A0");
-    ctx.globalAlpha = 1;
+  if(boosting) flames(w, h, (p.flame && p.flame[0]) || "#FF7A3A", (p.flame && p.flame[1]) || "#FFD9A0");
+}
+
+/* Phantom: a low, curvy sports car - same road-going shape as Redd,
+   but tapered and swept where Redd is square */
+function jetBody(w, h){
+  ctx.beginPath();
+  ctx.moveTo(-w*0.27, -h*0.50);
+  ctx.quadraticCurveTo(-w*0.46, -h*0.45, -w*0.48, -h*0.24);
+  ctx.lineTo(-w*0.50, h*0.14);
+  ctx.quadraticCurveTo(-w*0.50, h*0.45, -w*0.35, h*0.50);
+  ctx.lineTo( w*0.35, h*0.50);
+  ctx.quadraticCurveTo( w*0.50, h*0.45,  w*0.50, h*0.14);
+  ctx.lineTo( w*0.48, -h*0.24);
+  ctx.quadraticCurveTo( w*0.46, -h*0.45,  w*0.27, -h*0.50);
+  ctx.quadraticCurveTo(0, -h*0.56, -w*0.27, -h*0.50);
+  ctx.closePath();
+}
+function drawJet(w, h, p, isPlayer, boosting){
+  ctx.save(); ctx.translate(3, 7);
+  jetBody(w, h); ctx.fillStyle = "rgba(0,0,0,0.42)"; ctx.fill();
+  ctx.restore();
+
+  const ww = w*0.155, wh = h*0.155;                    /* four wheels, wide stance */
+  fillRR(-w/2-ww*0.26, -h*0.30, ww, wh, ww*0.4, "#0C0D10");
+  fillRR( w/2-ww*0.74, -h*0.30, ww, wh, ww*0.4, "#0C0D10");
+  fillRR(-w/2-ww*0.26,  h*0.15, ww, wh, ww*0.4, "#0C0D10");
+  fillRR( w/2-ww*0.74,  h*0.15, ww, wh, ww*0.4, "#0C0D10");
+
+  jetBody(w, h);
+  ctx.fillStyle = p.body; ctx.fill();
+  ctx.strokeStyle = "rgba(12,32,64,0.42)"; ctx.lineWidth = Math.max(1, w*0.03); ctx.stroke();
+
+  ctx.save();
+  jetBody(w, h); ctx.clip();
+  ctx.fillStyle = p.trim;                              /* blue nose and sills */
+  ctx.beginPath();
+  ctx.moveTo(0, -h*0.56); ctx.lineTo(w*0.34, -h*0.16); ctx.lineTo(-w*0.34, -h*0.16);
+  ctx.closePath(); ctx.fill();
+  ctx.fillRect(-w*0.52, -h*0.10, w*0.09, h*0.46);
+  ctx.fillRect( w*0.43, -h*0.10, w*0.09, h*0.46);
+  if(isPlayer){                                        /* twin stripes over the spine */
+    ctx.fillRect(-w*0.135, -h*0.50, w*0.085, h);
+    ctx.fillRect( w*0.05,  -h*0.50, w*0.085, h);
   }
   ctx.restore();
+
+  fillRR(-w*0.30, -h*0.455, w*0.20, h*0.032, w*0.02, "#8FE3FF");   /* light bar */
+  fillRR( w*0.10, -h*0.455, w*0.20, h*0.032, w*0.02, "#8FE3FF");
+
+  fillRR(-w*0.32, -h*0.15, w*0.64, h*0.40, w*0.15, p.dark);        /* cabin */
+  ctx.beginPath();                                                  /* windshield */
+  ctx.moveTo(-w*0.26, -h*0.05); ctx.lineTo(w*0.26, -h*0.05);
+  ctx.lineTo(w*0.20, -h*0.13);  ctx.lineTo(-w*0.20, -h*0.13);
+  ctx.closePath(); ctx.fillStyle = p.glass; ctx.fill();
+  ctx.beginPath();                                                  /* rear glass */
+  ctx.moveTo(-w*0.23, h*0.13); ctx.lineTo(w*0.23, h*0.13);
+  ctx.lineTo(w*0.19, h*0.21);  ctx.lineTo(-w*0.19, h*0.21);
+  ctx.closePath(); ctx.fill();
+
+  fillRR(-w*0.44, h*0.37, w*0.88, h*0.062, w*0.05, p.trim);        /* ducktail spoiler */
+  fillRR(-w*0.34, h*0.385, w*0.20, h*0.032, w*0.02, "#8FE3FF");    /* tail lights */
+  fillRR( w*0.14, h*0.385, w*0.20, h*0.032, w*0.02, "#8FE3FF");
+  [-w*0.15, w*0.15].forEach(function(tx){                          /* exhaust tips */
+    ctx.beginPath(); ctx.arc(tx, h*0.455, w*0.062, 0, 6.2832);
+    ctx.fillStyle = p.dark; ctx.fill();
+  });
+
+  if(boosting) flames(w, h, p.flame[0], p.flame[1]);
 }
 
 const ROOF = ["#22242A", "#1A1C21", "#2B2E35"];
@@ -1684,24 +2188,24 @@ function puddlePath(p, k){
 function drawPuddle(p){
   ctx.save();
   puddlePath(p, 1.0);
-  ctx.fillStyle = "rgba(22,34,45,0.62)"; ctx.fill();
+  ctx.fillStyle = "rgba(28,86,150,0.66)"; ctx.fill();
   puddlePath(p, 0.66);
-  ctx.fillStyle = "rgba(12,20,28,0.5)"; ctx.fill();
+  ctx.fillStyle = "rgba(16,54,104,0.58)"; ctx.fill();
   ctx.beginPath();
   if(ctx.ellipse) ctx.ellipse(p.x - p.rx*0.24, p.y - p.ry*0.28, p.rx*0.36, p.ry*0.19, -0.35, 0, 6.2832);
   else ctx.arc(p.x - p.rx*0.24, p.y - p.ry*0.28, p.rx*0.28, 0, 6.2832);
-  ctx.fillStyle = "rgba(196,220,236,0.30)"; ctx.fill();
+  ctx.fillStyle = "rgba(150,208,246,0.42)"; ctx.fill();
   ctx.beginPath();
   if(ctx.ellipse) ctx.ellipse(p.x + p.rx*0.30, p.y + p.ry*0.24, p.rx*0.17, p.ry*0.10, 0.4, 0, 6.2832);
   else ctx.arc(p.x + p.rx*0.30, p.y + p.ry*0.24, p.rx*0.12, 0, 6.2832);
-  ctx.fillStyle = "rgba(196,220,236,0.18)"; ctx.fill();
+  ctx.fillStyle = "rgba(150,208,246,0.24)"; ctx.fill();
   puddlePath(p, 1.0);
-  ctx.strokeStyle = "rgba(208,228,242,0.34)"; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.strokeStyle = "rgba(126,196,244,0.5)"; ctx.lineWidth = 1.6; ctx.stroke();
   for(let i=0;i<2;i++){
     const a = p.s*6.28 + i*2.4;
     ctx.beginPath();
     ctx.arc(p.x + Math.cos(a)*p.rx*1.35, p.y + Math.sin(a)*p.ry*1.4, 2.4 + ((p.s*17 + i) % 1)*2.6, 0, 6.2832);
-    ctx.fillStyle = "rgba(22,34,45,0.5)"; ctx.fill();
+    ctx.fillStyle = "rgba(28,86,150,0.55)"; ctx.fill();
   }
   ctx.restore();
 }
@@ -1944,9 +2448,33 @@ function render(){
     drawCar(t2.x, t2.y, t2.w, t2.h, t2.paint, 0, false, false);
   }
 
+  const RV = G.rival;
+  if(RV && G.state !== "idle" && RV.dead <= 0){
+    const rc = CARS[RV.car];
+    const flick = RV.immune > 0 && Math.floor(RV.immune*9) % 2 === 0;
+    if(!flick){
+      if(RV.ultOn && rc.power === "burn") drawBurn(rc, RV.x, RV.y);
+      if(RV.ultOn && rc.power === "phase"){ drawPhase(rc, RV.x, RV.y); ctx.globalAlpha = 0.5; }
+      drawCar(RV.x, RV.y, carW, carH, rc, RV.tilt, true, RV.boosting || RV.ultOn);
+      ctx.globalAlpha = 1;
+    }
+  }
+
   const blink = G.immune > 0 && Math.floor(G.immune*9) % 2 === 0;
   if(G.state !== "idle" && G.dead <= 0 && !blink){
-    drawCar(G.x, playerY, carW, carH, {body:"#E21B22", dark:"#101116", glass:"#3B404A"}, G.tilt, true, G.boosting);
+    const car = CARS[G.car];
+    if(G.ultOn && car.power === "burn") drawBurn(car, G.x, playerY);
+    if(G.ultOn && car.power === "phase"){
+      for(let i=2;i>=1;i--){                       /* after-images trailing behind */
+        ctx.globalAlpha = 0.16/i;
+        drawCar(G.x, playerY + carH*0.28*i, carW, carH, car, G.tilt, true, true);
+      }
+      ctx.globalAlpha = 1;
+      drawPhase(car, G.x, playerY);
+      ctx.globalAlpha = 0.5;
+    }
+    drawCar(G.x, playerY, carW, carH, car, G.tilt, true, G.boosting || G.ultOn);
+    ctx.globalAlpha = 1;
   }
 
   for(let i=0;i<G.fx.length;i++){
@@ -1973,12 +2501,55 @@ function render(){
   ctx.restore();
 }
 
+/* Redd alight: a burning shell around the car */
+function drawBurn(car, cx, cy){
+  const t = G.scroll*0.035;
+  const gl = ctx.createRadialGradient(cx, cy, carW*0.2, cx, cy, carW*1.5);
+  gl.addColorStop(0, "rgba(255,150,60,0.45)");
+  gl.addColorStop(1, "rgba(255,90,20,0)");
+  ctx.fillStyle = gl;
+  ctx.fillRect(cx - carW*1.6, cy - carH*1.1, carW*3.2, carH*2.2);
+  for(let i=0;i<9;i++){
+    const side = i % 2 ? 1 : -1;
+    const f = (i/9);
+    const fy = cy - carH*0.42 + f*carH*0.95;
+    const wob = Math.sin(t + i*1.7)*carW*0.08;
+    const len = carH*(0.14 + Math.abs(Math.sin(t*1.3 + i))*0.13);
+    ctx.beginPath();
+    ctx.moveTo(cx + side*carW*0.42 + wob, fy);
+    ctx.quadraticCurveTo(cx + side*carW*0.72 + wob, fy - len*0.5,
+                         cx + side*carW*0.5 + wob, fy - len);
+    ctx.quadraticCurveTo(cx + side*carW*0.40 + wob, fy - len*0.4,
+                         cx + side*carW*0.42 + wob, fy);
+    ctx.fillStyle = i % 3 === 0 ? car.flame[1] : car.flame[0];
+    ctx.globalAlpha = 0.85; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  if(Math.random() < 0.7)
+    addFx(cx + rand(-carW*0.5, carW*0.5), cy + rand(-carH*0.4, carH*0.4),
+          rand(-40, 40), rand(30, 150), rand(.3,.7), rand(2,4),
+          Math.random() < 0.5 ? car.flame[0] : car.flame[1]);
+}
+
+/* Phantom vapour: a cold halo and a drifting wake */
+function drawPhase(car, cx, cy){
+  const gl = ctx.createRadialGradient(cx, cy, carW*0.15, cx, cy, carW*1.35);
+  gl.addColorStop(0, "rgba(120,205,255,0.4)");
+  gl.addColorStop(1, "rgba(60,150,255,0)");
+  ctx.fillStyle = gl;
+  ctx.fillRect(cx - carW*1.5, cy - carH*1.0, carW*3.0, carH*2.0);
+  if(Math.random() < 0.6)
+    addFx(cx + rand(-carW*0.45, carW*0.45), cy + rand(-carH*0.3, carH*0.5),
+          rand(-30, 30), rand(40, 140), rand(.35,.8), rand(2,4),
+          Math.random() < 0.5 ? car.flame[0] : car.flame[1]);
+}
+
 /* water thrown over the view, running off as it clears */
 function drawBlind(){
   const hold = BLIND_TIME - 0.55;
   const a = G.blind > hold ? 1 : clamp(G.blind/hold, 0, 1);
   ctx.globalAlpha = a*0.6;
-  ctx.fillStyle = "#C3D5E2"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#A8CDEA"; ctx.fillRect(0, 0, W, H);
   for(let i=0;i<G.blindPts.length;i++){
     const p = G.blindPts[i];
     const x = p.x*W, y = p.y*H, r = p.r*(0.75 + a*0.35);
@@ -1986,7 +2557,7 @@ function drawBlind(){
     ctx.beginPath();
     if(ctx.ellipse) ctx.ellipse(x, y, r, r*(0.6 + p.s*0.7), p.s*3, 0, 6.2832);
     else ctx.arc(x, y, r, 0, 6.2832);
-    ctx.fillStyle = "rgba(232,242,249,0.9)"; ctx.fill();
+    ctx.fillStyle = "rgba(206,232,250,0.9)"; ctx.fill();
     ctx.globalAlpha = a*0.55;
     ctx.beginPath(); ctx.arc(x - r*0.3, y - r*0.34, r*0.34, 0, 6.2832);
     ctx.fillStyle = "#FFFFFF"; ctx.fill();
@@ -2002,9 +2573,22 @@ function paintHUD(force){
   const f = $("#boostFill");
   f.style.width = (G.charge*100).toFixed(1) + "%";
   $("#boostWrap").classList.toggle("full", G.charge > 0.98);
-  $("#trackFill").style.width = (clamp(G.trackT/TRACK_SECONDS, 0, 1)*100).toFixed(1) + "%";
-  $("#trackBar").classList.toggle("soon", G.trackT < 6);
-  $("#speedFill").style.width = (clamp(G.speedT/SPEED_SECONDS, 0, 1)*100).toFixed(1) + "%";
+  $("#boostWrap").classList.toggle("locked", G.boostLock);
+  if(G.rival){
+    const mine = Math.floor(G.meters), theirs = Math.floor(rivalMeters());
+    const lead = mine >= theirs;
+    $("#pos1").textContent = t("place1");
+    $("#pos2").textContent = t("place2");
+    $("#pos1n").textContent = lead ? mine : theirs;
+    $("#pos2n").textContent = lead ? theirs : mine;
+    const you = CARS[G.car].accent, them = "rgba(255,255,255,.62)";
+    $("#posRow1").style.color = lead ? you : them;
+    $("#posRow2").style.color = lead ? them : you;
+  }
+  const up = $("#ultPct"), ready = G.ult >= 1 || G.ultOn;
+  up.textContent = Math.round(G.ult*100) + "%";
+  up.style.color = ready ? CARS[G.car].accent : "rgba(255,255,255,.7)";
+  up.classList.toggle("ready", G.ult >= 1 && !G.ultOn);
 }
 
 /* ---------------- loop ------------------------------------------- */
