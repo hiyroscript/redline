@@ -374,6 +374,14 @@ body.desk .keys{display:flex}
 .key{font-family:var(--mono);font-size:11px;color:var(--icon);background:var(--gray-050);border:1.5px solid var(--gray-300);border-bottom-width:3px;border-radius:6px;padding:5px 8px;min-width:26px;text-align:center}
 .keys .lbl{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:.06em}
 
+/* On a computer the race runs across the screen instead of down it. */
+body.desk #shell{max-width:none}
+body.desk .topbar,body.desk .home-head,body.desk .home-foot{max-width:520px;margin-left:auto;margin-right:auto;width:100%}
+body.desk #ribbon{max-width:520px;margin-left:auto;margin-right:auto;width:100%}
+body.desk #modeCard,body.desk #langCard,body.desk .panel-card{max-width:520px;margin-left:auto;margin-right:auto}
+body.desk #modes,body.desk #cars,body.desk #diffs{align-items:center;justify-content:center}
+body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{width:100%}
+
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
 }
@@ -467,9 +475,10 @@ body.desk .keys{display:flex}
         <span data-i18n="start">Start race</span>
       </button>
       <div class="keys">
-        <span class="key">&#8592;</span><span class="key">&#8594;</span>
+        <span class="key">&#8593;</span><span class="key">&#8595;</span>
         <span class="lbl" data-i18n="k1">lanes</span>
-        <span class="key">&#8593;</span><span class="lbl" data-i18n="k2">boost</span>
+        <span class="key">&#8594;</span><span class="lbl" data-i18n="k2">boost</span>
+        <span class="key">Shift</span><span class="lbl" data-i18n="k4">ultimate</span>
         <span class="key">P</span><span class="lbl" data-i18n="k3">pause</span>
       </div>
     </div>
@@ -752,6 +761,7 @@ const STR = {
   k1:           {en:"lanes",                       fr:"voies"},
   k2:           {en:"boost",                       fr:"turbo"},
   k3:           {en:"pause",                       fr:"pause"},
+  k4:           {en:"ultimate",                    fr:"ultime"},
   chooseMode:   {en:"Choose a mode",               fr:"Choisir un mode"},
   endless:      {en:"Endless run",                 fr:"Course sans fin"},
   endlessDesc:  {en:"Three lanes, dense traffic, no finish line. Go as far as you can.",
@@ -807,9 +817,9 @@ const STR = {
   yourPlace:    {en:"Your place",                  fr:"Votre place"},
   place1:       {en:"1st",                         fr:"1er"},
   place2:       {en:"2nd",                         fr:"2e"},
-  holdTwo:      {en:"Hold two fingers to unleash it",
-                 fr:"Maintenez deux doigts pour la d\u00e9clencher"},
-  holdKey:      {en:"Hold Shift to unleash it",    fr:"Maintenez Maj pour la d\u00e9clencher"}
+  holdTwo:      {en:"Tap the screen to unleash it",
+                 fr:"Touchez l'\u00e9cran pour la d\u00e9clencher"},
+  holdKey:      {en:"Press Shift to unleash it",   fr:"Appuyez sur Maj pour la d\u00e9clencher"}
 };
 let lang = store.get("redline.lang") || null;
 let curTrackKey = "trackCity";
@@ -911,6 +921,7 @@ if(SPLASH_IMAGE){
   img.onload = function(){ holder.innerHTML = ""; holder.appendChild(img); };
 }
 const DESKTOP = !!(window.matchMedia && window.matchMedia("(hover:hover) and (pointer:fine)").matches);
+const LANDSCAPE = DESKTOP;
 if(DESKTOP) document.body.classList.add("desk");
 applyLang();
 paintBest();
@@ -975,10 +986,10 @@ const G = {
   biome:"city", next:null, seam:null, trackT:60, seamPts:[], seamBits:[],
   traps:[], fx:[], trapGap:0, nextTrap:600,
   tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0,
-  car:"redd", ult:0, ultOn:false, twoHold:0, ultKey:false, ultArmed:true,
-  boostLock:false, rivals:[], stepFlash:0,
+  car:"redd", ult:0, ultOn:false, ultKey:false, ultArmed:true,
+  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9,
   mode:"endless", diff:"medium",
-  orbs:0, bolts:[], shockT:0,
+  orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
   raceT:0, tracksLeft:-1, finishAt:0, finished:null, results:[]
 };
 
@@ -1001,10 +1012,17 @@ function laneCX(i){ return roadX + laneW*(i+0.5); }
 
 function resize(){
   const r = cv.getBoundingClientRect();
-  W = Math.max(1, r.width); H = Math.max(1, r.height);
+  const cw = Math.max(1, r.width), ch = Math.max(1, r.height);
   DPR = Math.min(window.devicePixelRatio || 1, 2);
-  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+  cv.width = Math.round(cw*DPR); cv.height = Math.round(ch*DPR);
+  if(LANDSCAPE){
+    /* quarter turn: the road runs left to right, lanes stack top to bottom */
+    W = ch; H = cw;
+    ctx.setTransform(0, DPR, -DPR, 0, cw*DPR, 0);
+  } else {
+    W = cw; H = ch;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
   layout();
 }
 window.addEventListener("resize", function(){ if($("#race").classList.contains("on")) resize(); });
@@ -1128,8 +1146,8 @@ function spawnRivals(){
     return {
       car:id, lane:lane, x:laneCX(lane), y:playerY, tilt:0,
       abs:0, changeT:rand(0.2, 0.7),          /* standing start: everyone from zero */
-      slow:0, blind:0, dead:0, immune:0, shock:0,
-      inDanger:false, willReact:true, reactT:0,
+      slow:0, blind:0, dead:0, immune:0, shock:0, launch:0, bumpCD:0,
+      inDanger:false, willReact:true, reactT:0, prevLane:-1, laneT:9,
       ult:0, ultOn:false, ultWait:rand(1, 3), orbs:0, fireT:0,
       charge:1, boostLock:false, boosting:false,
       finished:null
@@ -1141,6 +1159,11 @@ function diff(){ return DIFFS[G.diff] || DIFFS.medium; }
 /* distance along the road, in metres, for anyone on it */
 function metersOf(R){ return R ? G.meters + (playerY - R.y)*0.075 : G.meters; }
 function rivalMeters(){ return G.rivals.length ? metersOf(G.rivals[0]) : 0; }
+function ghosting(who){
+  return who === "me"
+    ? (G.ultOn && CARS[G.car].power === "phase")
+    : (!!who && who.ultOn && CARS[who.car].power === "phase");
+}
 function safeCar(R){ return !R || R.dead > 0 || R.immune > 0 || R.ultOn && CARS[R.car].power !== "storm"; }
 function playerUntouchable(){ return G.dead > 0 || G.immune > 0 || (G.ultOn && CARS[G.car].power !== "storm"); }
 
@@ -1154,25 +1177,77 @@ function racers(){
   return list;
 }
 function carAt(lane, y, skip){
+  if(ghosting(skip)) return null;                /* a phasing car meets nobody */
   const all = racers();
   for(let i=0;i<all.length;i++){
     const a = all[i];
     if(a.out || a.obj === skip || (skip === "me" && a.me)) continue;
+    if(ghosting(a.me ? "me" : a.obj)) continue;  /* and nobody meets it */
     if(a.lane === lane && Math.abs(a.y - y) < carH*0.95) return a;
   }
   return null;
 }
 
+/* Running into the back of the car in front: they get shunted forward,
+   you lose time. What your ultimate is doing changes the outcome. */
+function rearEnd(who, victim){
+  const meB = who === "me";
+  const power = meB ? (G.ultOn ? CARS[G.car].power : null)
+                    : (who.ultOn ? CARS[who.car].power : null);
+  if(power === "phase") return;                        /* straight through */
+  if(victim.me ? ghosting("me") : ghosting(victim.obj)) return;
+  if((meB ? G.bumpCD : who.bumpCD) > 0) return;
+
+  const vy = victim.y;
+  if(meB) G.bumpCD = 0.5; else { who.bumpCD = 0.5; who.y = vy + carH*0.98; }
+
+  if(power === "burn"){                                /* Redd smashes straight through */
+    if(victim.me) destroyCar(meB ? "me" : who);
+    else wreckRival(victim.obj, meB ? "me" : who);
+    return;
+  }
+  if(power === "storm"){                               /* Bolt: the surge is spent */
+    if(meB){ G.ultOn = false; G.ult = 0; }
+    else { who.stormOn = false; who.ultOn = false; who.ult = 0; }
+  } else {
+    if(meB) G.slowT = Math.max(G.slowT, BUMP_SLOW*0.7);
+    else who.slow = Math.max(who.slow, BUMP_SLOW*0.7);
+  }
+  if(victim.me) G.launchT = LAUNCH_TIME;               /* they get shoved along */
+  else victim.obj.launch = LAUNCH_TIME;
+  for(let i=0;i<12;i++){
+    const a = rand(-2.4, -0.7), sp = rand(60, 200);
+    addFx((meB ? G.x : who.x), vy + carH*0.5, Math.cos(a)*sp, Math.sin(a)*sp,
+          rand(.25,.5), rand(2,4), i % 2 ? "#FFE8C0" : "#B9BEC6");
+  }
+  G.shake = Math.max(G.shake, 7);
+  noise(.14, .22);
+}
+
+/* Phantom coming back solid on top of someone takes both of them out. */
+function rematerialise(){
+  const all = racers();
+  for(let i=0;i<all.length;i++){
+    const a = all[i];
+    if(a.me || a.out) continue;
+    if(a.lane === G.lane && Math.abs(a.y - playerY) < carH*0.95){
+      wreckRival(a.obj);
+      destroyCar();
+      return;
+    }
+  }
+}
+
 /* one car shouldering another out of a lane */
-function bumpTarget(victim, dir){
+function bumpTarget(victim, dir, by){
   const to = victim.lane + dir;
   if(victim.me){
     if(playerUntouchable()) return;
-    if(to < 0 || to > 2) destroyCar();
+    if(to < 0 || to > 2) destroyCar(by);
     else { G.lane = to; G.slowT = Math.max(G.slowT, BUMP_SLOW); }
   } else {
     if(safeCar(victim.obj)) return;
-    if(to < 0 || to > 2) wreckRival(victim.obj);
+    if(to < 0 || to > 2) wreckRival(victim.obj, by);
     else {
       victim.obj.lane = to;
       victim.obj.x = lerp(victim.obj.x, laneCX(to), 0.35);
@@ -1184,13 +1259,15 @@ function bumpTarget(victim, dir){
 }
 
 /* lanes this car should stay out of: hazards, and traffic it would run into */
-function laneRisk(R){
+function laneRisk(R, far){
+  const D = diff();
+  const look = far ? 360 + D.look : 360;         /* sharper drivers see it coming sooner */
   const risk = [0,0,0];
   for(let i=0;i<G.traps.length;i++){
     const o = G.traps[i];
     if(o.kind === "meteor" && o.phase !== 0) continue;
     const ahead = R.y - o.y;
-    if(ahead < -40 || ahead > 360) continue;
+    if(ahead < -40 || ahead > look) continue;
     risk[clamp(Math.floor((o.x - roadX)/laneW), 0, 2)] = 1;
   }
   for(let i=0;i<G.traffic.length;i++){
@@ -1209,8 +1286,9 @@ function laneRisk(R){
 
 function rivalLaneTo(R, lane){
   const dir = lane > R.lane ? 1 : -1;
+  R.prevLane = R.lane; R.laneT = 0;
   const victim = carAt(lane, R.y, R);
-  if(victim) bumpTarget(victim, dir);
+  if(victim) bumpTarget(victim, dir, R);
   R.lane = lane;
   R.changeT = 0.7;
 }
@@ -1233,11 +1311,13 @@ function rivalThink(R, dt){
     return;
   }
 
-  /* 2. wreck someone pinned against a barrier */
-  if(Math.random() < D.aggro){
+  /* 2. wreck someone pinned against a barrier - but not into a hazard */
+  const soon = laneRisk(R, true);
+  if(Math.random() < D.aggro && !soon[R.lane]){
     for(let i=0;i<taken.length;i++){
       const l = taken[i], v = carAt(l, R.y, R);
       const dir = l > R.lane ? 1 : -1;
+      if(soon[l]) continue;
       if(v && (l + dir < 0 || l + dir > 2)) return rivalLaneTo(R, l);
     }
   }
@@ -1250,15 +1330,17 @@ function rivalThink(R, dt){
       if(a.out || a.obj === R) continue;
       const behind = a.y - R.y;
       if(behind > carH*0.9 && behind < carH*3.4 && metersOf(a.obj) < mine){
-        if(a.lane !== R.lane && opts.indexOf(a.lane) >= 0 && !risk[a.lane])
+        if(a.lane !== R.lane && opts.indexOf(a.lane) >= 0 && !risk[a.lane] && !soon[a.lane])
           return rivalLaneTo(R, a.lane);                    /* move across to cover */
       }
     }
   }
 
   /* 4. otherwise drift for position now and then */
-  if(clean.length && Math.random() < 0.10) rivalLaneTo(R, clean[randi(0, clean.length-1)]);
-  else if(taken.length && Math.random() < 0.05 + D.aggro*0.2) rivalLaneTo(R, taken[0]);
+  const safe = clean.filter(function(l){ return !soon[l]; });
+  if(soon[R.lane] && safe.length) return rivalLaneTo(R, safe[randi(0, safe.length-1)]);
+  if(safe.length && Math.random() < 0.10) rivalLaneTo(R, safe[randi(0, safe.length-1)]);
+  else if(taken.length && !soon[taken[0]] && Math.random() < 0.05 + D.aggro*0.2) rivalLaneTo(R, taken[0]);
 }
 
 function updateRival(R, dt, st){
@@ -1269,7 +1351,10 @@ function updateRival(R, dt, st){
   if(R.blind > 0)  R.blind  = Math.max(0, R.blind - dt);
   if(R.immune > 0) R.immune = Math.max(0, R.immune - dt);
   if(R.shock > 0)  R.shock  = Math.max(0, R.shock - dt);
+  if(R.launch > 0) R.launch = Math.max(0, R.launch - dt);
+  if(R.bumpCD > 0) R.bumpCD = Math.max(0, R.bumpCD - dt);
   if(R.changeT > 0) R.changeT -= dt;
+  R.laneT += dt;
   if(R.reactT > 0)  R.reactT -= dt;
   if(R.fireT > 0)   R.fireT -= dt;
 
@@ -1321,21 +1406,16 @@ function updateRival(R, dt, st){
   else {
     if(R.ultOn && CARS[R.car].power !== "storm") want *= ULT_SPEED;
     else if(R.stormOn) want *= ULT_SPEED;
+    else if(R.orbs > 0) want *= BOLT_ORB_SPEED;
     else if(R.slow > 0) want *= 0.5;
     if(R.boosting) want *= 1.5;
+    if(R.launch > 0) want *= LAUNCH_BOOST;
   }
   R.abs = lerp(R.abs, want, 1 - Math.pow(0.001, dt));   /* same throttle response as you */
   if(Math.abs(R.abs - want) < 1.5) R.abs = want;
 
-  const ahead = carAt(R.lane, R.y, R);                 /* no driving through anyone */
-  if(ahead && ahead.y < R.y){
-    const theirV = ahead.me ? G.speed : ahead.obj.abs;
-    R.abs = Math.min(R.abs, theirV);
-  }
-  if(G.dead <= 0 && R.lane === G.lane && R.y < playerY &&
-     Math.abs(R.y - playerY) < carH*0.95){
-    G.speed = Math.min(G.speed, R.abs);                /* and it holds you up too */
-  }
+  const ahead = carAt(R.lane, R.y, R);
+  if(ahead && ahead.y < R.y) rearEnd(R, ahead);        /* it runs into their back */
   R.y += (G.speed - R.abs)*dt;
   R.y = clamp(R.y, -30000, H + 30000);
 
@@ -1347,7 +1427,7 @@ function updateRival(R, dt, st){
     R.reactT = rand(D.react[0], D.react[1]);
   } else if(!inLane) R.inDanger = false;
 
-  if(R.changeT <= 0 && R.blind <= 0){
+  if(R.changeT <= 0 && R.blind <= 0 && R.shock <= 0){
     R.changeT = rand(D.tick[0], D.tick[1]);
     rivalThink(R, dt);
   }
@@ -1361,18 +1441,22 @@ function updateRival(R, dt, st){
   const ghost = R.ultOn && CARS[R.car].power === "phase";
   if(R.immune <= 0 && !ghost){
     const rc = { x:R.x, y:R.y, hw:carW*0.40, hh:carH*0.42 };
+    const bit = R === G.rivals[0] ? 2 : 4;
     for(let i=G.traps.length-1;i>=0;i--){
       const o = G.traps[i];
       if(o.kind === "meteor") continue;
       const p = nearestOnCar(rc, o.x, o.y);
       const dx = p.x - o.x, dy = p.y - o.y;
+      if(o.hit & bit) continue;                        /* already soaked this one */
       const hit = o.kind === "puddle"
-        ? (dx/(o.rx*0.92))*(dx/(o.rx*0.92)) + (dy/(o.ry*0.92))*(dy/(o.ry*0.92)) <= 1
+        ? puddleHits(o, rc)
         : dx*dx + dy*dy <= o.r*o.r*0.86;
-      if(!hit) continue;
+      if(!hit){ dodgeCheck(o, rc, bit, R, R.prevLane, R.laneT); continue; }
+      o.hit |= bit;
       if(smash){ smashFx(o.x, o.y, (o.rx || o.r)*1.1, "#D8C49A", R.car); G.traps.splice(i,1); continue; }
+      ultDelta(R, ULT_ON_TRAP);
       if(o.kind === "weed"){ R.slow = SLOW_TIME; puffFx(o.x, o.y); G.traps.splice(i,1); }
-      else { R.blind = BLIND_TIME; o.hit = true; puffFx(o.x, o.y); }
+      else { R.blind = BLIND_TIME; puffFx(o.x, o.y); }
       break;
     }
   }
@@ -1403,8 +1487,8 @@ function fireOrb(owner){
   const mark = targetAhead(h.y, owner);
   if(!mark) return false;
   G.bolts.push({
-    x:h.x, y:h.y - carH*0.4, vx:0, vy:-260,
-    owner:owner, car:owner === "me" ? G.car : owner.car, life:4,
+    x:h.x, y:h.y - carH*0.4, vx:0, vy:-ORB_SPEED,
+    owner:owner, car:owner === "me" ? G.car : owner.car, life:6,
     mark:mark.me ? "me" : mark.obj
   });
   tone(880, .12, "square", .07);
@@ -1413,6 +1497,9 @@ function fireOrb(owner){
 }
 function absorbOrbs(owner){
   const h = orbHolder(owner);
+  /* fewer than a full set going in means a shorter surge */
+  if(owner === "me") G.ultFast = h.orbs < ORB_COUNT;
+  else owner.ultFast = h.orbs < ORB_COUNT;
   for(let i=0;i<26;i++){
     const a = (i/26)*6.2832;
     addFx(h.x + Math.cos(a)*carW*0.8, h.y + Math.sin(a)*carH*0.5,
@@ -1425,11 +1512,11 @@ function absorbOrbs(owner){
 function shockCar(who){
   if(who === "me"){
     if(playerUntouchable()) return;
-    G.shockT = SHOCK_TIME;
-    G.slowT = 0;
+    G.shockT = Math.min(G.shockT > 0 ? G.shockT + SHOCK_STACK : SHOCK_TIME, SHOCK_MAX);
+    G.slowT = 0; G.boosting = false; G.keyBoost = false; G.ptrBoost = false;
   } else {
     if(!who || who.dead > 0 || who.immune > 0) return;
-    who.shock = SHOCK_TIME;
+    who.shock = Math.min(who.shock > 0 ? who.shock + SHOCK_STACK : SHOCK_TIME, SHOCK_MAX);
     who.boosting = false;
   }
   const p = who === "me" ? { x:G.x, y:playerY } : { x:who.x, y:who.y };
@@ -1451,19 +1538,41 @@ function updateBolts(dt){
     if(b.life <= 0 || m.gone || b.y < -600){ G.bolts.splice(i,1); continue; }
     const dx = m.x - b.x, dy = m.y - b.y;
     const d = Math.max(1, Math.sqrt(dx*dx + dy*dy));
-    const sp = 640;
-    b.vx = lerp(b.vx, dx/d*sp, 1 - Math.pow(0.0015, dt));
-    b.vy = lerp(b.vy, dy/d*sp, 1 - Math.pow(0.0015, dt));
+    b.vx = lerp(b.vx, dx/d*ORB_SPEED, 1 - Math.pow(0.0004, dt));
+    b.vy = lerp(b.vy, dy/d*ORB_SPEED, 1 - Math.pow(0.0004, dt));
+    const sp2 = Math.sqrt(b.vx*b.vx + b.vy*b.vy) || 1;
+    b.vx = b.vx/sp2*ORB_SPEED; b.vy = b.vy/sp2*ORB_SPEED;   /* never slows down */
     b.x += b.vx*dt; b.y += b.vy*dt;
     addFx(b.x, b.y, rand(-30,30), rand(-30,30), .25, rand(1.5,3), "#FFE44D");
-    if(d < carW*0.55){ shockCar(b.mark); G.bolts.splice(i,1); }
+    const hitBox = { x:m.x, y:m.y, hw:carW*0.40, hh:carH*0.42 };
+    const cp = nearestOnCar(hitBox, b.x, b.y);
+    const hx = cp.x - b.x, hy = cp.y - b.y;
+    if(hx*hx + hy*hy <= ORB_R*ORB_R){                        /* an actual collision */
+      const power = b.mark === "me"
+        ? (G.ultOn ? CARS[G.car].power : null)
+        : (b.mark.ultOn ? CARS[b.mark.car].power : null);
+      if(power === "phase"){                     /* Phantom: it simply fades out */
+        for(let k=0;k<10;k++)
+          addFx(b.x, b.y, rand(-50,50), rand(-50,50), rand(.3,.6), rand(2,4), "#CFEFFF");
+        tone(420, .18, "sine", .05);
+      } else if(power === "burn"){                /* Redd: it goes off on contact */
+        for(let k=0;k<18;k++){
+          const a = rand(0, 6.2832), sp = rand(60, 260);
+          addFx(b.x, b.y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.3,.7), rand(2,5),
+                k % 2 ? "#FF7A3A" : "#FFD9A0");
+        }
+        G.shake = Math.max(G.shake, 8);
+        noise(.25, .3);
+      } else shockCar(b.mark);
+      G.bolts.splice(i,1);
+    }
   }
 }
 /* how a bot handles Bolt's ultimate */
 function stormAI(R, dt, D){
   if(R.stormOn){
-    R.ult -= dt/ULT_TIME;
-    if(R.ult <= 0){ R.ult = 0; R.stormOn = false; }
+    R.ult -= dt/ULT_TIME*(R.ultFast ? 2 : 1);
+    if(R.ult <= 0){ R.ult = 0; R.stormOn = false; R.ultFast = false; }
     return;
   }
   if(R.orbs > 0){
@@ -1532,8 +1641,10 @@ function puffFx(x, y){
   }
 }
 
-function wreckRival(R){
+function wreckRival(R, by){
   if(!R || R.dead > 0 || R.immune > 0 || safeCar(R)) return;
+  ultDelta(R, ULT_ON_WRECK);
+  if(by !== undefined) ultDelta(by, ULT_ON_KILL);
   R.dead = DEAD_TIME;
   R.ultOn = false; R.stormOn = false; R.boosting = false;
   R.slow = 0; R.blind = 0; R.shock = 0; R.orbs = 0;
@@ -1569,8 +1680,9 @@ function startRace(){
   G.traps = []; G.fx = []; G.trapGap = 0; G.nextTrap = 620;
   G.tier = 0; G.speedT = SPEED_SECONDS; G.blind = 0; G.blindPts = [];
   G.dead = 0; G.immune = 0; G.slowT = 0; G.swipeLock = 0;
-  G.ult = 0; G.ultOn = false; G.twoHold = 0; G.boostLock = false; G.ultArmed = true;
-  G.orbs = 0; G.bolts = []; G.shockT = 0;
+  G.ult = 0; G.ultOn = false; G.boostLock = false; G.ultArmed = true;
+  G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.bumpCD = 0; G.ultFast = false;
+  G.prevLane = -1; G.laneT = 9;
   G.raceT = 0; G.finishAt = 0; G.finished = null; G.results = [];
   G.tracksLeft = -1;
   $("#ovTitle").textContent = t("over");
@@ -1661,15 +1773,16 @@ function flash(a, ms){
 
 /* ---------------- input ------------------------------------------ */
 function move(dir){
-  if(G.state !== "running" || G.dead > 0) return;
+  if(G.state !== "running" || G.dead > 0 || G.shockT > 0) return;   /* pinned */
   const n = clamp(G.lane + dir, 0, 2);
   if(n === G.lane) return;
+  G.prevLane = G.lane; G.laneT = 0;
 
   /* Barge into the lane you want. If the other car has room it is shoved
      across and left labouring; if it is already against a barrier the hit
      wrecks it instead. Either way the lane is yours. */
   const victim = carAt(n, playerY, "me");
-  if(victim) bumpTarget(victim, dir);
+  if(victim) bumpTarget(victim, dir, "me");
   G.lane = n;
 }
 
@@ -1703,19 +1816,16 @@ function fireUlt(){
     if(G.orbs > 0){                          /* second call: loose an orb */
       if(fireOrb("me")) G.orbs--;
       else { absorbOrbs("me"); G.orbs = 0; G.ultOn = true; G.ult = 1; }
-      if(G.orbs <= 0 && !G.ultOn) G.ult = 0;
-      G.twoHold = 0; G.ultArmed = false;
+      if(G.orbs <= 0 && !G.ultOn) G.ult = 0; G.ultArmed = false;
       return;
     }
     if(G.ultOn || G.ult < 1) return;
-    G.orbs = ORB_COUNT;
-    G.twoHold = 0; G.ultArmed = false;
+    G.orbs = ORB_COUNT; G.ultArmed = false;
     ultBurst(G.car, G.x, playerY);
     return;
   }
   if(G.ultOn || G.ult < 1) return;
-  G.ultOn = true;
-  G.twoHold = 0; G.ultArmed = false;
+  G.ultOn = true; G.ultArmed = false;
   ultBurst(G.car, G.x, playerY);
 }
 
@@ -1736,6 +1846,15 @@ document.addEventListener("keydown", function(e){
     if($("#cars").classList.contains("on")){ e.preventDefault(); pickCar(CAR_IDS[randi(0, CAR_IDS.length-1)]); return; }
   }
   if(!racing) return;
+  if(LANDSCAPE){
+    /* lanes are stacked up the screen, and forward is to the right */
+    if(k === "arrowup" || k === "w"){ e.preventDefault(); move(-1); }
+    else if(k === "arrowdown" || k === "s"){ e.preventDefault(); move(1); }
+    else if(k === "arrowright" || k === "d"){ e.preventDefault(); G.keyBoost = true; setBoost(); }
+    else if(k === "p" || k === "escape"){ e.preventDefault(); pause(G.state === "running"); }
+    else if(k === "shift" || k === " "){ e.preventDefault(); G.ultKey = true; }
+    return;
+  }
   if(k === "arrowleft" || k === "a"){ e.preventDefault(); move(-1); }
   else if(k === "arrowright" || k === "d"){ e.preventDefault(); move(1); }
   else if(k === "arrowup" || k === "w"){ e.preventDefault(); G.keyBoost = true; setBoost(); }
@@ -1745,7 +1864,8 @@ document.addEventListener("keydown", function(e){
 document.addEventListener("keyup", function(e){
   if(!e.key) return;
   const k = e.key.toLowerCase();
-  if(k === "arrowup" || k === "w"){ G.keyBoost = false; setBoost(); }
+  if(LANDSCAPE){ if(k === "arrowright" || k === "d"){ G.keyBoost = false; setBoost(); } }
+  else if(k === "arrowup" || k === "w"){ G.keyBoost = false; setBoost(); }
   if(k === "shift" || k === " ") G.ultKey = false;
 });
 
@@ -1758,7 +1878,7 @@ cv.addEventListener("pointerdown", function(e){
   if(cv.setPointerCapture) try{ cv.setPointerCapture(e.pointerId); }catch(err){}
 });
 cv.addEventListener("pointermove", function(e){
-  if(!ptr.on || ptrCount >= 2) return;      /* two fingers down is the ultimate, not a swipe */
+  if(!ptr.on) return;
   const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y;
   if(Math.abs(dx) > SWIPE_STEP && Math.abs(dx) > Math.abs(dy)){
     /* Each step of travel is one lane, but a flick covers several steps in
@@ -1771,12 +1891,19 @@ cv.addEventListener("pointermove", function(e){
     ptr.x = e.clientX; ptr.y = e.clientY; ptr.moved = true;
   } else if(dy < -34 && Math.abs(dy) > Math.abs(dx)){
     G.ptrBoost = true; setBoost(); ptr.moved = true;
+  } else if(Math.abs(dx) > TAP_SLOP || Math.abs(dy) > TAP_SLOP){
+    ptr.moved = true;                      /* a drag, not a tap */
   }
 });
 function endPtr(e){
+  const tapped = ptr.on && !ptr.moved;
   if(e && ptrDown[e.pointerId]){ delete ptrDown[e.pointerId]; ptrCount = Math.max(0, ptrCount - 1); }
   else { ptrCount = 0; for(const k in ptrDown) delete ptrDown[k]; }
-  if(ptrCount === 0){ ptr.on = false; G.ptrBoost = false; setBoost(); }
+  if(ptrCount === 0){
+    ptr.on = false; G.ptrBoost = false; setBoost();
+    G.ultArmed = true;
+    if(tapped) fireUlt();          /* one finger, one tap - that is the ultimate */
+  }
 }
 cv.addEventListener("pointerup", endPtr);
 cv.addEventListener("pointercancel", endPtr);
@@ -1784,12 +1911,17 @@ cv.addEventListener("contextmenu", function(e){ e.preventDefault(); });
 
 /* ---------------- update ----------------------------------------- */
 const SWIPE_STEP = 42, SWIPE_LOCK = 0.18;
+const TAP_SLOP = 14;                      /* a tap may wander this far and still count */
 const ULT_CHARGE = 45;                    /* seconds from empty to ready */
 const ULT_TIME = 5;                       /* seconds it lasts */
 const ULT_SPEED = 2.0;                    /* how much faster it makes you */
-const TWO_FINGER_HOLD = 0.22;
 const RIVAL_LAPSE = 0.14;                 /* how often it simply misses one */
-const BUMP_SLOW = 1.3;                    /* both cars lose the same time to a bump */
+const BUMP_SLOW = 1.3;
+const ULT_ON_WRECK = -0.10;               /* what each event does to the meter */
+const ULT_ON_TRAP  = -0.05;
+const ULT_ON_KILL  =  0.10;
+const ULT_ON_DODGE =  0.05;
+const LAUNCH_TIME = 0.8, LAUNCH_BOOST = 1.35;                    /* both cars lose the same time to a bump */
 
 const CARS = {
   redd: {
@@ -1813,16 +1945,21 @@ const CAR_IDS = ["redd","phantom","bolt"];
 /* ---------------- opposition ------------------------------------- */
 const DIFFS = {
   easy:   { key:"diffEasy",   lapse:0.42, react:[0.55,1.15], tick:[0.45,0.85],
-            block:0.00, aggro:0.00, boost:0.30, ult:0.20, keep:0.00 },
+            block:0.00, aggro:0.00, boost:0.14, ult:0.08, keep:0.00, look:0 },
   medium: { key:"diffMedium", lapse:0.16, react:[0.25,0.60], tick:[0.30,0.60],
-            block:0.15, aggro:0.06, boost:0.60, ult:0.55, keep:0.12 },
+            block:0.15, aggro:0.06, boost:0.45, ult:0.40, keep:0.12, look:120 },
   hard:   { key:"diffHard",   lapse:0.06, react:[0.14,0.36], tick:[0.20,0.42],
-            block:0.45, aggro:0.28, boost:0.85, ult:0.85, keep:0.26 },
+            block:0.45, aggro:0.28, boost:0.85, ult:0.85, keep:0.26, look:260 },
   brutal: { key:"diffBrutal", lapse:0.02, react:[0.06,0.20], tick:[0.13,0.28],
-            block:0.78, aggro:0.58, boost:1.00, ult:1.00, keep:0.32 }
+            block:0.78, aggro:0.58, boost:1.00, ult:1.00, keep:0.32, look:380 }
 };
 const DIFF_IDS = ["easy","medium","hard","brutal"];
-const SHOCK_TIME = 3;                     /* Bolt: how long a hit car is pinned */
+const SHOCK_TIME = 10;                    /* Bolt: how long a hit car is pinned */
+const SHOCK_STACK = 5;                    /* every further hit adds this */
+const SHOCK_MAX = 25;
+const ORB_SPEED = 1500;                   /* the orbs travel hard and never let up */
+const ORB_R = 7;
+const BOLT_ORB_SPEED = 1.5;               /* Bolt's pace while the orbs are circling */
 const ORB_COUNT = 3;
 const RACE_MINUTES = 5;                   /* bots mode: then three tracks to the flag */
 const FINAL_TRACKS = 3;
@@ -1842,8 +1979,10 @@ function update(dt){
   else {
     target = BASE_SPEED*speedMult();
     if(G.ultOn) target *= ULT_SPEED;          /* Bolt gets the speed but no shield */
+    else if(G.orbs > 0) target *= BOLT_ORB_SPEED;
     else if(G.slowT > 0) target *= 0.5;
     if(G.boosting) target *= 1.5;
+    if(G.launchT > 0) target *= LAUNCH_BOOST;
   }
   G.speed = lerp(G.speed, target, 1 - Math.pow(0.001, dt));
   G.scroll += G.speed*dt;
@@ -1920,23 +2059,25 @@ function update(dt){
   if(st === "running"){
     const storm = CARS[G.car].power === "storm";
     if(G.ultOn){
-      G.ult -= dt/ULT_TIME;
-      if(G.ult <= 0){ G.ult = 0; G.ultOn = false; }
+      G.ult -= dt/ULT_TIME*(storm && G.ultFast ? 2 : 1);
+      if(G.ult <= 0){ G.ult = 0; G.ultOn = false; G.ultFast = false; }
+      if(!G.ultOn && CARS[G.car].power === "phase") rematerialise();
     } else if(storm){
       /* the meter holds while orbs are still circling, then refills */
       if(G.orbs <= 0 && G.ult < 1 && G.dead <= 0) G.ult = Math.min(1, G.ult + dt/ULT_CHARGE);
     } else if(G.ult < 1 && G.dead <= 0){
       G.ult = Math.min(1, G.ult + dt/ULT_CHARGE);
     }
-    if(ptrCount >= 2 || G.ultKey){
-      G.twoHold += dt;
-      if(G.twoHold >= TWO_FINGER_HOLD && G.ultArmed) fireUlt();
-    } else { G.twoHold = 0; G.ultArmed = true; }
+    if(G.ultKey && G.ultArmed){ fireUlt(); G.ultArmed = false; }
+    else if(!G.ultKey && !ptr.on) G.ultArmed = true;
   }
 
   /* hit states */
   if(G.blind > 0)  G.blind  = Math.max(0, G.blind - dt);
   if(G.shockT > 0) G.shockT = Math.max(0, G.shockT - dt);
+  if(G.launchT > 0) G.launchT = Math.max(0, G.launchT - dt);
+  G.laneT += dt;
+  if(G.bumpCD > 0) G.bumpCD = Math.max(0, G.bumpCD - dt);
   if(G.slowT > 0)  G.slowT  = Math.max(0, G.slowT - dt);
   if(G.immune > 0) G.immune = Math.max(0, G.immune - dt);
   if(G.dead > 0){
@@ -1944,6 +2085,10 @@ function update(dt){
     if(G.dead <= 0){ G.dead = 0; G.immune = IMMUNE_TIME; respawnFx(); }
   }
   updateTraps(dt, d, st);
+  if(st === "running" && G.dead <= 0){
+    const inFront = carAt(G.lane, playerY, "me");
+    if(inFront && inFront.y < playerY) rearEnd("me", inFront);
+  }
   updateRivals(dt, st);
   updateBolts(dt);
   checkFinish();
@@ -2043,18 +2188,18 @@ function spawnTrap(){
   if(b === "city"){
     const rx = rand(laneW*0.30, laneW*0.48), ry = rx*rand(0.52, 0.82);
     G.traps.push({ b:b, kind:"puddle", x:onRoad(laneCX(lane) + rand(-laneW*0.16, laneW*0.16), rx),
-                   y:-ry-50, rx:rx, ry:ry, s:Math.random(), hit:false });
+                   y:-ry-50, rx:rx, ry:ry, s:Math.random(), hit:0, nm:0 });
   } else if(b === "space"){
     /* blast stays under three quarters of a lane so a neighbouring lane is always safe */
     const y = -rand(300, 460);          /* warning first, then the long drop */
     G.traps.push({ b:b, kind:"meteor", x:onRoad(laneCX(lane) + rand(-laneW*0.06, laneW*0.06), 6),
                    y:y, span:playerY - y, r:laneW*rand(0.42, 0.60), mr:rand(13, 21),
-                   s:Math.random(), phase:0, t:0 });
+                   s:Math.random(), phase:0, t:0, nm:0 });
   } else {
     const dir = Math.random() < 0.5 ? 1 : -1, r = rand(15, 25);
     G.traps.push({ b:b, kind:"weed", r:r, s:Math.random(), age:0, rot:rand(0, 6.28),
                    x: dir > 0 ? roadX - 46 : roadX + roadW + 46,
-                   y: -70,
+                   y: -70, nm:0,
                    vx: dir*(roadW + 92)/rand(2.1, 3.1),
                    fall: rand(0.48, 0.66) });
   }
@@ -2065,6 +2210,67 @@ function spawnTrap(){
 function carHit(){
   return { x:G.x, y:playerY, hw:carW*0.40, hh:carH*0.42 };
 }
+/* The drawn puddle is a jittered blob, not an ellipse. This reads the same
+   jitter back so the edge you can see is the edge that catches you. */
+function puddleFactor(p, ang){
+  const n = 11;
+  const a = ((ang % 6.2832) + 6.2832) % 6.2832;
+  const f = a/6.2832*n, i0 = Math.floor(f) % n, i1 = (i0 + 1) % n, tt = f - Math.floor(f);
+  const j0 = 0.68 + ((p.s*131.7 + i0*47.31) % 1)*0.56;
+  const j1 = 0.68 + ((p.s*131.7 + i1*47.31) % 1)*0.56;
+  return lerp(j0, j1, tt)*0.95;
+}
+/* The nearest point on the car to the puddle centre is NOT the nearest point
+   in ellipse space, so testing it there missed glancing hits. Squash both
+   shapes so the puddle becomes a unit circle, then the test is exact. */
+function puddleHits(o, box, yAt){
+  const oy = yAt === undefined ? o.y : yAt;
+  const sx = 1/o.rx, sy = 1/o.ry;
+  const cx = (box.x - o.x)*sx, cy = (box.y - oy)*sy;   /* car relative to the puddle */
+  const hw = box.hw*sx, hh = box.hh*sy;
+  const nx = clamp(0, cx - hw, cx + hw);
+  const ny = clamp(0, cy - hh, cy + hh);
+  const d = Math.sqrt(nx*nx + ny*ny);
+  if(d === 0) return true;                       /* centre inside the car */
+  return d <= puddleFactor(o, Math.atan2(ny, nx));
+}
+/* the closest the hazard got to this car during the frame, not just where it ended */
+function sweptY(o, moved, cy){
+  const prev = o.y - moved;
+  return clamp(cy, Math.min(prev, o.y), Math.max(prev, o.y));
+}
+
+/* While an ultimate is running the meter is its remaining duration, so
+   rewards and penalties wait until it has finished rather than cutting it
+   short or extending it. */
+function ultDelta(who, amount){
+  if(who === "me"){
+    if(G.ultOn || G.orbs > 0) return;
+    G.ult = clamp(G.ult + amount, 0, 1);
+  } else if(who){
+    if(who.ultOn || who.stormOn || who.orbs > 0) return;
+    who.ult = clamp(who.ult + amount, 0, 1);
+  }
+}
+/* did this hazard slip past close enough to count as a dodge? */
+/* Credit for getting out of the way at the last moment: either you squeezed
+   past it, or you swerved out of the lane it was about to take you in. */
+function dodgeCheck(o, box, bit, who, prevLane, since){
+  if(o.nm & bit) return;
+  if(o.y < box.y) return;                        /* not past us yet */
+  o.nm |= bit;
+  if(o.hit & bit) return;                        /* you drove through it, not round it */
+  const half = o.kind === "puddle" ? o.rx : (o.kind === "meteor" ? o.r : o.r);
+  const lane = clamp(Math.floor((o.x - roadX)/laneW), 0, 2);
+  const squeeze = Math.abs(o.x - box.x) < box.hw + half + carW*0.4;
+  const swerved = prevLane >= 0 && lane === prevLane && since < 0.9;
+  if(squeeze || swerved){
+    ultDelta(who, ULT_ON_DODGE);
+    for(let i=0;i<6;i++)
+      addFx(box.x, box.y - carH*0.3, rand(-60,60), rand(-120,-30), .35, 2.5, "#FFFFFF");
+  }
+}
+
 function nearestOnCar(c, px, py){
   return { x:clamp(px, c.x - c.hw, c.x + c.hw), y:clamp(py, c.y - c.hh, c.y + c.hh) };
 }
@@ -2084,9 +2290,10 @@ function updateTraps(dt, d, st){
       o.y += d*o.fall;
       o.rot += o.vx*dt/o.r;
       if(o.x < roadX-100 || o.x > roadX+roadW+100 || o.y > H+100){ G.traps.splice(i,1); continue; }
-      if((live || smash) && !o.hit){
-        const p = nearestOnCar(c, o.x, o.y);
-        const dx = p.x - o.x, dy = p.y - o.y;
+      if((live || smash) && !(o.hit & 1)){
+        const wy = sweptY(o, d*o.fall, c.y);
+        const p = nearestOnCar(c, o.x, wy);
+        const dx = p.x - o.x, dy = p.y - wy;
         if(dx*dx + dy*dy <= o.r*o.r*0.86){
           if(smash) smashFx(o.x, o.y, o.r*1.2, "#D8C49A");
           else hitWeed(o);
@@ -2119,14 +2326,13 @@ function updateTraps(dt, d, st){
 
     o.y += d;
     if(o.y > H + 260){ G.traps.splice(i,1); continue; }
-    if((!live && !smash) || o.hit) continue;
-    const p = nearestOnCar(c, o.x, o.y);
-    const ex = (p.x - o.x)/(o.rx*0.92), ey = (p.y - o.y)/(o.ry*0.92);
-    if(ex*ex + ey*ey <= 1){
-      o.hit = true;
-      if(smash){ smashFx(o.x, o.y, o.rx*1.1, "#7FC2EC", G.car); G.traps.splice(i,1); }
-      else hitPuddle();
+    if((!live && !smash) || (o.hit & 1)) continue;
+    if(puddleHits(o, c, sweptY(o, d, c.y))){
+      o.hit |= 1;
+      if(smash){ smashFx(o.x, o.y, o.rx*1.1, "#7FC2EC", G.car); G.traps.splice(i,1); continue; }
+      hitPuddle();
     }
+    dodgeCheck(o, c, 1, "me", G.prevLane, G.laneT);
   }
 }
 
@@ -2159,6 +2365,7 @@ function detonate(o, live){
 }
 
 function hitPuddle(){
+  ultDelta("me", ULT_ON_TRAP);
   G.blind = BLIND_TIME;
   G.blindPts = [];
   for(let i=0;i<54;i++)
@@ -2173,7 +2380,9 @@ function hitPuddle(){
 }
 
 /* the destroy effect: wreck the car, then respawn it untouchable */
-function destroyCar(){
+function destroyCar(by){
+  ultDelta("me", ULT_ON_WRECK);
+  if(by) ultDelta(by, ULT_ON_KILL);
   G.dead = DEAD_TIME;
   G.shake = 22;
   for(let i=0;i<30;i++){
@@ -2187,6 +2396,7 @@ function destroyCar(){
 }
 
 function hitWeed(o){
+  ultDelta("me", ULT_ON_TRAP);
   G.slowT = SLOW_TIME;
   G.shake = 8;
   for(let i=0;i<14;i++){
@@ -3047,8 +3257,9 @@ function pipFor(R, slot){
   ctx.strokeStyle = c; ctx.lineWidth = 2.4; ctx.lineJoin = "round"; ctx.stroke();
   ctx.fillStyle = c;
   ctx.font = "600 12px ui-monospace, Menlo, Consolas, monospace";
-  ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  ctx.fillText(gap + "m", x - 6, y + 0.5);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  if(LANDSCAPE){ ctx.translate(x + 6, y); ctx.rotate(-1.5708); ctx.fillText(gap + "m", 0, 0); }
+  else ctx.fillText(gap + "m", x + 6, y + 0.5);
   ctx.restore();
 }
 
