@@ -273,37 +273,36 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   transition:background .12s ease,transform .09s ease;
 }
 .car-opt:active{background:var(--red-press);transform:scale(.96)}
-.car-opt:active .mode-name,.car-opt:active .ult-tag{color:#fff}
+.car-opt:active .mode-name{color:#fff}
 .car-opt:active .car-art{background:#fff}
 .car-opt:focus-visible{outline:3px solid var(--black);outline-offset:2px}
 .car-opt .mode-name{font-size:14px;letter-spacing:.03em;line-height:1}
-.car-opt .ult-tag{margin:0;font-size:8px;letter-spacing:.14em}
 .car-art{
   width:100%;aspect-ratio:1/1;border-radius:var(--r-sm);
   background:var(--black);display:flex;align-items:center;justify-content:center;
 }
 .car-art svg{width:56%;height:88%;display:block}
-.ult-tag{
-  display:block;font-family:var(--mono);font-size:9px;letter-spacing:.2em;
-  text-transform:uppercase;color:var(--red);margin:4px 0 3px;
-}
-.car-opt.phantom .ult-tag{color:#1E5FA8}
-.car-opt.timestamp .ult-tag{color:#1F7A4C}
-.car-opt.rose .ult-tag{color:#7B3FA8}
-.car-opt.siren .ult-tag{color:#3A4A6B}
 #garage{background:var(--gray-100)}
 .tabs{display:flex;gap:6px;padding:0 var(--pad) 12px}
-.tab{flex:1;appearance:none;border:0;cursor:pointer;padding:11px 6px;border-radius:var(--r-sm);
+.tab{flex:1;appearance:none;border:0;cursor:pointer;padding:9px 6px;border-radius:var(--r-sm);
   background:var(--gray-200);font-family:var(--mono);font-size:10px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--icon)}
+  text-transform:uppercase;color:var(--icon);
+  white-space:pre-line;line-height:1.3;text-align:center;
+  display:flex;align-items:center;justify-content:center}
 .tab.on{background:var(--red);color:#fff}
 #garageBody{flex:1;overflow-y:auto;padding:0 var(--pad) calc(24px + var(--safe-b))}
 .info{background:var(--gray-050);border-radius:var(--r-md);padding:14px 16px;margin-bottom:10px}
+.kind{
+  display:inline-block;margin-bottom:6px;padding:3px 7px;border-radius:5px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+}
+.kind.track{background:var(--gray-200);color:var(--icon)}
+.kind.trap{background:var(--red);color:#fff}
+.kind.pickup{background:#7FB3E8;color:#0B0B0C}
 .info h3{margin:0 0 2px;font-family:var(--display);font-variation-settings:'wdth' 118,'wght' 750;
   text-transform:uppercase;font-size:16px;letter-spacing:.04em;color:var(--black)}
 .info p{margin:4px 0 0;font-size:13px;color:var(--muted);line-height:1.4}
 .info .tagrow{margin-top:6px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
-#carBolt .ult-tag{color:#9A7A00}
 .diff-mark{width:56px;height:70px;flex:0 0 auto;border-radius:var(--r-sm);background:var(--black);
   display:flex;align-items:center;justify-content:center;gap:4px}
 .diff-mark i{width:5px;border-radius:3px;background:var(--red)}
@@ -318,13 +317,22 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 #raceClock.on{display:block}
 #raceClock.final{color:var(--red)}
 #ultPct{
-  display:block;margin-top:9px;font-family:var(--mono);font-weight:600;font-size:15px;
-  color:rgba(255,255,255,.7);text-shadow:0 1px 8px rgba(0,0,0,.85);
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-top:9px;width:46px;height:46px;box-sizing:border-box;
+  border-radius:var(--r-sm);border:2px solid rgba(255,255,255,.28);
+  background:rgba(11,11,12,.62);
+  font-family:var(--mono);font-weight:600;font-size:15px;
+  color:rgba(255,255,255,.78);text-shadow:0 1px 6px rgba(0,0,0,.85);
+  transition:background .18s ease,border-color .18s ease,color .18s ease;
 }
-#ultPct.ready{animation:ultPulse 1.05s ease-in-out infinite}
+/* charged: the square itself goes light red, the number white */
+#ultPct.ready{
+  background:var(--red-press);border-color:#fff;color:#fff;text-shadow:none;
+  animation:ultPulse 1.05s ease-in-out infinite;
+}
 #ultPct.gain{animation:ultGain .5s ease}
-@keyframes ultGain{0%{transform:scale(1)}35%{transform:scale(1.35);color:#fff}100%{transform:scale(1)}}
-@keyframes ultPulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes ultGain{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
+@keyframes ultPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,127,.55)}50%{box-shadow:0 0 0 7px rgba(255,122,127,0)}}
 
 /* ============================================================
    5. Race
@@ -342,9 +350,14 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 .readout .k{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:#8D919A;text-transform:uppercase}
 .readout .v{font-family:var(--mono);font-weight:600;font-size:34px;color:#fff;line-height:1;margin-top:3px;text-shadow:0 2px 10px rgba(0,0,0,.6)}
 .readout .b{font-family:var(--mono);font-size:11px;color:#8D919A;margin-top:7px;letter-spacing:.1em}
-.readout .pos{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:6px;font-family:var(--mono)}
+.readout .pos{
+  display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:4px;
+  font-family:var(--mono);opacity:.62;
+}
+.readout .pos.mine{opacity:1}
 .readout .pos .p{font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
-.readout .pos .n{font-size:14px;font-weight:600;min-width:52px;text-align:right}
+.readout .pos .n{font-size:13px;font-weight:600;min-width:50px;text-align:right}
+.readout .pos.mine .n{font-size:14px}
 #gauges{position:absolute;left:16px;top:calc(66px + var(--safe-t));pointer-events:none}
 #trackName{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.85)}
 #effList{
@@ -377,6 +390,18 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 }
 #cleanseTag.on{animation:cleansePop 1s ease both}
 @keyframes cleansePop{0%{opacity:0;transform:scale(.85)}25%{opacity:1;transform:scale(1)}75%{opacity:1}100%{opacity:0}}
+#itemBox{
+  position:absolute;right:16px;bottom:calc(30px + var(--safe-b));
+  width:54px;height:54px;box-sizing:border-box;
+  appearance:none;cursor:pointer;pointer-events:auto;
+  border:2px solid #fff;border-radius:var(--r-sm);
+  background:rgba(11,11,12,.62);
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .18s ease,background .18s ease,transform .09s ease;
+}
+#itemBox:active{transform:scale(.92)}
+#itemBox.full{background:rgba(11,11,12,.8)}
+#itemBox svg{width:30px;height:30px;display:block}
 #boostWrap{position:absolute;left:16px;right:16px;bottom:calc(14px + var(--safe-b));height:4px;background:rgba(255,255,255,.16);border-radius:3px;overflow:hidden}
 #boostFill{height:100%;width:100%;background:var(--red);border-radius:3px;transition:background .2s ease}
 #boostWrap.full #boostFill{background:var(--red-press)}
@@ -516,6 +541,7 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
         <span class="lbl" data-i18n="k1">lanes</span>
         <span class="key">&#8593;</span><span class="lbl" data-i18n="k2">boost</span>
         <span class="key">Shift</span><span class="lbl" data-i18n="k4">ultimate</span>
+        <span class="key">E</span><span class="lbl" data-i18n="k5">item</span>
         <span class="key">P</span><span class="lbl" data-i18n="k3">pause</span>
       </div>
     </div>
@@ -615,7 +641,6 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
           </svg>
         </span>
           <span class="mode-name" data-i18n="redd">Redd</span>
-          <span class="ult-tag" data-i18n="ultimate">Ultimate</span>
         </button>
         <button class="car-opt phantom" id="carPhantom">
           <span class="car-art">
@@ -635,7 +660,6 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
           </svg>
         </span>
           <span class="mode-name" data-i18n="phantom">Phantom</span>
-          <span class="ult-tag" data-i18n="ultimate">Ultimate</span>
         </button>
         <button class="car-opt " id="carBolt">
           <span class="car-art">
@@ -655,7 +679,6 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
           </svg>
         </span>
           <span class="mode-name" data-i18n="bolt">Bolt</span>
-          <span class="ult-tag" data-i18n="ultimate">Ultimate</span>
         </button>
         <button class="car-opt timestamp" id="carTimestamp">
           <span class="car-art"><svg viewBox="0 0 76 132" aria-hidden="true">
@@ -674,7 +697,6 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
             <rect x="13" y="108" width="50" height="4" rx="2" fill="#3FD98A"/>
           </svg></span>
           <span class="mode-name" data-i18n="timestamp">Timestamp</span>
-          <span class="ult-tag" data-i18n="ultimate">Ultimate</span>
         </button>
         <button class="car-opt rose" id="carRose">
           <span class="car-art"><svg viewBox="0 0 76 132" aria-hidden="true">
@@ -693,16 +715,13 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
             <rect x="15" y="108" width="16" height="4" rx="2" fill="#FFD9F2"/><rect x="45" y="108" width="16" height="4" rx="2" fill="#FFD9F2"/>
           </svg></span>
           <span class="mode-name" data-i18n="rose">Rose</span>
-          <span class="ult-tag" data-i18n="ultimate">Ultimate</span>
         </button>
         <button class="car-opt siren" id="carSiren">
           <span class="car-art"><svg viewBox="0 0 76 132"><g fill="#0C0D10"><rect x="0" y="26" width="14" height="23" rx="5"/><rect x="62" y="26" width="14" height="23" rx="5"/><rect x="0" y="86" width="14" height="23" rx="5"/><rect x="62" y="86" width="14" height="23" rx="5"/></g><rect x="8" y="4" width="60" height="124" rx="12" fill="#F2F3F5"/><rect x="8" y="46" width="60" height="42" fill="#101114"/><rect x="12" y="6" width="52" height="11" rx="4" fill="#101114"/><rect x="20" y="52" width="36" height="30" rx="7" fill="#5A6472"/><rect x="18" y="36" width="40" height="9" rx="4" fill="#101114"/><rect x="20" y="37" width="17" height="7" rx="3" fill="#4D8BFF"/><rect x="39" y="37" width="17" height="7" rx="3" fill="#FF4A50"/><rect x="6" y="112" width="64" height="10" rx="5" fill="#101114"/></svg></span>
           <span class="mode-name" data-i18n="siren">Siren</span>
-          <span class="ult-tag" data-i18n="ultimate">Ultimate</span>
         </button>
       </div>
 
-      <p class="soon" id="ultHint" data-i18n="holdTwo">Hold two fingers to unleash it</p>
     </div>
   </section>
 
@@ -721,7 +740,8 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
     </div>
     <div class="tabs">
       <button class="tab on" id="tabCars" data-i18n="tabCars">Cars</button>
-      <button class="tab" id="tabTracks" data-i18n="tabTracks">Tracks &amp; traps</button>
+      <button class="tab" id="tabTracks" data-i18n="tabTracks">Tracks
+traps</button>
       <button class="tab" id="tabEffects" data-i18n="tabEffects">Effects</button>
     </div>
     <div id="garageBody"></div>
@@ -743,6 +763,9 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
           <div class="pos" id="posRow1"><span class="p" id="pos1">1st</span><span class="n" id="pos1n">0</span></div>
           <div class="pos" id="posRow2"><span class="p" id="pos2">2nd</span><span class="n" id="pos2n">0</span></div>
           <div class="pos" id="posRow3"><span class="p" id="pos3">3rd</span><span class="n" id="pos3n">0</span></div>
+          <div class="pos" id="posRow4"><span class="p" id="pos4">4th</span><span class="n" id="pos4n">0</span></div>
+          <div class="pos" id="posRow5"><span class="p" id="pos5">5th</span><span class="n" id="pos5n">0</span></div>
+          <div class="pos" id="posRow6"><span class="p" id="pos6">6th</span><span class="n" id="pos6n">0</span></div>
           <div class="b"><span data-i18n="bestShort">Best</span> <span id="hudBest">0</span></div>
         </div>
       </div>
@@ -750,6 +773,7 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
       <div id="effList"></div>
       <div id="immuneTag"></div>
       <div id="cleanseTag"></div>
+      <button id="itemBox" aria-label="Use item"><span id="itemIcon"></span></button>
       <div id="boostWrap"><div id="boostFill"></div></div>
     </div>
     <div id="flash"></div>
@@ -857,6 +881,7 @@ const STR = {
   k1:           {en:"lanes",                       fr:"voies"},
   k2:           {en:"boost",                       fr:"turbo"},
   k3:           {en:"pause",                       fr:"pause"},
+  k5:           {en:"item",                        fr:"objet"},
   k4:           {en:"ultimate",                    fr:"ultime"},
   chooseMode:   {en:"Choose a mode",               fr:"Choisir un mode"},
   endless:      {en:"Endless run",                 fr:"Course sans fin"},
@@ -909,6 +934,9 @@ const STR = {
   boltUlt:      {en:"Three orbs circle you. Fire them one by one to pin a car ahead.",
                  fr:"Trois orbes vous entourent. Tirez-les pour clouer une voiture devant."},
   place3:       {en:"3rd",                         fr:"3e"},
+  place4:       {en:"4th",                         fr:"4e"},
+  place5:       {en:"5th",                         fr:"5e"},
+  place6:       {en:"6th",                         fr:"6e"},
   timestamp:    {en:"Timestamp",                   fr:"Timestamp"},
   timestampUlt: {en:"Stops time dead for everyone else while it drives on.",
                  fr:"Arr\u00eate le temps pour tous les autres et continue seule."},
@@ -928,20 +956,29 @@ const STR = {
   efGhosted:    {en:"Ghosted",    fr:"Spectral"},
   efOrdered:    {en:"Ordered",    fr:"Somm\u00e9"},
   efCleansed:   {en:"Cleansed",   fr:"Purifi\u00e9"},
+  efSlippery:   {en:"Slippery",   fr:"Glissant"},
   garage:       {en:"Cars & more",                 fr:"Voitures et plus"},
   tabCars:      {en:"Cars",                        fr:"Voitures"},
-  tabTracks:    {en:"Tracks & traps",              fr:"Pistes et pi\u00e8ges"},
+  kindTrack:    {en:"Track",       fr:"Piste"},
+  kindTrap:     {en:"Trap",        fr:"Pi\u00e8ge"},
+  tabTracks:    {en:"Tracks\ntraps",               fr:"Pistes\npi\u00e8ges"},
   tabEffects:   {en:"Effects",                     fr:"Effets"},
   byLine:       {en:"a game by hiyroscript",       fr:"un jeu de hiyroscript"},
-  cityInfo:     {en:"Rooftops and crosswalks. Puddles lie in wait.", fr:"Toits et passages pi\u00e9tons. Des flaques vous attendent."},
-  desertInfo:   {en:"Sand and rock. Tumbleweeds roll across the road.", fr:"Sable et roche. Des virevoltants traversent la route."},
-  spaceInfo:    {en:"A rainbow road through the void. Meteors fall.", fr:"Une route arc-en-ciel dans le vide. Des m\u00e9t\u00e9ores tombent."},
+  cityInfo:     {en:"Dark asphalt between pale rooftops, water tanks and helipads. White lane dashes, crosswalks and red hydrants along the kerb.",
+                 fr:"Asphalte sombre entre des toits p\u00e2les, ch\u00e2teaux d'eau et h\u00e9lisurfaces. Lignes blanches, passages pi\u00e9tons et bornes rouges au bord."},
+  desertInfo:   {en:"Sand-coloured ground and layered rock, with cacti and scrub on the shoulders. Sand drifts blow across a dark road under faded yellow markings.",
+                 fr:"Sol sableux et roche stratifi\u00e9e, cactus et broussailles sur les bas-c\u00f4t\u00e9s. Le sable balaie une route sombre aux marquages jaunis."},
+  spaceInfo:    {en:"A road of scrolling rainbow bands over near-black, edged with neon cyan rails. Nothing beside it but a drifting starfield.",
+                 fr:"Une route de bandes arc-en-ciel d\u00e9filantes sur du presque noir, bord\u00e9e de rails cyan. Autour, seulement un champ d'\u00e9toiles."},
   puddleName:   {en:"Puddle",     fr:"Flaque"},
-  puddleInfo:   {en:"City hazard. Throws water over your view: cluttered.", fr:"Pi\u00e8ge urbain. Vous asperge la vue : encombr\u00e9."},
+  puddleInfo:   {en:"Drive through it and water is thrown over your screen, leaving you cluttered for a few seconds. Costs 5% of your ultimate.",
+                 fr:"Roulez dedans et l'eau vous asperge l'\u00e9cran : encombr\u00e9 quelques secondes. Co\u00fbte 5% de votre ultime."},
   meteorName:   {en:"Meteor",     fr:"M\u00e9t\u00e9ore"},
-  meteorInfo:   {en:"Space hazard. A red ring marks the impact. Destroys.", fr:"Pi\u00e8ge spatial. Un cercle rouge marque l'impact. D\u00e9truit."},
+  meteorInfo:   {en:"A blinking red ring marks where it will land. Anything caught in the blast is destroyed and respawns after three seconds. Costs 10% of your ultimate.",
+                 fr:"Un cercle rouge clignotant marque l'impact. Tout ce qui est pris dans l'explosion est d\u00e9truit et rena\u00eet apr\u00e8s trois secondes. Co\u00fbte 10% de votre ultime."},
   weedName:     {en:"Tumbleweed", fr:"Virevoltant"},
-  weedInfo:     {en:"Desert hazard. Crosses the road and slows you.", fr:"Pi\u00e8ge du d\u00e9sert. Traverse la route et vous ralentit."},
+  weedInfo:     {en:"Rolls across the road from either side. Hitting one halves your speed for a short while. Costs 5% of your ultimate.",
+                 fr:"Traverse la route d'un c\u00f4t\u00e9 \u00e0 l'autre. La percuter divise votre vitesse par deux un moment. Co\u00fbte 5% de votre ultime."},
   slowedInfo:   {en:"Anything that cuts your pace in half.", fr:"Tout ce qui divise votre allure par deux."},
   immuneInfo:   {en:"Nothing can touch you. Granted on respawn and by Phantom.", fr:"Rien ne peut vous atteindre. Au respawn et avec Phantom."},
   clutteredInfo:{en:"Your view is fouled. From puddles and from Rose.", fr:"Votre vue est salie. Flaques et Rose."},
@@ -952,13 +989,26 @@ const STR = {
   ghostedInfo:  {en:"Phantom as vapour. Passes through everything, and is immune.", fr:"Phantom en vapeur. Traverse tout et est immunis\u00e9e."},
   orderedInfo:  {en:"Siren has ordered you aside. Your controls are gone.", fr:"Siren vous somme de d\u00e9gager. Vos commandes sont coup\u00e9es."},
   cleansedInfo: {en:"A one-off wipe of slowed, cluttered and shocked.", fr:"Efface d'un coup ralenti, encombr\u00e9 et \u00e9lectrocut\u00e9."},
+  itemCan:      {en:"Boost can",   fr:"Bidon de boost"},
+  itemCanInfo:  {en:"Common. A short burst of extra speed that does not touch your boost meter.",
+                 fr:"Commun. Une courte acc\u00e9l\u00e9ration sans toucher \u00e0 votre jauge de boost."},
+  itemOil:      {en:"Oily oil",    fr:"Huile"},
+  itemOilInfo:  {en:"Rare. Drops a slick behind you. The first racer to touch it loses all grip.",
+                 fr:"Rare. Laisse une flaque d'huile. Le premier qui la touche perd toute adh\u00e9rence."},
+  itemSeeker:   {en:"Seeker",      fr:"Traqueur"},
+  itemSeekerInfo:{en:"Legendary. A missile that hunts the leader, destroying whatever it passes through.",
+                 fr:"L\u00e9gendaire. Un missile qui traque le premier et d\u00e9truit tout sur son passage."},
+  bubbleName:   {en:"Mystery bubble", fr:"Bulle myst\u00e8re"},
+  bubbleInfo:   {en:"Three drift across the road together. Touch one for a random item; only one per row, and a new one replaces what you hold.",
+                 fr:"Trois d\u00e9rivent ensemble. Touchez-en une pour un objet al\u00e9atoire ; une seule par rang\u00e9e, et la suivante remplace la pr\u00e9c\u00e9dente."},
+  kindItem:     {en:"Item",        fr:"Objet"},
+  kindBubble:   {en:"Pickup",      fr:"Bonus"},
+  slipperyInfo: {en:"No grip: your steering is reversed. Left goes right and right goes left.",
+                 fr:"Aucune adh\u00e9rence : direction invers\u00e9e. Gauche va \u00e0 droite et droite \u00e0 gauche."},
   finished:     {en:"Finished",                    fr:"Arriv\u00e9e"},
   yourPlace:    {en:"Your place",                  fr:"Votre place"},
   place1:       {en:"1st",                         fr:"1er"},
   place2:       {en:"2nd",                         fr:"2e"},
-  holdTwo:      {en:"Tap the screen to unleash it",
-                 fr:"Touchez l'\u00e9cran pour la d\u00e9clencher"},
-  holdKey:      {en:"Press Shift to unleash it",   fr:"Appuyez sur Maj pour la d\u00e9clencher"}
 };
 let lang = store.get("redline.lang") || null;
 let curTrackKey = "trackCity";
@@ -972,7 +1022,6 @@ function applyLang(){
     if(s) el.textContent = s[L];
   });
   const tn = $("#trackName"); if(tn) tn.textContent = STR[curTrackKey][L];
-  const uh = $("#ultHint"); if(uh) uh.textContent = STR[DESKTOP ? "holdKey" : "holdTwo"][L];
 }
 
 const CARS = {
@@ -1032,7 +1081,8 @@ const EFFECTS = {
   onfire:   { key:"efOnFire",    col:"#FF5A2A" },
   ghosted:  { key:"efGhosted",   col:"#8FD0FF" },
   ordered:  { key:"efOrdered",   col:"#4D8BFF" },
-  cleansed: { key:"efCleansed",  col:"#B96BFF" }
+  cleansed: { key:"efCleansed",  col:"#B96BFF" },
+  slippery: { key:"efSlippery",  col:"#0B0B0C" }
 };
 const ULT_EFFECTS = {
   burn:   ["boosted","onfire"],
@@ -1044,6 +1094,28 @@ const ULT_EFFECTS = {
 };
 const FREEZE_TIME = 5, BLOOM_TIME = 7, SIREN_TIME = 6;
 const ORDER_TIME = 1.4, SIREN_RANGE = 260;
+/* gold, silver, bronze, then plain white for the rest of the field */
+const PLACE_COLS = ["#FFD24A", "#D9DEE6", "#D08A4A", "#FFFFFF"];
+/* ---------------- mystery bubbles ---------------- */
+const RARITY = {
+  common:    { col:"#E8E9EC", weight:60 },
+  rare:      { col:"#4D8BFF", weight:25 },
+  epic:      { col:"#B96BFF", weight:10 },
+  legendary: { col:"#FFD24A", weight:5  }
+};
+const ITEMS = {
+  can:    { key:"itemCan",    rarity:"common" },
+  oil:    { key:"itemOil",    rarity:"rare" },
+  seeker: { key:"itemSeeker", rarity:"legendary" }
+};
+const ITEM_IDS = ["can", "oil", "seeker"];
+const BUBBLE_GAP = 1500;                  /* road distance between rows */
+const CAN_TIME = 2.2, CAN_SPEED = 1.55;   /* the boost can */
+const OIL_LIFE = 22, SLIP_TIME = 4;       /* the slick, and how long it costs you */
+const MISSILE_SPEED = 2100;
+const BUBBLE_R = 21;
+
+const PIP_FAR = 500;                      /* beyond this the marker drops the number */
 const SHOCK_TIME = 10;                    /* Bolt: how long a hit car is pinned */
 const SHOCK_STACK = 5;                    /* every further hit adds this */
 const SHOCK_MAX = 25;
@@ -1075,10 +1147,20 @@ function buildGarage(){
     });
   } else if(garageTab === "tracks"){
     TRACK_IDS.forEach(function(id){
-      html += '<div class="info"><h3>' + t(TRACKS[id].key) + '</h3><p>' + t(id + "Info") + '</p></div>';
+      html += '<div class="info"><span class="kind track">' + t("kindTrack") + '</span>' +
+              '<h3>' + t(TRACKS[id].key) + '</h3><p>' + t(id + "Info") + '</p></div>';
     });
     ["puddle","meteor","weed"].forEach(function(id){
-      html += '<div class="info"><h3>' + t(id + "Name") + '</h3><p>' + t(id + "Info") + '</p></div>';
+      html += '<div class="info"><span class="kind trap">' + t("kindTrap") + '</span>' +
+              '<h3>' + t(id + "Name") + '</h3><p>' + t(id + "Info") + '</p></div>';
+    });
+    html += '<div class="info"><span class="kind pickup">' + t("kindBubble") + '</span>' +
+            '<h3>' + t("bubbleName") + '</h3><p>' + t("bubbleInfo") + '</p></div>';
+    ITEM_IDS.forEach(function(id){
+      const r = RARITY[ITEMS[id].rarity];
+      html += '<div class="info"><span class="kind item" style="background:' + r.col +
+              ';color:#0B0B0C">' + t("kindItem") + '</span>' +
+              '<h3>' + t(ITEMS[id].key) + '</h3><p>' + t(ITEMS[id].key + "Info") + '</p></div>';
     });
   } else {
     for(const id in EFFECTS){
@@ -1225,6 +1307,7 @@ $("#tabCars").addEventListener("click", function(){ garageTab = "cars"; setTab()
 $("#tabTracks").addEventListener("click", function(){ garageTab = "tracks"; setTab(); });
 $("#tabEffects").addEventListener("click", function(){ garageTab = "effects"; setTab(); });
 $("#carRandom").addEventListener("click", function(){ pickCar(CAR_IDS[randi(0, CAR_IDS.length-1)]); });
+$("#itemBox").addEventListener("click", function(e){ if(e && e.stopPropagation) e.stopPropagation(); useItem("me"); });
 $("#btnPause").addEventListener("click", function(){ pause(true); });
 $("#btnResume").addEventListener("click", function(){ pause(false); });
 $("#btnQuit").addEventListener("click", function(){ leave(); });
@@ -1248,11 +1331,12 @@ const G = {
   traps:[], fx:[], trapGap:0, nextTrap:600,
   tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0,
   car:"redd", ult:0, ultOn:false, ultKey:false, ultArmed:true,
-  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9, dodgeFlash:0,
+  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9, dodgeFlash:0, parkWait:0,
   cdT:0, cdStep:-1, wasCounting:false,
   mode:"endless", diff:"medium",
   orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
   frozenT:0, orderedT:0, bloomT:0, cleanseT:0, petals:[], freezeT:0, bloomOwner:null, effLog:[],
+  slipT:0, item:null, boxes:[], slicks:[], missiles:[], boxGap:0, canT:0, lastTap:-9, tapClock:0,
   freezeOwner:null, sirenOwner:null,
   raceT:0, tracksLeft:-1, finishAt:0, finished:null, results:[]
 };
@@ -1410,7 +1494,8 @@ function spawnRivals(){
       car:id, lane:lane, x:laneCX(lane), y:playerY + back, tilt:0,
       abs:0, changeT:rand(0.2, 0.7),          /* standing start: everyone from zero */
       slow:0, blind:0, dead:0, immune:0, shock:0, launch:0, bumpCD:0,
-      frozen:0, ordered:0, clutter:0, orderDir:1,
+      frozen:0, ordered:0, clutter:0, orderDir:1, slip:0,
+      item:null, itemRow:-1, canT:0, useT:rand(0.6, 2.4), item:null, canT:0, useT:0,
       inDanger:false, willReact:true, reactT:0, prevLane:-1, laneT:9,
       ult:0, ultOn:false, ultWait:rand(1, 3), orbs:0, fireT:0,
       charge:1, boostLock:false, boosting:false,
@@ -1428,32 +1513,39 @@ function ghosting(who){
     ? (G.ultOn && CARS[G.car].power === "phase")
     : (!!who && who.ultOn && CARS[who.car].power === "phase");
 }
-function safeCar(R){ return !R || R.dead > 0 || R.immune > 0 || R.ultOn && CARS[R.car].power !== "storm"; }
+/* Finished: not shown anywhere and only ever granted at the flag. A finished
+   racer is simply out of play - nothing can target, hit or bump it. */
+function finishedCar(R){ return !!R && R.finished !== null; }
+function finishedMe(){ return G.finished !== null; }
+
+function safeCar(R){ return !R || finishedCar(R) || R.dead > 0 || R.immune > 0 || R.ultOn && CARS[R.car].power !== "storm"; }
 /* Immune means immune to everything, ultimates included. */
-function immuneCar(R){ return !!R && (R.dead > 0 || R.immune > 0); }
-function immuneMe(){ return G.dead > 0 || G.immune > 0; }
+function immuneCar(R){ return !!R && (finishedCar(R) || R.dead > 0 || R.immune > 0); }
+function immuneMe(){ return finishedMe() || G.dead > 0 || G.immune > 0; }
 
 /* Immunity cleanses on arrival and keeps cleansing for as long as it lasts.
    This is not the one-off Cleansed effect; nothing is announced. */
 function immuneScrub(){
   if(G.immune > 0){
-    G.slowT = 0; G.shockT = 0; G.blind = 0; G.frozenT = 0; G.orderedT = 0;
+    G.slowT = 0; G.shockT = 0; G.blind = 0; G.frozenT = 0; G.orderedT = 0; G.slipT = 0;
     if(G.bloomT > 0){ G.bloomT = 0; G.petals = []; }
   }
   for(let i=0;i<G.rivals.length;i++){
     const R = G.rivals[i];
     if(R.immune <= 0) continue;
-    R.slow = 0; R.shock = 0; R.blind = 0; R.clutter = 0; R.frozen = 0; R.ordered = 0;
+    R.slow = 0; R.shock = 0; R.blind = 0; R.clutter = 0; R.frozen = 0; R.ordered = 0; R.slip = 0;
   }
 }
-function playerUntouchable(){ return G.dead > 0 || G.immune > 0 || (G.ultOn && CARS[G.car].power !== "storm"); }
+function playerUntouchable(){ return finishedMe() || G.dead > 0 || G.immune > 0 || (G.ultOn && CARS[G.car].power !== "storm"); }
 
 /* every car on the road, described the same way */
 function racers(){
-  const list = [{ me:true, obj:null, lane:G.lane, y:playerY, car:G.car, out:G.dead > 0 }];
+  const list = [{ me:true, obj:null, lane:G.lane, y:playerY, car:G.car,
+                  out:G.dead > 0 || finishedMe() }];
   for(let i=0;i<G.rivals.length;i++){
     const R = G.rivals[i];
-    list.push({ me:false, obj:R, lane:R.lane, y:R.y, car:R.car, out:R.dead > 0 });
+    list.push({ me:false, obj:R, lane:R.lane, y:R.y, car:R.car,
+                out:R.dead > 0 || finishedCar(R) });
   }
   return list;
 }
@@ -1473,6 +1565,8 @@ function carAt(lane, y, skip){
    you lose time. What your ultimate is doing changes the outcome. */
 function rearEnd(who, victim){
   const meB = who === "me";
+  if(meB ? finishedMe() : finishedCar(who)) return;      /* out of play: no contact */
+  if(victim.me ? finishedMe() : finishedCar(victim.obj)) return;
   const power = meB ? (G.ultOn ? CARS[G.car].power : null)
                     : (who.ultOn ? CARS[who.car].power : null);
   if(power === "phase") return;                        /* straight through */
@@ -1583,6 +1677,12 @@ function laneRisk(R, far){
   return risk;
 }
 
+/* what the bot meant to do, after its steering is reversed */
+function rivalSteer(R, lane){
+  if(R.slip > 0) lane = clamp(R.lane - (lane - R.lane), 0, 2);
+  rivalLaneTo(R, lane);
+}
+
 function rivalLaneTo(R, lane){
   const dir = lane > R.lane ? 1 : -1;
   R.prevLane = R.lane; R.laneT = 0;
@@ -1611,8 +1711,8 @@ function rivalThink(R, dt){
   /* 1. get out of trouble */
   if(risk[R.lane]){
     if(R.willReact && R.reactT <= 0){
-      if(clean.length) return rivalLaneTo(R, clean[randi(0, clean.length-1)]);
-      if(taken.length) return rivalLaneTo(R, taken[0]);     /* shove through */
+      if(clean.length) return rivalSteer(R, clean[randi(0, clean.length-1)]);
+      if(taken.length) return rivalSteer(R, taken[0]);     /* shove through */
     }
     return;
   }
@@ -1626,7 +1726,7 @@ function rivalThink(R, dt){
       const dir = l > R.lane ? 1 : -1;
       if(soon[l] || !v) continue;
       if(!v.me && Math.random() > 0.12) continue;      /* rarely pick on each other */
-      if(l + dir < 0 || l + dir > 2) return rivalLaneTo(R, l);
+      if(l + dir < 0 || l + dir > 2) return rivalSteer(R, l);
     }
   }
 
@@ -1639,24 +1739,24 @@ function rivalThink(R, dt){
       const behind = a.y - R.y;
       if(behind > carH*0.9 && behind < carH*3.4 && metersOf(a.obj) < mine){
         if(a.lane !== R.lane && opts.indexOf(a.lane) >= 0 && !risk[a.lane] && !soon[a.lane])
-          return rivalLaneTo(R, a.lane);                    /* move across to cover */
+          return rivalSteer(R, a.lane);                    /* move across to cover */
       }
     }
   }
 
   /* 4. otherwise drift for position now and then */
   const safe = clean.filter(function(l){ return !soon[l]; });
-  if(soon[R.lane] && safe.length) return rivalLaneTo(R, safe[randi(0, safe.length-1)]);
-  if(safe.length && Math.random() < 0.10) rivalLaneTo(R, safe[randi(0, safe.length-1)]);
+  if(soon[R.lane] && safe.length) return rivalSteer(R, safe[randi(0, safe.length-1)]);
+  if(safe.length && Math.random() < 0.10) rivalSteer(R, safe[randi(0, safe.length-1)]);
   else if(taken.length && !soon[taken[0]]){
     const v = carAt(taken[0], R.y, R);
     const shove = v && !v.me ? 0.03 : 0.05 + D.aggro*0.2;   /* gentler on each other */
-    if(Math.random() < shove) rivalLaneTo(R, taken[0]);
+    if(Math.random() < shove) rivalSteer(R, taken[0]);
   }
 }
 
 function updateRival(R, dt, st){
-  if(st !== "running") return;
+  if(st !== "running" && st !== "over") return;   /* still let them reach the flag */
   const D = diff();
 
   if(R.slow > 0)   R.slow   = Math.max(0, R.slow - dt);
@@ -1665,6 +1765,12 @@ function updateRival(R, dt, st){
   if(R.shock > 0){ R.shock = Math.max(0, R.shock - dt); R.boosting = false; }
   if(R.frozen > 0){ R.frozen = Math.max(0, R.frozen - dt); R.boosting = false; }
   if(R.ordered > 0) R.ordered = Math.max(0, R.ordered - dt);
+  if(R.slip > 0) R.slip = Math.max(0, R.slip - dt);
+  if(R.canT > 0) R.canT = Math.max(0, R.canT - dt);
+  if(R.item && R.useT > 0){                      /* bots hold an item, then use it */
+    R.useT -= dt*(0.6 + diff().ult);
+    if(R.useT <= 0) useItem(R);
+  }
   if(R.clutter > 0) R.clutter = Math.max(0, R.clutter - dt);
   if(R.launch > 0) R.launch = Math.max(0, R.launch - dt);
   if(R.bumpCD > 0) R.bumpCD = Math.max(0, R.bumpCD - dt);
@@ -1680,7 +1786,25 @@ function updateRival(R, dt, st){
     R.y += G.speed*dt;
     return;
   }
-  if(R.finished !== null){ R.abs = BASE_SPEED*speedMult(); R.y += (G.speed - R.abs)*dt; return; }
+  if(R.finished !== null){                     /* over the line: roll to a stop */
+    R.abs = lerp(R.abs, 0, 1 - Math.pow(0.02, dt));
+    if(R.abs < 2) R.abs = 0;
+    R.tilt = 0;
+    /* Only tidy up once the whole field is in; parking early can wall off all
+       three lanes and trap someone still on their way to the flag. */
+    const allIn = G.finished !== null && G.rivals.every(function(x){ return x.finished !== null; });
+    if(!allIn){
+      R.y += (G.speed - R.abs)*dt;              /* others still racing: it recedes */
+    } else {
+      const cell = parkCell(R);
+      if(cell){
+        R.lane = cell.lane;
+        R.y = lerp(R.y, playerY - cell.row*carH*1.6, 1 - Math.pow(0.02, dt));
+      }
+    }
+    R.x = lerp(R.x, laneCX(R.lane), 1 - Math.pow(0.00008, dt));
+    return;
+  }
 
   /* ultimate: held back for a moment that matters */
   const mine = metersOf(R);
@@ -1740,6 +1864,7 @@ function updateRival(R, dt, st){
     else if(R.orbs > 0) want *= BOLT_ORB_SPEED;
     else if(R.slow > 0) want *= 0.5;
     if(R.boosting) want *= 1.5;
+  if(R.canT > 0) want *= CAN_SPEED;
     if(R.launch > 0) want *= LAUNCH_BOOST;
   }
   R.abs = lerp(R.abs, want, 1 - Math.pow(0.001, dt));   /* same throttle response as you */
@@ -1770,7 +1895,7 @@ function updateRival(R, dt, st){
   /* hazards, on exactly the terms the player gets them */
   const smash = R.ultOn && CARS[R.car].power === "burn";
   const ghost = R.ultOn && CARS[R.car].power === "phase";
-  if(R.immune <= 0 && !ghost){
+  if(R.immune <= 0 && !ghost && !finishedCar(R)){
     const rc = { x:R.x, y:R.y, hw:carW*0.40, hh:carH*0.42 };
     const bit = 2 << G.rivals.indexOf(R);
     for(let i=G.traps.length-1;i>=0;i--){
@@ -1930,24 +2055,63 @@ function updateRivals(dt, st){
 }
 
 /* who has crossed the flag, and in what order */
+/* A finisher rolls to a stop and tucks into a free lane rather than piling
+   onto whoever stopped first. */
+/* Once everyone is done, the field tidies itself into a 3x2 grid around your
+   car so nothing ends up parked on top of anything else. */
+function parkCell(R){
+  const done = G.rivals.filter(function(x){ return x.finished !== null; })
+                       .sort(function(a, b){ return a.finished - b.finished; });
+  const k = done.indexOf(R);
+  if(k < 0) return null;
+  const cells = [];
+  for(const row of [1, 0])
+    for(const lane of [0, 1, 2])
+      if(!(row === 0 && lane === G.lane)) cells.push({ lane:lane, row:row });
+  return cells[k % cells.length];
+}
+
+function parkLane(skip, y){
+  const busy = [0,0,0];
+  for(let i=0;i<G.rivals.length;i++){
+    const R = G.rivals[i];
+    if(R === skip || R.finished === null) continue;
+    if(Math.abs(R.y - y) < carH*1.4) busy[R.lane] = 1;
+  }
+  if(skip !== "me" && G.finished !== null && Math.abs(playerY - y) < carH*1.4) busy[G.lane] = 1;
+  const here = skip === "me" ? G.lane : skip.lane;
+  if(!busy[here]) return here;
+  for(let d=1;d<=2;d++){
+    if(here - d >= 0 && !busy[here - d]) return here - d;
+    if(here + d <= 2 && !busy[here + d]) return here + d;
+  }
+  return here;
+}
+
 function checkFinish(){
-  if(!G.finishAt || G.state !== "running") return;
+  if(!G.finishAt || (G.state !== "running" && G.state !== "over")) return;
   for(let i=0;i<G.rivals.length;i++){
     const R = G.rivals[i];
     if(R.finished === null && metersOf(R) >= G.finishAt){
       R.finished = G.results.length + 1;
       G.results.push({ me:false, car:R.car, place:R.finished });
+      R.lane = parkLane(R, R.y);                 /* pull into a free lane */
+      R.ultOn = false; R.stormOn = false; R.boosting = false; R.orbs = 0;
     }
   }
   if(G.finished === null && G.meters >= G.finishAt){
     G.finished = G.results.length + 1;
     G.results.push({ me:true, car:G.car, place:G.finished });
+    G.lane = parkLane("me", playerY);           /* your car parks too */
+    G.ultOn = false; G.orbs = 0; G.boosting = false;
+    G.keyBoost = G.ptrBoost = G.ultKey = false;
     finishRace();
   }
 }
 
 function finishRace(){
-  G.state = "over";
+  /* Keep the world running so the car actually rolls to a stop on the line
+     rather than the line freezing on top of it. */
   engineStop();
   const m = Math.floor(G.meters);
   const isBest = m > best;
@@ -1955,7 +2119,9 @@ function finishRace(){
   tone(660, .18, "square", .12);
   later(function(){ tone(880, .18, "square", .12); }, 150);
   later(function(){ tone(1180, .3, "square", .12); }, 300);
+  G.parkWait = 2.2;
   later(function(){
+    G.state = "over";
     $("#ovTitle").textContent = t("finished");
     $("#ovLead").textContent = t("yourPlace") + ": " + placeWord(G.finished);
     $("#ovDist").textContent = m;
@@ -1964,7 +2130,7 @@ function finishRace(){
     $("#overPanel").classList.add("on");
   }, 700);
 }
-function placeWord(n){ return t(n === 1 ? "place1" : (n === 2 ? "place2" : "place3")); }
+function placeWord(n){ return t("place" + clamp(n, 1, 6)); }
 
 function puffFx(x, y){
   for(let i=0;i<12;i++){
@@ -2017,7 +2183,9 @@ function startRace(){
   G.dead = 0; G.immune = 0; G.slowT = 0; G.swipeLock = 0;
   G.ult = 0; G.ultOn = false; G.boostLock = false; G.ultArmed = true;
   G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.bumpCD = 0; G.ultFast = false;
-  G.frozenT = 0; G.orderedT = 0; G.bloomT = 0; G.cleanseT = 0; G.petals = [];
+  G.frozenT = 0; G.orderedT = 0; G.bloomT = 0; G.cleanseT = 0; G.petals = []; G.slipT = 0;
+  G.item = null; G.boxes = []; G.slicks = []; G.missiles = []; G.boxGap = 400; G.canT = 0;
+  G.lastTap = -9; G.tapClock = 0;
   G.freezeOwner = null; G.sirenOwner = null; G.effLog = [];
   G.prevLane = -1; G.laneT = 9; G.dodgeFlash = 0;
   G.cdT = 0; G.cdStep = -1; G.wasCounting = false;
@@ -2120,7 +2288,8 @@ function flash(a, ms){
 /* ---------------- input ------------------------------------------ */
 function move(dir){
   if(G.state !== "running" || G.dead > 0 || G.shockT > 0 ||
-     G.frozenT > 0 || G.orderedT > 0) return;   /* pinned, frozen, or under orders */
+     G.frozenT > 0 || G.orderedT > 0 || G.finished !== null) return;
+  if(G.slipT > 0) dir = -dir;                    /* no grip: the steering is reversed */
   const n = clamp(G.lane + dir, 0, 2);
   if(n === G.lane) return;
   G.prevLane = G.lane; G.laneT = 0;
@@ -2257,6 +2426,9 @@ function logEffect(id, secs){
   el.id = "eff-" + id;
   el.textContent = t(EFFECTS[id].key);
   el.style.color = EFFECTS[id].col;
+  const c = EFFECTS[id].col;
+  const lum = parseInt(c.slice(1,3),16)*0.299 + parseInt(c.slice(3,5),16)*0.587 + parseInt(c.slice(5,7),16)*0.114;
+  if(lum < 70) el.style.textShadow = "0 0 6px rgba(255,255,255,.95), 0 1px 2px rgba(255,255,255,.9)";
   list.appendChild(el);
 }
 function dropEffect(id){
@@ -2279,7 +2451,8 @@ function syncEffects(){
     frozen:    G.frozenT > 0,
     onfire:    G.ultOn && p === "burn",
     ghosted:   G.ultOn && p === "phase",
-    ordered:   G.orderedT > 0
+    ordered:   G.orderedT > 0,
+    slippery:  G.slipT > 0
   };
   for(const id in on){
     if(on[id]) logEffect(id, 0);
@@ -2306,7 +2479,7 @@ function ultBurst(carId, x, y){
 }
 
 function fireUlt(){
-  if(G.state !== "running" || G.dead > 0 || G.shockT > 0) return;
+  if(G.state !== "running" || G.dead > 0 || G.shockT > 0 || G.finished !== null) return;
   if(CARS[G.car].power === "storm"){
     if(G.orbs > 0){                          /* second call: loose an orb */
       if(fireOrb("me")) G.orbs--;
@@ -2338,7 +2511,7 @@ function sirenWail(){
 
 function setBoost(){
   G.boosting = (G.keyBoost || G.ptrBoost) && !G.boostLock && G.charge > 0
-               && G.state === "running" && G.dead <= 0
+               && G.state === "running" && G.dead <= 0 && G.finished === null
                && G.shockT <= 0 && G.frozenT <= 0 && G.orderedT <= 0;
 }
 
@@ -2362,6 +2535,7 @@ document.addEventListener("keydown", function(e){
     pause(G.state === "running" || G.state === "countdown");
   }
   else if(k === "shift" || k === " "){ e.preventDefault(); G.ultKey = true; }
+  else if(k === "e"){ e.preventDefault(); useItem("me"); }
 });
 document.addEventListener("keyup", function(e){
   if(!e.key) return;
@@ -2398,13 +2572,17 @@ cv.addEventListener("pointermove", function(e){
   }
 });
 function endPtr(e){
-  const tapped = false;                          /* the ultimate needs a long press now */
+  const tapped = ptr.on && !ptr.moved && (ptr.hold || 0) < LONG_PRESS;
+  if(tapped){
+    const now2 = G.tapClock;                     /* real seconds, even when stopped */
+    if(now2 - G.lastTap < DOUBLE_TAP){ useItem("me"); G.lastTap = -9; }
+    else G.lastTap = now2;
+  }
   if(e && ptrDown[e.pointerId]){ delete ptrDown[e.pointerId]; ptrCount = Math.max(0, ptrCount - 1); }
   else { ptrCount = 0; for(const k in ptrDown) delete ptrDown[k]; }
   if(ptrCount === 0){
     ptr.on = false; G.ptrBoost = false; setBoost();
-    G.ultArmed = true;
-    if(tapped) fireUlt();          /* one finger, one tap - that is the ultimate */
+    G.ultArmed = true;             /* the ultimate needs a long press, not a tap */
   }
 }
 cv.addEventListener("pointerup", endPtr);
@@ -2414,7 +2592,8 @@ cv.addEventListener("contextmenu", function(e){ e.preventDefault(); });
 /* ---------------- update ----------------------------------------- */
 const SWIPE_STEP = 42, SWIPE_LOCK = 0.18;
 const TAP_SLOP = 14;
-const LONG_PRESS = 0.35;                  /* hold one finger this long for the ultimate */                      /* a tap may wander this far and still count */
+const LONG_PRESS = 0.35;
+const DOUBLE_TAP = 0.5;                  /* hold one finger this long for the ultimate */                      /* a tap may wander this far and still count */
 const ULT_CHARGE = 45;                    /* seconds from empty to ready */
 const ULT_TIME = 5;                       /* seconds it lasts */
 const ULT_SPEED = 2.0;                    /* Redd and Phantom */
@@ -2448,6 +2627,7 @@ function update(dt){
   let target;
   if(st === "countdown") target = 0;          /* the car holds still on the line */
   else if(st === "over") target = Math.max(0, G.speed - 900*dt);
+  else if(G.finished !== null) target = 0;         /* over the line: coast to a halt */
   else if(G.dead > 0 || G.shockT > 0 || G.frozenT > 0) target = 0;   /* wrecked, pinned or frozen:
                                                  you stop, the race goes on without you */
   else {
@@ -2456,6 +2636,7 @@ function update(dt){
     else if(G.orbs > 0) target *= BOLT_ORB_SPEED;
     else if(G.slowT > 0) target *= 0.5;
     if(G.boosting) target *= 1.5;
+    if(G.canT > 0) target *= CAN_SPEED;          /* the can is free speed */
     if(G.launchT > 0) target *= LAUNCH_BOOST;
   }
   G.speed = lerp(G.speed, target, 1 - Math.pow(0.001, dt));
@@ -2564,11 +2745,14 @@ function update(dt){
   if(G.shockT > 0) G.shockT = Math.max(0, G.shockT - dt);
   if(G.frozenT > 0) G.frozenT = Math.max(0, G.frozenT - dt);
   if(G.orderedT > 0) G.orderedT = Math.max(0, G.orderedT - dt);
+  if(G.slipT > 0) G.slipT = Math.max(0, G.slipT - dt);
+  if(G.canT > 0) G.canT = Math.max(0, G.canT - dt);
   if(G.bloomT > 0){ G.bloomT = Math.max(0, G.bloomT - dt); if(G.bloomT === 0) G.petals = []; }
   if(G.cleanseT > 0) G.cleanseT = Math.max(0, G.cleanseT - dt);
   if(G.freezeT > 0){ G.freezeT = Math.max(0, G.freezeT - dt); if(G.freezeT === 0) endFreeze(); }
   if(G.launchT > 0) G.launchT = Math.max(0, G.launchT - dt);
   G.laneT += dt;
+  G.tapClock += dt;
   if(G.bumpCD > 0) G.bumpCD = Math.max(0, G.bumpCD - dt);
   if(G.slowT > 0)  G.slowT  = Math.max(0, G.slowT - dt);
   if(G.immune > 0) G.immune = Math.max(0, G.immune - dt);
@@ -2577,6 +2761,9 @@ function update(dt){
     G.dead -= dt;
     if(G.dead <= 0){ G.dead = 0; G.immune = IMMUNE_TIME; respawnFx(); }
   }
+  updateBubbles(dt, d, st);
+  updateSlicks(dt, d, st);
+  updateMissiles(dt, d);
   updateTraps(dt, d, st);
   if(st === "running" && G.dead <= 0){
     const inFront = carAt(G.lane, playerY, "me");
@@ -2676,6 +2863,232 @@ function onRoad(x, half){
   return clamp(x, roadX + 8 + half, roadX + roadW - 8 - half);
 }
 
+/* Rarer items are rarer. The seeker is pointless in the lead, so it is not
+   offered to whoever is already first. */
+function rollItem(leader){
+  const pool = ITEM_IDS.filter(function(id){ return !(id === "seeker" && leader); });
+  let total = 0;
+  pool.forEach(function(id){ total += RARITY[ITEMS[id].rarity].weight; });
+  let r = Math.random()*total;
+  for(let i=0;i<pool.length;i++){
+    r -= RARITY[ITEMS[pool[i]].rarity].weight;
+    if(r <= 0) return pool[i];
+  }
+  return pool[0];
+}
+function leaderOf(who){
+  const mine = who === "me" ? G.meters : metersOf(who);
+  const all = [G.meters].concat(G.rivals.map(metersOf));
+  return mine >= Math.max.apply(null, all) - 0.01;
+}
+
+function spawnBubbleRow(){
+  G.boxes.push({ y:-90, taken:0, s:Math.random() });
+}
+
+function updateBubbles(dt, d, st){
+  if(st === "running" && G.finished === null){
+    G.boxGap += d;
+    if(G.boxGap >= BUBBLE_GAP){ G.boxGap = 0; spawnBubbleRow(); }
+  }
+  const c = carHit();
+  for(let i=G.boxes.length-1;i>=0;i--){
+    const row = G.boxes[i];
+    row.y += d;
+    if(row.y > H + 120){ G.boxes.splice(i,1); continue; }
+    for(let l=0;l<3;l++){
+      const bx = laneCX(l), by = row.y + Math.sin(G.scroll*0.01 + l*2 + row.s*6)*6;
+      /* you */
+      if(!(row.taken & 1) && st === "running" && G.dead <= 0 && G.finished === null){
+        const p = nearestOnCar(c, bx, by);
+        const dx = p.x - bx, dy = p.y - by;
+        if(dx*dx + dy*dy <= BUBBLE_R*BUBBLE_R){
+          row.taken |= 1;
+          G.item = rollItem(leaderOf("me"));
+          popFx(bx, by, RARITY[ITEMS[G.item].rarity].col);
+        }
+      }
+      /* and everyone else */
+      for(let n=0;n<G.rivals.length;n++){
+        const R = G.rivals[n], bit = 2 << n;
+        if(row.taken & bit) continue;
+        if(R.dead > 0 || R.finished !== null) continue;
+        const rc = { x:R.x, y:R.y, hw:carW*0.40, hh:carH*0.42 };
+        const p2 = nearestOnCar(rc, bx, by);
+        const ex = p2.x - bx, ey = p2.y - by;
+        if(ex*ex + ey*ey <= BUBBLE_R*BUBBLE_R){
+          row.taken |= bit;
+          R.item = rollItem(leaderOf(R));
+          R.useT = rand(0.6, 2.4);
+          popFx(bx, by, RARITY[ITEMS[R.item].rarity].col);
+        }
+      }
+    }
+  }
+}
+function popFx(x, y, col){
+  for(let i=0;i<14;i++){
+    const a = rand(0, 6.2832), sp = rand(60, 210);
+    addFx(x, y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.3,.6), rand(2,4), i % 2 ? col : "#FFFFFF");
+  }
+  tone(880, .07, "sine", .06);
+  later(function(){ tone(1320, .09, "sine", .06); }, 60);
+}
+
+/* ---------------- using an item ---------------- */
+function useItem(who){
+  const me = who === "me";
+  const holder = me ? G : who;
+  const id = holder.item;
+  if(!id) return false;
+  if(me && (G.state !== "running" || G.dead > 0 || G.shockT > 0 ||
+            G.frozenT > 0 || G.finished !== null)) return false;
+  if(!me && (who.dead > 0 || who.shock > 0 || who.frozen > 0 || who.finished !== null)) return false;
+  holder.item = null;
+  const x = me ? G.x : who.x, y = me ? playerY : who.y;
+
+  if(id === "can"){
+    holder.canT = CAN_TIME;
+    for(let i=0;i<18;i++)
+      addFx(x + rand(-carW*0.3, carW*0.3), y + carH*0.4, rand(-70,70), rand(90,260),
+            rand(.3,.6), rand(2,5), i % 2 ? "#FF9A4A" : "#FFE8C0");
+    tone(320, .18, "square", .09);
+    later(function(){ tone(560, .22, "square", .08); }, 110);
+  } else if(id === "oil"){
+    G.slicks.push({ x:x, y:y + carH*0.75, r:rand(26, 34), s:Math.random(),
+                    life:OIL_LIFE, owner:me ? "me" : who });
+    tone(150, .25, "sawtooth", .07);
+  } else if(id === "seeker"){
+    fireSeeker(me ? "me" : who);
+  }
+  return true;
+}
+
+/* the seeker: one target, the leader, and nothing survives the trip */
+function seekerTarget(owner){
+  const all = [{ me:true, obj:null, m:G.meters, out:G.dead > 0 }].concat(
+    G.rivals.map(function(R){ return { me:false, obj:R, m:metersOf(R), out:R.dead > 0 }; }));
+  const others = all.filter(function(a){ return owner === "me" ? !a.me : a.obj !== owner; });
+  if(!others.length) return null;
+  others.sort(function(a, b){ return b.m - a.m; });
+  return others[0];
+}
+function fireSeeker(owner){
+  const t = seekerTarget(owner);
+  if(!t) return;
+  const x = owner === "me" ? G.x : owner.x, y = owner === "me" ? playerY : owner.y;
+  G.missiles.push({
+    x:x, y:y - carH*0.5, vx:0, vy:-MISSILE_SPEED*0.3,
+    owner:owner, mark:t.me ? "me" : t.obj, life:14, fade:0
+  });
+  noise(.4, .4); tone(210, .5, "sawtooth", .12);
+}
+function markPos(mark){
+  return mark === "me" ? { x:G.x, y:playerY, gone:G.dead > 0 }
+                       : { x:mark.x, y:mark.y, gone:mark.dead > 0 };
+}
+function markGhosted(mark){
+  return mark === "me" ? (G.ultOn && CARS[G.car].power === "phase")
+                       : (mark.ultOn && CARS[mark.car].power === "phase");
+}
+function markImmune(mark){ return mark === "me" ? immuneMe() : immuneCar(mark); }
+
+function updateMissiles(dt, d){
+  for(let i=G.missiles.length-1;i>=0;i--){
+    const m = G.missiles[i];
+    m.life -= dt;
+    if(m.fade > 0){                                   /* slipped past a ghost */
+      m.fade -= dt;
+      m.x += m.vx*dt; m.y += m.vy*dt + d;
+      addFx(m.x, m.y, rand(-40,40), rand(-40,40), .3, 3, "rgba(255,180,120,0.8)");
+      if(m.fade <= 0 || m.life <= 0) G.missiles.splice(i,1);
+      continue;
+    }
+    const p = markPos(m.mark);
+    if(p.gone || m.life <= 0){ G.missiles.splice(i,1); continue; }
+
+    if(markGhosted(m.mark)){                          /* nothing to hit: sail on through */
+      m.fade = 1.2;
+      continue;
+    }
+    if(markImmune(m.mark)){                           /* wait it out */
+      m.x = lerp(m.x, p.x, 1 - Math.pow(0.2, dt));
+      m.y = lerp(m.y, p.y + carH*2.2, 1 - Math.pow(0.2, dt));
+      addFx(m.x, m.y, rand(-30,30), rand(20,90), .25, 2.5, "#FFB07A");
+      continue;
+    }
+    const dx = p.x - m.x, dy = p.y - m.y;
+    const len = Math.max(1, Math.sqrt(dx*dx + dy*dy));
+    m.vx = lerp(m.vx, dx/len*MISSILE_SPEED, 1 - Math.pow(0.0005, dt));
+    m.vy = lerp(m.vy, dy/len*MISSILE_SPEED, 1 - Math.pow(0.0005, dt));
+    m.x += m.vx*dt; m.y += m.vy*dt;
+    addFx(m.x, m.y, rand(-50,50), rand(-30,60), .28, rand(3,5), "#FF8A3A");
+
+    /* it clears everything it passes through */
+    for(let k=G.traps.length-1;k>=0;k--){
+      const o = G.traps[k];
+      const ox = o.x - m.x, oy = o.y - m.y;
+      if(ox*ox + oy*oy < 46*46){ smashFx(o.x, o.y, 26, "#FFD9A0", G.car); G.traps.splice(k,1); }
+    }
+    for(let k=G.slicks.length-1;k>=0;k--){
+      const o = G.slicks[k];
+      const ox = o.x - m.x, oy = o.y - m.y;
+      if(ox*ox + oy*oy < 46*46) G.slicks.splice(k,1);
+    }
+    const all = racers();
+    for(let k=0;k<all.length;k++){
+      const a = all[k];
+      if(a.out) continue;
+      if(m.owner === "me" ? a.me : a.obj === m.owner) continue;
+      const box = { x:a.me ? G.x : a.obj.x, y:a.y, hw:carW*0.40, hh:carH*0.42 };
+      const q2 = nearestOnCar(box, m.x, m.y);
+      const qx = q2.x - m.x, qy = q2.y - m.y;
+      if(qx*qx + qy*qy > 26*26) continue;
+      const isMark = (m.mark === "me" && a.me) || m.mark === a.obj;
+      if(a.me) destroyCar(); else wreckRival(a.obj, m.owner);
+      seekerBoom(m.x, m.y);
+      if(isMark || true){ G.missiles.splice(i,1); break; }
+    }
+  }
+}
+function seekerBoom(x, y){
+  for(let i=0;i<34;i++){
+    const a = rand(0, 6.2832), sp = rand(80, 380);
+    addFx(x, y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.4,.9), rand(3,7),
+          i%3 === 0 ? "#FFE3B0" : (i%3 === 1 ? "#FF8A2B" : "#C6482A"));
+  }
+  G.shake = Math.max(G.shake, 20);
+  noise(.6, .5); tone(80, .45, "sawtooth", .16);
+}
+
+/* the slick sits there until somebody drives through it */
+function updateSlicks(dt, d, st){
+  const c = carHit();
+  for(let i=G.slicks.length-1;i>=0;i--){
+    const o = G.slicks[i];
+    o.y += d; o.life -= dt;
+    if(o.life <= 0 || o.y > H + 120){ G.slicks.splice(i,1); continue; }
+    if(st === "running" && !immuneMe() && G.finished === null){
+      const p = nearestOnCar(c, o.x, o.y);
+      const dx = p.x - o.x, dy = p.y - o.y;
+      if(dx*dx + dy*dy <= o.r*o.r){
+        G.slipT = SLIP_TIME; G.slicks.splice(i,1);
+        noise(.2, .2); continue;
+      }
+    }
+    let hit = false;
+    for(let n=0;n<G.rivals.length;n++){
+      const R = G.rivals[n];
+      if(immuneCar(R)) continue;
+      const rc = { x:R.x, y:R.y, hw:carW*0.40, hh:carH*0.42 };
+      const p2 = nearestOnCar(rc, o.x, o.y);
+      const ex = p2.x - o.x, ey = p2.y - o.y;
+      if(ex*ex + ey*ey <= o.r*o.r){ R.slip = SLIP_TIME; hit = true; break; }
+    }
+    if(hit) G.slicks.splice(i,1);
+  }
+}
+
 function spawnTrap(){
   if(G.seam !== null) return;              /* leave the handover clear */
   const b = G.biome, lane = randi(0, 2);
@@ -2772,7 +3185,7 @@ function updateTraps(dt, d, st){
   const racing = st === "running" && G.dead <= 0;
   const power = G.ultOn ? CARS[G.car].power : null;
   const shielded = G.ultOn && CARS[G.car].power !== "storm";
-  const live = racing && G.immune <= 0 && !shielded && G.shockT <= 0;
+  const live = racing && G.immune <= 0 && !shielded && G.shockT <= 0 && !finishedMe();
   const smash = racing && power === "burn";           /* Redd wrecks what it touches */
   const c = carHit();
   for(let i=G.traps.length-1;i>=0;i--){
@@ -2780,8 +3193,8 @@ function updateTraps(dt, d, st){
     if(o.kind === "weed"){
       o.age += dt;
       if(G.freezeT <= 0) o.x += o.vx*dt;         /* tumbleweeds hold still too */
-      o.y += d*o.fall;
-      o.rot += o.vx*dt/o.r;
+      o.y += G.freezeT > 0 ? d : d*o.fall;     /* frozen: stops rolling, still scrolls past */
+      if(G.freezeT <= 0) o.rot += o.vx*dt/o.r;
       if(o.x < roadX-100 || o.x > roadX+roadW+100 || o.y > H+100){ G.traps.splice(i,1); continue; }
       if((live || smash) && !(o.hit & 1)){
         const wy = sweptY(o, d*o.fall, c.y);
@@ -2796,8 +3209,19 @@ function updateTraps(dt, d, st){
       continue;
     }
     if(o.kind === "meteor"){
-      if(G.freezeT <= 0){ o.y += d; o.t += dt; }
-      if(G.freezeT > 0) continue;                /* meteors hang in the air */
+      if(G.freezeT > 0){
+        /* Time is stopped for it: the rock hangs where it is, so hold its
+           descent, but its impact point is a fixed spot on the road and must
+           keep scrolling past whoever is still driving. */
+        if(o.hold === undefined) o.hold = playerY - o.y;
+        o.y += d;
+        if(o.y > H + 400) G.traps.splice(i,1);
+        continue;
+      }
+      /* Time resumes where the rock actually is. If the driver got past it
+         during the freeze it now lands harmlessly behind them. */
+      o.hold = undefined;
+      o.y += d; o.t += dt;
       if(o.phase === 0){
         const left = playerY - o.y;
         if(left <= 0) detonate(o, live);
@@ -2817,7 +3241,7 @@ function updateTraps(dt, d, st){
       continue;
     }
 
-    if(G.freezeT <= 0) o.y += d;               /* held in place while time is stopped */
+    o.y += d;                                  /* world-fixed: always scrolls with the road */
     if(o.y > H + 260){ G.traps.splice(i,1); continue; }
     if((!live && !smash) || (o.hit & 1)) continue;
     if(puddleHits(o, c, sweptY(o, d, c.y))){
@@ -3597,7 +4021,7 @@ function drawPuddle(p){
 /* A rock on the way down, the ground it is aimed at, and the crater after. */
 function drawMeteor(o){
   if(o.phase === 0){
-    const left = playerY - o.y;
+    const left = o.hold !== undefined ? o.hold : playerY - o.y;   /* held while frozen */
     const prog = clamp(1 - left/Math.max(1, o.span), 0, 1);
     const per = lerp(0.46, 0.13, prog);
     const on = (o.t % per) < per*0.55;
@@ -3898,9 +4322,12 @@ function render(){
     }
   }
 
+  drawSlicks();
+  drawBubbles();
   drawBolts();
+  drawMissiles();
   ctx.fillStyle = vign; ctx.fillRect(0,0,W,H);
-  drawRivalPip();
+  drawLadder();
   if(G.blind > 0) drawBlind();
   if(G.bloomT > 0) drawBloom();
   if(G.freezeT > 0) drawFrost();
@@ -3953,32 +4380,106 @@ function drawPhase(car, cx, cy){
 
 /* When the other car is off the top or bottom of the screen, a marker at the
    edge shows which lane it is in and how far up or down the road it is. */
-function drawRivalPip(){
-  for(let n=0;n<G.rivals.length;n++) pipFor(G.rivals[n], n);
-}
-/* the colour a car's distance readouts use */
 function pipColour(id){ return CARS[id].pip || CARS[id].accent; }
 
-function pipFor(R, slot){
-  if(!R || R.dead > 0 || G.state === "idle") return;
-  const above = R.y < -18, below = R.y > H + 18;
-  if(!above && !below) return;
-  const gap = Math.abs(Math.round(metersOf(R) - G.meters));
-  const x = clamp(R.x, roadX + 34, roadX + roadW - 34);
-  const y = (above ? 104 + (H*0.02) : H - 74) + slot*32*(above ? 1 : -1);
-  const c = pipColour(R.car);
+/* A ladder down the right-hand side: one dot per racer, height showing how far
+   ahead or behind they are. Off-screen cars also get their distance badge here. */
+function ladderGeom(){
+  /* Sits below the standings text and above the boost bar, rather than being
+     centred on the screen where it would run through the readout. */
+  const top = 226, bottom = H - 100;
+  const half = clamp((bottom - top)/2, 60, 150);
+  return { x:W - 30, cy:(top + bottom)/2, half:half };
+}
+function ladderY(gap, g){
+  return g.cy - clamp(gap/PIP_FAR, -1, 1)*g.half;   /* ahead is up, behind is down */
+}
+
+function drawLadder(){
+  if(G.state === "idle") return;
+  const g = ladderGeom();
+
   ctx.save();
-  fillRR(x - 33, y - 13, 66, 26, 13, "rgba(11,11,12,0.74)");
-  rr(x - 33, y - 13, 66, 26, 13);
+  ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(g.x, g.cy - g.half); ctx.lineTo(g.x, g.cy + g.half); ctx.stroke();
+  ctx.strokeStyle = "rgba(255,255,255,0.85)";
+  [-1, 1].forEach(function(s2){
+    ctx.beginPath();
+    ctx.moveTo(g.x - 5, g.cy + s2*g.half); ctx.lineTo(g.x + 5, g.cy + s2*g.half);
+    ctx.stroke();
+  });
+  ctx.strokeStyle = "rgba(255,255,255,0.3)";      /* the notch level with you */
+  ctx.beginPath(); ctx.moveTo(g.x - 3, g.cy); ctx.lineTo(g.x + 3, g.cy); ctx.stroke();
+  ctx.restore();
+
+  /* every rival, plus you */
+  const marks = [];
+  for(let i=0;i<G.rivals.length;i++){
+    const R = G.rivals[i];
+    const gap = metersOf(R) - G.meters;
+    marks.push({
+      col: pipColour(R.car), gap: gap, y: ladderY(gap, g),
+      off: R.y < -18 || R.y > H + 18, above: R.y < -18, me: false
+    });
+  }
+  marks.push({ col: pipColour(G.car), gap: 0, y: g.cy, off: false, me: true });
+
+  /* badges must not sit on top of each other */
+  const badges = marks.filter(function(m){ return m.off; })
+                      .sort(function(a, b){ return a.y - b.y; });
+  for(let i=1;i<badges.length;i++)
+    if(badges[i].by === undefined && badges[i-1].by === undefined) badges[i].by = badges[i].y;
+  let last = -1e9;
+  for(let i=0;i<badges.length;i++){
+    badges[i].by = Math.max(badges[i].y, last + 28);
+    last = badges[i].by;
+  }
+  const overflow = badges.length ? Math.max(0, badges[badges.length-1].by - (H - 40)) : 0;
+  for(let i=0;i<badges.length;i++) badges[i].by -= overflow;
+
+  for(let i=0;i<badges.length;i++) drawGapBadge(badges[i], g);
+
+  for(let i=0;i<marks.length;i++){
+    const m = marks[i];
+    ctx.beginPath(); ctx.arc(g.x, m.y, m.me ? 5.5 : 4.2, 0, 6.2832);
+    ctx.fillStyle = m.col; ctx.fill();
+    if(m.me){
+      ctx.strokeStyle = "rgba(11,11,12,0.8)"; ctx.lineWidth = 1.6; ctx.stroke();
+    }
+  }
+}
+
+/* the distance badge, parked to the left of its dot */
+function drawGapBadge(m, g){
+  const gap = Math.abs(Math.round(m.gap));
+  const far = gap >= PIP_FAR;
+  const w = far ? 30 : 58;
+  const right = g.x - 13;
+  const x = right - w/2;
+  const y = m.by;
+  const c = m.col;
+  ctx.save();
+  fillRR(x - w/2, y - 12, w, 24, 12, "rgba(11,11,12,0.74)");
+  rr(x - w/2, y - 12, w, 24, 12);
   ctx.strokeStyle = c; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.beginPath();
-  if(above){ ctx.moveTo(x - 21, y + 3.5); ctx.lineTo(x - 16, y - 3.5); ctx.lineTo(x - 11, y + 3.5); }
-  else     { ctx.moveTo(x - 21, y - 3.5); ctx.lineTo(x - 16, y + 3.5); ctx.lineTo(x - 11, y - 3.5); }
-  ctx.strokeStyle = c; ctx.lineWidth = 2.4; ctx.lineJoin = "round"; ctx.stroke();
-  ctx.fillStyle = c;
-  ctx.font = "600 12px ui-monospace, Menlo, Consolas, monospace";
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText(gap + "m", x + 6, y + 0.5);
+
+  ctx.strokeStyle = c; ctx.lineWidth = 2.2; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  const chevron = function(cx, cy){
+    ctx.beginPath();
+    if(m.above){ ctx.moveTo(cx - 4.5, cy + 3); ctx.lineTo(cx, cy - 3); ctx.lineTo(cx + 4.5, cy + 3); }
+    else       { ctx.moveTo(cx - 4.5, cy - 3); ctx.lineTo(cx, cy + 3); ctx.lineTo(cx + 4.5, cy - 3); }
+    ctx.stroke();
+  };
+  if(far){
+    chevron(x, y + (m.above ? 3.5 : -3.5));
+    chevron(x, y + (m.above ? -3.5 : 3.5));
+  } else {
+    chevron(x - 18, y);
+    ctx.fillStyle = c;
+    ctx.font = "600 11px ui-monospace, Menlo, Consolas, monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(gap + "m", x + 5, y + 0.5);
+  }
   ctx.restore();
 }
 
@@ -4001,6 +4502,96 @@ function drawOrbs(who, cx, cy){
     ctx.stroke();
   }
 }
+/* rows of three floating bubbles with a ? inside */
+const ITEM_ICON = {
+  can:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF9A4A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M6 8h9v12H6z"/><path d="M15 11h3l2 3v6h-5"/><path d="M8 5h5v3H8z"/><path d="M9 12l-1 4h3l-1 4"/></svg>',
+  oil:'<svg viewBox="0 0 24 24" fill="none" stroke="#4D8BFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M12 3c3.5 4.6 5.5 7.6 5.5 10a5.5 5.5 0 0 1-11 0C6.5 10.6 8.5 7.6 12 3Z"/>' +
+      '<path d="M9.5 13.5a2.5 2.5 0 0 0 2.5 2.5"/></svg>',
+  seeker:'<svg viewBox="0 0 24 24" fill="none" stroke="#FFD24A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M12 2c2.2 2.6 3.2 5.4 3.2 8.4V16H8.8v-5.6C8.8 7.4 9.8 4.6 12 2Z"/>' +
+      '<path d="M8.8 12 5 16l3.8-.6M15.2 12 19 16l-3.8-.6"/><path d="M10.4 19h3.2l-1.6 3z"/></svg>'
+};
+function paintItemBox(){
+  const box = $("#itemBox"), icon = $("#itemIcon");
+  if(!box) return;
+  const id = G.item;
+  box.classList.toggle("full", !!id);
+  box.style.borderColor = id ? RARITY[ITEMS[id].rarity].col : "#fff";
+  const want = id || "";
+  if(box._shown !== want){ box._shown = want; icon.innerHTML = id ? ITEM_ICON[id] : ""; }
+}
+
+function drawBubbles(){
+  for(let i=0;i<G.boxes.length;i++){
+    const row = G.boxes[i];
+    if(row.y < -80 || row.y > H + 80) continue;
+    for(let l=0;l<3;l++){
+      const x = laneCX(l);
+      const y = row.y + Math.sin(G.scroll*0.01 + l*2 + row.s*6)*6;
+      const gone = (row.taken & 1) !== 0;
+      ctx.save();
+      ctx.globalAlpha = gone ? 0.25 : 1;
+      const g2 = ctx.createRadialGradient(x - BUBBLE_R*0.3, y - BUBBLE_R*0.35, 2, x, y, BUBBLE_R);
+      g2.addColorStop(0, "rgba(255,255,255,0.85)");
+      g2.addColorStop(0.55, "rgba(150,220,255,0.35)");
+      g2.addColorStop(1, "rgba(90,170,230,0.18)");
+      ctx.beginPath(); ctx.arc(x, y, BUBBLE_R, 0, 6.2832);
+      ctx.fillStyle = g2; ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.9)"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x - BUBBLE_R*0.34, y - BUBBLE_R*0.38, BUBBLE_R*0.22, 0, 6.2832);
+      ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fill();
+      ctx.fillStyle = "#0B0B0C";
+      ctx.font = "700 20px ui-monospace, Menlo, Consolas, monospace";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("?", x, y + 1);
+      ctx.restore();
+    }
+  }
+}
+
+function drawSlicks(){
+  for(let i=0;i<G.slicks.length;i++){
+    const o = G.slicks[i];
+    if(o.y < -60 || o.y > H + 60) continue;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, o.life/2);
+    ctx.fillStyle = "rgba(10,10,14,0.86)";
+    blob(o.x, o.y, o.r, o.s);
+    ctx.globalAlpha = Math.min(1, o.life/2)*0.5;
+    ctx.fillStyle = "rgba(120,90,160,0.5)";
+    blob(o.x - o.r*0.2, o.y - o.r*0.15, o.r*0.5, o.s + 0.4);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+}
+
+function drawMissiles(){
+  for(let i=0;i<G.missiles.length;i++){
+    const m = G.missiles[i];
+    const a = m.fade > 0 ? clamp(m.fade/1.2, 0, 1) : 1;
+    const ang = Math.atan2(m.vy, m.vx) + 1.5708;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.translate(m.x, m.y); ctx.rotate(ang);
+    ctx.beginPath(); ctx.arc(0, 26, 15, 0, 6.2832);
+    ctx.fillStyle = "rgba(255,150,60,0.35)"; ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, -26); ctx.lineTo(11, -4); ctx.lineTo(11, 20);
+    ctx.lineTo(-11, 20); ctx.lineTo(-11, -4);
+    ctx.closePath();
+    ctx.fillStyle = "#D8DEE6"; ctx.fill();
+    ctx.strokeStyle = "#5A6472"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#E21B22";
+    ctx.beginPath(); ctx.moveTo(0, -26); ctx.lineTo(7, -8); ctx.lineTo(-7, -8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#5A6472";
+    ctx.beginPath(); ctx.moveTo(-11, 8); ctx.lineTo(-20, 24); ctx.lineTo(-11, 22); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(11, 8); ctx.lineTo(20, 24); ctx.lineTo(11, 22); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+}
+
 function drawBolts(){
   for(let i=0;i<G.bolts.length;i++){
     const b = G.bolts[i];
@@ -4226,18 +4817,20 @@ function paintHUD(force){
   $("#boostWrap").classList.toggle("full", G.charge > 0.98);
   $("#boostWrap").classList.toggle("locked", G.boostLock);
   syncEffects();
+  paintItemBox();
   const board = [{ me:true, m:G.meters, car:G.car }].concat(G.rivals.map(function(R){
     return { me:false, m:metersOf(R), car:R.car };
   }));
   board.sort(function(a, b){ return b.m - a.m; });
-  const keys = ["place1", "place2", "place3"];
-  for(let i=0;i<3;i++){
+  for(let i=0;i<6;i++){
     const row = $("#posRow" + (i+1));
+    if(!row) continue;
     if(!board[i]){ row.style.display = "none"; continue; }
     row.style.display = "";
-    $("#pos" + (i+1)).textContent = t(keys[i]);
+    $("#pos" + (i+1)).textContent = t("place" + (i+1));
     $("#pos" + (i+1) + "n").textContent = Math.floor(board[i].m);
-    row.style.color = board[i].me ? pipColour(board[i].car) : "rgba(255,255,255,.62)";
+    row.style.color = PLACE_COLS[i] || PLACE_COLS[3];
+    row.classList.toggle("mine", board[i].me);        /* which one is you */
   }
   const clock = $("#raceClock");
   clock.classList.toggle("on", G.mode === "bots");
@@ -4253,10 +4846,9 @@ function paintHUD(force){
       clock.classList.add("final");
     }
   }
-  const up = $("#ultPct"), ready = G.ult >= 1 || G.ultOn;
+  const up = $("#ultPct");
   up.textContent = Math.round(G.ult*100) + "%";
-  up.style.color = ready ? CARS[G.car].accent : "rgba(255,255,255,.7)";
-  up.classList.toggle("ready", G.ult >= 1 && !G.ultOn);
+  up.classList.toggle("ready", G.ult >= 1 && !G.ultOn);   /* the square handles the colour */
   up.classList.toggle("gain", G.dodgeFlash > 0);
 }
 
