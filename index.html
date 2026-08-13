@@ -681,7 +681,7 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
       <button class="tab" id="tabTracks" data-i18n="tabTracks">Tracks
 traps</button>
       <button class="tab" id="tabItems" data-i18n="tabItems">Mystery
-bubbles</button>
+bubble</button>
       <button class="tab" id="tabEffects" data-i18n="tabEffects">Effects</button>
     </div>
     <div id="garageBody"></div>
@@ -902,7 +902,7 @@ const STR = {
   kindTrack:    {en:"Track",       fr:"Piste"},
   kindTrap:     {en:"Trap",        fr:"Pi\u00e8ge"},
   tabTracks:    {en:"Tracks\ntraps",               fr:"Pistes\npi\u00e8ges"},
-  tabItems:     {en:"Mystery\nbubbles",            fr:"Bulles\nmystère"},
+  tabItems:     {en:"Mystery\nbubble",             fr:"Bulle\nmystère"},
   tabEffects:   {en:"Effects",                     fr:"Effets"},
   byLine:       {en:"a game by hiyroscript",       fr:"un jeu de hiyroscript"},
   cityInfo:     {en:"Dark asphalt between pale rooftops, water tanks and helipads. White lane dashes, crosswalks and red hydrants along the kerb.",
@@ -1058,6 +1058,7 @@ const ITEMS = {
 };
 const ITEM_IDS = ["can", "oil", "seeker"];
 const BUBBLE_GAP = [5400, 8600];          /* road distance between rows */
+const BUBBLE_LIFE = 10, BUBBLE_BLINK = 2; /* bubbles fade out after 10s; last 2s blink */
 const CAN_TIME = 2.2, CAN_SPEED = 1.55;   /* the boost can */
 const OIL_LIFE = 15, OIL_FADE = 2, SLIP_TIME = 4;       /* the slick, and how long it costs you */
 const MISSILE_SPEED = 2100;
@@ -1107,40 +1108,36 @@ function buildGarage(){
       html += '<div class="info"><span class="kind trap">' + t("kindTrap") + '</span>' +
               '<h3>' + t(id + "Name") + '</h3><p>' + t(id + "Info") + '</p></div>';
     });
-    html += '<div class="info"><span class="kind pickup">' + t("kindBubble") + '</span>' +
-            '<h3>' + t("bubbleName") + '</h3><p>' + t("bubbleInfo") + '</p></div>';
   } else if(garageTab === "items"){
-    /* Show the same rarity table used by the actual bubble roll. The displayed
-       percentages are the global drop odds; Seeker is unavailable to the leader,
-       which is called out below rather than silently changing the published odds. */
-    let total = 0;
-    ITEM_IDS.forEach(function(id){ total += RARITY[ITEMS[id].rarity].weight; });
+    /* Mystery Bubbles: publish the real roll weights used by rollItem().
+       Seeker has a 5/90 base chance, but is unavailable while leading. */
+    const baseTotal = ITEM_IDS.reduce(function(sum, id){
+      return sum + RARITY[ITEMS[id].rarity].weight;
+    }, 0);
     html += '<div class="mystery-intro"><h3>' + t("bubbleName") + '</h3>' +
             '<p>' + t("bubbleInfo") + '</p>' +
             '<div class="rarity-line">' +
-            ITEM_IDS.map(function(id){ return ITEMS[id].rarity; }).filter(function(rk, i, arr){
-              return arr.indexOf(rk) === i;
-            }).map(function(rk){
-              const rr = RARITY[rk];
-              return '<span class="rarity-chip" style="background:' + rr.col + ';color:#0B0B0C">' +
-                     t("rarity" + rk) + ' · ' + (rr.weight/total*100).toFixed(0) + '%</span>';
-            }).join("") +
+            '<span class="rarity-chip" style="background:' + RARITY.common.col + ';color:#0B0B0C">' + t("rarityCommon") + '</span>' +
+            '<span class="rarity-chip" style="background:' + RARITY.rare.col + ';color:#fff">' + t("rarityRare") + '</span>' +
+            '<span class="rarity-chip" style="background:' + RARITY.legendary.col + ';color:#0B0B0C">' + t("rarityLegendary") + '</span>' +
             '</div></div>';
-    ITEM_IDS.slice().sort(function(a, b){
-      return RARITY[ITEMS[b].rarity].weight - RARITY[ITEMS[a].rarity].weight;
-    }).forEach(function(id){
-      const r = RARITY[ITEMS[id].rarity];
-      const pct = (r.weight/total*100).toFixed(0) + '%';
-      html += '<div class="info">' +
+
+    ITEM_IDS.forEach(function(id){
+      const item = ITEMS[id];
+      const r = RARITY[item.rarity];
+      const pct = (r.weight / baseTotal * 100).toFixed(1) + '%';
+      const leaderNote = id === 'seeker' ? '<p class="item-rule">' + t("oddsNote") + '</p>' : '';
+      html += '<div class="info mystery-item">' +
               '<div class="item-meta">' +
-              '<span class="kind item" style="background:' + r.col + ';color:#0B0B0C">' +
-              t("rarity" + ITEMS[id].rarity) + '</span>' +
+              '<span class="kind item" style="background:' + r.col + ';color:#0B0B0C">' + t("kindItem") + '</span>' +
+              '<span class="kind item" style="background:' + r.col + ';color:#0B0B0C">' + t("rarity" + item.rarity) + '</span>' +
               '<span class="odds">' + pct + ' ' + t("dropChance") + '</span>' +
               '</div>' +
-              '<h3>' + t(ITEMS[id].key) + '</h3>' +
-              '<p>' + t(ITEMS[id].key + "Info") + '</p></div>';
+              '<h3>' + t(item.key) + '</h3>' +
+              '<p>' + t(item.key + "Info") + '</p>' +
+              leaderNote +
+              '</div>';
     });
-    html += '<p class="soon">' + t("oddsNote") + '</p>';
   } else {
     for(const id in EFFECTS){
       html += '<div class="info"><h3 style="color:' + EFFECTS[id].col + '">' + t(EFFECTS[id].key) +
@@ -2863,7 +2860,7 @@ function leaderOf(who){
 }
 
 function spawnBubbleRow(){
-  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random() });
+  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random(), age:0 });
 }
 
 function updateBubbles(dt, d, st){
@@ -2878,6 +2875,8 @@ function updateBubbles(dt, d, st){
   for(let i=G.boxes.length-1;i>=0;i--){
     const row = G.boxes[i];
     row.y += d;
+    row.age += dt;
+    if(row.age >= BUBBLE_LIFE){ G.boxes.splice(i,1); continue; }
     if(row.y > H + 120){ G.boxes.splice(i,1); continue; }
     if(row.gone === 7){ G.boxes.splice(i,1); continue; }   /* all three collected */
     for(let l=0;l<3;l++){
@@ -4579,6 +4578,10 @@ function drawBubbles(){
   for(let n=0;n<G.boxes.length;n++){
     const row = G.boxes[n];
     if(row.y < -80 || row.y > H + 80) continue;
+    const timeLeft = BUBBLE_LIFE - row.age;
+    const blinking = timeLeft <= BUBBLE_BLINK;
+    const blinkVisible = !blinking || Math.floor(row.age * 8) % 2 === 0;
+    if(blinking && !blinkVisible) continue;
     for(let l=0;l<3;l++){
       if(row.gone & (1 << l)) continue;                  /* collected: it is gone */
       const x = laneCX(l);
