@@ -415,6 +415,14 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 #boostFill{height:100%;width:100%;background:var(--red);border-radius:3px;transition:background .2s ease}
 #boostWrap.full #boostFill{background:var(--red-press)}
 #boostWrap.locked #boostFill{background:rgba(255,255,255,.34)}
+#launchWrap{position:absolute;left:16px;right:16px;bottom:calc(24px + var(--safe-b));height:5px;background:rgba(255,255,255,.13);border-radius:3px;overflow:visible}
+#launchFill{height:100%;width:100%;background:#FFD24A;border-radius:3px;transition:background .18s ease}
+#launchWrap.ready #launchFill{background:#FFFFFF}
+#launchWrap.cooldown #launchFill{background:rgba(255,255,255,.28)}
+#launchMin{position:absolute;top:-3px;bottom:-3px;left:75%;width:1px;background:rgba(255,255,255,.9);box-shadow:0 0 5px rgba(255,255,255,.5)}
+#launchMin::after{content:"MIN";position:absolute;left:3px;top:-13px;font:600 7px var(--mono);letter-spacing:.08em;color:rgba(255,255,255,.8)}
+#launchHint{position:absolute;left:16px;right:16px;bottom:calc(31px + var(--safe-b));font:600 7px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.62);text-align:right;pointer-events:none}
+#launchWrap.cooldown #launchMin{opacity:.35}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 
 /* countdown gantry */
@@ -549,6 +557,7 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
         <span class="key">&#8592;</span><span class="key">&#8594;</span>
         <span class="lbl" data-i18n="k1">lanes</span>
         <span class="key">&#8593;</span><span class="lbl" data-i18n="k2">boost</span>
+        <span class="key">&#8595;</span><span class="lbl">launch</span>
         <span class="key">Shift</span><span class="lbl" data-i18n="k4">ultimate</span>
         <span class="key">E</span><span class="lbl" data-i18n="k5">item</span>
         <span class="key">P</span><span class="lbl" data-i18n="k3">pause</span>
@@ -714,6 +723,8 @@ bubble</button>
       <div id="immuneTag"></div>
       <div id="cleanseTag"></div>
       <button id="itemBox" aria-label="Use item"><span id="itemIcon"></span></button>
+      <div id="launchHint">hold ↓ / S or swipe down</div>
+      <div id="launchWrap"><div id="launchFill"></div><span id="launchMin"></span></div>
       <div id="boostWrap"><div id="boostFill"></div></div>
     </div>
     <div id="flash"></div>
@@ -897,6 +908,7 @@ const STR = {
   efOrdered:    {en:"Ordered",    fr:"Somm\u00e9"},
   efCleansed:   {en:"Cleansed",   fr:"Purifi\u00e9"},
   efSlippery:   {en:"Slippery",   fr:"Glissant"},
+  efLaunched:   {en:"Launched",   fr:"Propulsé"},
   garage:       {en:"Cars & more",                 fr:"Voitures et plus"},
   tabCars:      {en:"Cars",                        fr:"Voitures"},
   kindTrack:    {en:"Track",       fr:"Piste"},
@@ -1030,7 +1042,8 @@ const EFFECTS = {
   ghosted:  { key:"efGhosted",   col:"#8FD0FF" },
   ordered:  { key:"efOrdered",   col:"#4D8BFF" },
   cleansed: { key:"efCleansed",  col:"#B96BFF" },
-  slippery: { key:"efSlippery",  col:"#0B0B0C" }
+  slippery: { key:"efSlippery",  col:"#0B0B0C" },
+  launched:  { key:"efLaunched",  col:"#FFD24A" }
 };
 const ULT_EFFECTS = {
   burn:   ["boosted","onfire"],
@@ -1312,7 +1325,7 @@ const G = {
   boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9, parkWait:0,
   cdT:0, cdStep:-1, wasCounting:false,
   mode:"endless", diff:"medium",
-  orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
+  orbs:0, bolts:[], shockT:0, launchT:0, launchSpeed:1, launchCharge:1, launchHold:false, launchRecover:false, launchCooldown:0, bumpCD:0, ultFast:false,
   frozenT:0, orderedT:0, bloomT:0, cleanseT:0, petals:[], freezeT:0, bloomOwner:null, effLog:[],
   slipT:0, item:null, boxes:[], slicks:[], missiles:[], boxGap:0, nextRow:6000, canT:0, lastTap:-9, tapClock:0,
   freezeOwner:null, sirenOwner:null,
@@ -2160,7 +2173,7 @@ function startRace(){
   G.tier = 0; G.speedT = SPEED_SECONDS; G.blind = 0; G.blindPts = [];
   G.dead = 0; G.immune = 0; G.slowT = 0; G.swipeLock = 0;
   G.ult = 0; G.ultOn = false; G.boostLock = false; G.ultArmed = true;
-  G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.bumpCD = 0; G.ultFast = false;
+  G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.launchSpeed = 1; G.launchCharge = 1; G.launchHold = false; G.launchRecover = false; G.launchCooldown = 0; G.bumpCD = 0; G.ultFast = false;
   G.frozenT = 0; G.orderedT = 0; G.bloomT = 0; G.cleanseT = 0; G.petals = []; G.slipT = 0;
   G.item = null; G.boxes = []; G.slicks = []; G.missiles = []; G.canT = 0;
   G.boxGap = 0; G.nextRow = rand(2200, 3400);      /* the first row comes a bit sooner */
@@ -2431,7 +2444,8 @@ function syncEffects(){
     onfire:    G.ultOn && p === "burn",
     ghosted:   G.ultOn && p === "phase",
     ordered:   G.orderedT > 0,
-    slippery:  G.slipT > 0
+    slippery:  G.slipT > 0,
+    launched:   G.launchT > 0
   };
   for(const id in on){
     if(on[id]) logEffect(id, 0);
@@ -2488,6 +2502,76 @@ function sirenWail(){
   later(function(){ tone(560, .35, "square", .07); }, 360);
 }
 
+const LAUNCH_MIN_CHARGE = 0.75;   /* at least 25% of the meter must be spent */
+const LAUNCH_DRAIN = 0.48;         /* about two seconds from full to empty */
+const LAUNCH_RECOVER = 1.8;        /* failed attempt fills back quickly */
+const LAUNCH_COOLDOWN = 10;
+const LAUNCH_BASE_SPEED = 1.55;
+const LAUNCH_MAX_SPEED = 2.75;
+const LAUNCH_BASE_TIME = 0.85;
+const LAUNCH_MAX_TIME = 1.75;
+
+function launchReady(){
+  return G.state === "running" && G.dead <= 0 && G.finished === null &&
+         G.launchCooldown <= 0 && G.launchT <= 0 &&
+         G.shockT <= 0 && G.frozenT <= 0 && G.orderedT <= 0 && !G.ultOn && G.orbs <= 0;
+}
+function beginLaunchHold(){
+  if(!launchReady()) return false;
+  G.launchHold = true; G.launchRecover = false;
+  G.keyBoost = false; G.ptrBoost = false; G.boosting = false;
+  return true;
+}
+function cancelLaunchHold(){
+  if(!G.launchHold) return;
+  G.launchHold = false;
+  if(G.launchCharge <= LAUNCH_MIN_CHARGE){
+    const spent = 1 - G.launchCharge;
+    const strength = clamp((spent - (1-LAUNCH_MIN_CHARGE)) / LAUNCH_MIN_CHARGE, 0, 1);
+    G.launchSpeed = lerp(LAUNCH_BASE_SPEED, LAUNCH_MAX_SPEED, strength);
+    G.launchT = lerp(LAUNCH_BASE_TIME, LAUNCH_MAX_TIME, strength);
+    G.launchCooldown = LAUNCH_COOLDOWN;
+    G.launchRecover = false;
+    G.launchCharge = 0;
+    logEffect("launched", G.launchT);
+    ultBurst(G.car, G.x, playerY);
+    tone(180 - strength*60, .22, "sawtooth", .1);
+    later(function(){ tone(520 + strength*260, .25, "square", .08); }, 90);
+    G.shake = Math.max(G.shake, 11 + strength*12);
+  } else {
+    G.launchRecover = true;
+  }
+}
+function resolveLaunchLanding(){
+  /* Cars are passed over while airborne; landing on one destroys it. */
+  const all = racers();
+  for(let i=0;i<all.length;i++){
+    const a = all[i];
+    if(a.me || a.out || immuneCar(a.obj)) continue;
+    if(a.lane === G.lane && Math.abs(a.y - playerY) < carH*0.9){
+      wreckRival(a.obj, "me");
+      break;
+    }
+  }
+  /* Ground hazards are ignored while airborne, but the landing frame gets
+     their normal collision rule if one is directly underneath. */
+  const c = carHit();
+  for(let i=G.traps.length-1;i>=0;i--){
+    const o = G.traps[i];
+    if(o.kind === "puddle" && puddleHits(o, c, o.y)){
+      o.hit |= 1; hitPuddle(); return;
+    }
+    if(o.kind === "weed") {
+      const p = nearestOnCar(c, o.x, o.y), dx = p.x-o.x, dy = p.y-o.y;
+      if(dx*dx + dy*dy <= o.r*o.r*0.86){ hitWeed(o); G.traps.splice(i,1); return; }
+    }
+    if(o.kind === "meteor") {
+      const p = nearestOnCar(c, o.x, o.y), dx = p.x-o.x, dy = p.y-o.y;
+      if(dx*dx + dy*dy <= o.r*o.r){ detonate(o, true); return; }
+    }
+  }
+}
+
 function setBoost(){
   G.boosting = (G.keyBoost || G.ptrBoost) && !G.boostLock && G.charge > 0
                && G.state === "running" && G.dead <= 0 && G.finished === null
@@ -2509,6 +2593,7 @@ document.addEventListener("keydown", function(e){
   if(k === "arrowleft" || k === "a"){ e.preventDefault(); move(-1); }
   else if(k === "arrowright" || k === "d"){ e.preventDefault(); move(1); }
   else if(k === "arrowup" || k === "w"){ e.preventDefault(); G.keyBoost = true; setBoost(); }
+  else if(k === "arrowdown" || k === "s"){ e.preventDefault(); beginLaunchHold(); }
   else if(k === "p" || k === "escape"){
     e.preventDefault();
     pause(G.state === "running" || G.state === "countdown");
@@ -2520,6 +2605,7 @@ document.addEventListener("keyup", function(e){
   if(!e.key) return;
   const k = e.key.toLowerCase();
   if(k === "arrowup" || k === "w"){ G.keyBoost = false; setBoost(); }
+  if(k === "arrowdown" || k === "s"){ cancelLaunchHold(); }
   if(k === "shift" || k === " ") G.ultKey = false;
 });
 
@@ -2544,6 +2630,9 @@ cv.addEventListener("pointermove", function(e){
       G.swipeLock = SWIPE_LOCK;
     }
     ptr.x = e.clientX; ptr.y = e.clientY; ptr.moved = true;
+  } else if(dy > 18 && Math.abs(dy) > Math.abs(dx)){
+    if(!G.launchHold) beginLaunchHold();
+    ptr.moved = true;
   } else if(dy < -34 && Math.abs(dy) > Math.abs(dx)){
     G.ptrBoost = true; setBoost(); ptr.moved = true;
   } else if(Math.abs(dx) > TAP_SLOP || Math.abs(dy) > TAP_SLOP){
@@ -2560,6 +2649,7 @@ function endPtr(e){
   if(e && ptrDown[e.pointerId]){ delete ptrDown[e.pointerId]; ptrCount = Math.max(0, ptrCount - 1); }
   else { ptrCount = 0; for(const k in ptrDown) delete ptrDown[k]; }
   if(ptrCount === 0){
+    cancelLaunchHold();
     ptr.on = false; G.ptrBoost = false; setBoost();
     G.ultArmed = true;             /* the ultimate needs a long press, not a tap */
   }
@@ -2615,7 +2705,8 @@ function update(dt){
     else if(G.slowT > 0) target *= 0.5;
     if(G.boosting) target *= 1.5;
     if(G.canT > 0) target *= CAN_SPEED;          /* the can is free speed */
-    if(G.launchT > 0) target *= LAUNCH_BOOST;
+    if(G.launchHold) target *= G.launchCharge;  /* the longer you hold, the slower you get */
+    if(G.launchT > 0) target *= G.launchSpeed;
   }
   G.speed = lerp(G.speed, target, 1 - Math.pow(0.001, dt));
   G.scroll += G.speed*dt;
@@ -2634,6 +2725,22 @@ function update(dt){
   } else if(st === "running"){
     G.charge = clamp(G.charge + dt*0.14, 0, 1);
     if(G.charge >= 1) G.boostLock = false;       /* only back once it is full */
+  }
+  if(G.launchCooldown > 0) G.launchCooldown = Math.max(0, G.launchCooldown - dt);
+  if(G.launchHold){
+    G.launchCharge = clamp(G.launchCharge - dt*LAUNCH_DRAIN, 0, 1);
+  } else if(G.launchRecover){
+    G.launchCharge = clamp(G.launchCharge + dt*LAUNCH_RECOVER, 0, 1);
+    if(G.launchCharge >= 1){ G.launchCharge = 1; G.launchRecover = false; }
+  } else if(G.launchCooldown > 0){
+    G.launchCharge = clamp(G.launchCharge + dt*0.12, 0, 1);
+  } else if(G.launchT <= 0){
+    G.launchCharge = clamp(G.launchCharge + dt*0.32, 0, 1);
+  }
+  if(G.launchT > 0){
+    const was = G.launchT;
+    G.launchT = Math.max(0, G.launchT - dt);
+    if(was > 0 && G.launchT === 0) resolveLaunchLanding();
   }
   setBoost();
 
@@ -2728,7 +2835,6 @@ function update(dt){
   if(G.bloomT > 0){ G.bloomT = Math.max(0, G.bloomT - dt); if(G.bloomT === 0) G.petals = []; }
   if(G.cleanseT > 0) G.cleanseT = Math.max(0, G.cleanseT - dt);
   if(G.freezeT > 0){ G.freezeT = Math.max(0, G.freezeT - dt); if(G.freezeT === 0) endFreeze(); }
-  if(G.launchT > 0) G.launchT = Math.max(0, G.launchT - dt);
   G.laneT += dt;
   G.tapClock += dt;
   if(G.bumpCD > 0) G.bumpCD = Math.max(0, G.bumpCD - dt);
@@ -2743,7 +2849,7 @@ function update(dt){
   updateSlicks(dt, d, st);
   updateMissiles(dt, d);
   updateTraps(dt, d, st);
-  if(st === "running" && G.dead <= 0){
+  if(st === "running" && G.dead <= 0 && G.launchT <= 0 && !G.launchHold){
     const inFront = carAt(G.lane, playerY, "me");
     if(inFront && inFront.y < playerY) rearEnd("me", inFront);
   }
@@ -3214,7 +3320,7 @@ function updateTraps(dt, d, st){
   const racing = st === "running" && G.dead <= 0;
   const power = G.ultOn ? CARS[G.car].power : null;
   const shielded = G.ultOn && CARS[G.car].power !== "storm";
-  const live = racing && G.immune <= 0 && !shielded && G.shockT <= 0 && !finishedMe();
+  const live = racing && G.immune <= 0 && !shielded && G.shockT <= 0 && !finishedMe() && G.launchT <= 0 && !G.launchHold;
   const smash = racing && power === "burn";           /* Redd wrecks what it touches */
   const c = carHit();
   for(let i=G.traps.length-1;i>=0;i--){
@@ -5000,6 +5106,14 @@ function paintHUD(force){
   if(force || m !== lastM){ lastM = m; $("#hudDist").textContent = m; }
   const f = $("#boostFill");
   f.style.width = (G.charge*100).toFixed(1) + "%";
+  const lf = $("#launchFill"), lw = $("#launchWrap");
+  if(lf && lw){
+    lf.style.width = (G.launchCharge*100).toFixed(1) + "%";
+    lw.classList.toggle("ready", G.launchCharge <= LAUNCH_MIN_CHARGE && G.launchCooldown <= 0);
+    lw.classList.toggle("cooldown", G.launchCooldown > 0);
+    lw.title = G.launchCooldown > 0 ? ("Launch cooldown: " + G.launchCooldown.toFixed(1) + "s") :
+      (G.launchCharge <= LAUNCH_MIN_CHARGE ? "Release to launch" : "Hold longer to launch");
+  }
   $("#boostWrap").classList.toggle("full", G.charge > 0.98);
   $("#boostWrap").classList.toggle("locked", G.boostLock);
   syncEffects();
