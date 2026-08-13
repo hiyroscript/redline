@@ -4523,7 +4523,7 @@ function drawLadder(){
 /* the distance badge, parked to the left of its dot */
 function drawGapBadge(m, g){
   const gap = Math.abs(Math.round(m.gap));
-  const far = gap >= PIP_FAR;
+  const far = gap > PIP_FAR;
   const w = far ? 30 : 58;
   const right = g.x - 13;
   const x = right - w/2;
