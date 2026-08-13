@@ -299,8 +299,16 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 }
 .kind.track{background:var(--gray-200);color:var(--icon)}
 .kind.trap{background:var(--red);color:#fff}
-.odds{float:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--black);
+ .odds{float:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--black);
   background:var(--gray-200);border-radius:5px;padding:3px 7px;margin-top:-1px}
+.mystery-intro{background:var(--black);color:#fff;border-radius:var(--r-md);padding:16px;margin-bottom:10px}
+.mystery-intro h3{margin:0 0 5px;font-family:var(--display);font-variation-settings:'wdth' 118,'wght' 750;text-transform:uppercase;font-size:18px;letter-spacing:.04em}
+.mystery-intro p{margin:0;color:#C9CCD3;font-size:13px;line-height:1.4}
+.rarity-line{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+.rarity-chip{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;border-radius:5px;padding:4px 6px}
+.item-meta{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.item-meta .kind{margin:0}
+.item-meta .odds{float:none;margin:0}
 .kind.pickup{background:#7FB3E8;color:#0B0B0C}
 .info h3{margin:0 0 2px;font-family:var(--display);font-variation-settings:'wdth' 118,'wght' 750;
   text-transform:uppercase;font-size:16px;letter-spacing:.04em;color:var(--black)}
@@ -672,8 +680,8 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
       <button class="tab on" id="tabCars" data-i18n="tabCars">Cars</button>
       <button class="tab" id="tabTracks" data-i18n="tabTracks">Tracks
 traps</button>
-      <button class="tab" id="tabItems" data-i18n="tabItems">Bubble
-items</button>
+      <button class="tab" id="tabItems" data-i18n="tabItems">Mystery
+bubbles</button>
       <button class="tab" id="tabEffects" data-i18n="tabEffects">Effects</button>
     </div>
     <div id="garageBody"></div>
@@ -894,7 +902,7 @@ const STR = {
   kindTrack:    {en:"Track",       fr:"Piste"},
   kindTrap:     {en:"Trap",        fr:"Pi\u00e8ge"},
   tabTracks:    {en:"Tracks\ntraps",               fr:"Pistes\npi\u00e8ges"},
-  tabItems:     {en:"Bubble\nitems",              fr:"Objets\nbulle"},
+  tabItems:     {en:"Mystery\nbubbles",            fr:"Bulles\nmystère"},
   tabEffects:   {en:"Effects",                     fr:"Effets"},
   byLine:       {en:"a game by hiyroscript",       fr:"un jeu de hiyroscript"},
   cityInfo:     {en:"Dark asphalt between pale rooftops, water tanks and helipads. White lane dashes, crosswalks and red hydrants along the kerb.",
@@ -940,6 +948,7 @@ const STR = {
   rarityLegendary: {en:"Legendary", fr:"L\u00e9gendaire"},
   oddsNote:     {en:"The seeker never drops for whoever is leading.",
                  fr:"Le missile ne tombe jamais pour le leader."},
+  dropChance:   {en:"drop chance",   fr:"chance"},
   kindItem:     {en:"Item",        fr:"Objet"},
   kindBubble:   {en:"Pickup",      fr:"Bonus"},
   slipperyInfo: {en:"No grip: your steering is reversed. Left goes right and right goes left.",
@@ -1101,19 +1110,33 @@ function buildGarage(){
     html += '<div class="info"><span class="kind pickup">' + t("kindBubble") + '</span>' +
             '<h3>' + t("bubbleName") + '</h3><p>' + t("bubbleInfo") + '</p></div>';
   } else if(garageTab === "items"){
-    /* Odds are computed from the same table the game rolls against, so what is
-       printed here can never drift from what actually drops. */
+    /* Show the same rarity table used by the actual bubble roll. The displayed
+       percentages are the global drop odds; Seeker is unavailable to the leader,
+       which is called out below rather than silently changing the published odds. */
     let total = 0;
     ITEM_IDS.forEach(function(id){ total += RARITY[ITEMS[id].rarity].weight; });
+    html += '<div class="mystery-intro"><h3>' + t("bubbleName") + '</h3>' +
+            '<p>' + t("bubbleInfo") + '</p>' +
+            '<div class="rarity-line">' +
+            ITEM_IDS.map(function(id){ return ITEMS[id].rarity; }).filter(function(rk, i, arr){
+              return arr.indexOf(rk) === i;
+            }).map(function(rk){
+              const rr = RARITY[rk];
+              return '<span class="rarity-chip" style="background:' + rr.col + ';color:#0B0B0C">' +
+                     t("rarity" + rk) + ' · ' + (rr.weight/total*100).toFixed(0) + '%</span>';
+            }).join("") +
+            '</div></div>';
     ITEM_IDS.slice().sort(function(a, b){
       return RARITY[ITEMS[b].rarity].weight - RARITY[ITEMS[a].rarity].weight;
     }).forEach(function(id){
       const r = RARITY[ITEMS[id].rarity];
-      const pct = (r.weight/total*100).toFixed(1).replace(/\.0$/, "");
+      const pct = (r.weight/total*100).toFixed(0) + '%';
       html += '<div class="info">' +
+              '<div class="item-meta">' +
               '<span class="kind item" style="background:' + r.col + ';color:#0B0B0C">' +
               t("rarity" + ITEMS[id].rarity) + '</span>' +
-              '<span class="odds">' + pct + '%</span>' +
+              '<span class="odds">' + pct + ' ' + t("dropChance") + '</span>' +
+              '</div>' +
               '<h3>' + t(ITEMS[id].key) + '</h3>' +
               '<p>' + t(ITEMS[id].key + "Info") + '</p></div>';
     });
