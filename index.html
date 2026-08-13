@@ -3076,7 +3076,9 @@ function updateSlicks(dt, d, st){
     if(st === "running" && !immuneMe() && G.finished === null){
       const p = nearestOnCar(c, o.x, o.y);
       const dx = (p.x - o.x) / o.rx, dy = (p.y - o.y) / o.ry;
-      if(dx*dx + dy*dy <= 1){
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const hitRadius = dist === 0 ? 0 : puddleFactor(o, Math.atan2(dy, dx));
+      if(dist <= hitRadius){
         G.slipT = SLIP_TIME; G.slicks.splice(i,1);
         noise(.2, .2); continue;
       }
@@ -3088,7 +3090,9 @@ function updateSlicks(dt, d, st){
       const rc = { x:R.x, y:R.y, hw:carW*0.40, hh:carH*0.42 };
       const p2 = nearestOnCar(rc, o.x, o.y);
       const ex = (p2.x - o.x) / o.rx, ey = (p2.y - o.y) / o.ry;
-      if(ex*ex + ey*ey <= 1){ R.slip = SLIP_TIME; hit = true; break; }
+      const dist2 = Math.sqrt(ex*ex + ey*ey);
+      const hitRadius2 = dist2 === 0 ? 0 : puddleFactor(o, Math.atan2(ey, ex));
+      if(dist2 <= hitRadius2){ R.slip = SLIP_TIME; hit = true; break; }
     }
     if(hit) G.slicks.splice(i,1);
   }
@@ -4610,11 +4614,13 @@ function drawBubbles(){
   }
 }
 
+/* Oil uses the same randomized puddle silhouette system as water, so every
+   deployment gets its own irregular shape instead of a generic oval. */
 function oilPuddlePath(p, k){
-  const n = 13, pts = [];
+  const n = 11, pts = [];
   for(let i=0;i<n;i++){
     const a = (i/n)*6.2832;
-    const j = 0.72 + ((p.s*173.1 + i*31.7) % 1)*0.46;
+    const j = 0.68 + ((p.s*131.7 + i*47.31) % 1)*0.56;
     pts.push({ x:p.x + Math.cos(a)*p.rx*j*k, y:p.y + Math.sin(a)*p.ry*j*k });
   }
   smoothPath(pts);
