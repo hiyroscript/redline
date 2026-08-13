@@ -332,8 +332,6 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   background:var(--red-press);border-color:#fff;color:#fff;text-shadow:none;
   animation:ultPulse 1.05s ease-in-out infinite;
 }
-#ultPct.gain{animation:ultGain .5s ease}
-@keyframes ultGain{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
 @keyframes ultPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,127,.55)}50%{box-shadow:0 0 0 7px rgba(255,122,127,0)}}
 
 /* ============================================================
@@ -1360,7 +1358,7 @@ const G = {
   traps:[], fx:[], trapGap:0, nextTrap:600,
   tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0,
   car:"redd", ult:0, ultOn:false, ultKey:false, ultArmed:true,
-  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9, dodgeFlash:0, parkWait:0,
+  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9, parkWait:0,
   cdT:0, cdStep:-1, wasCounting:false,
   mode:"endless", diff:"medium",
   orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
@@ -2217,7 +2215,7 @@ function startRace(){
   G.boxGap = 0; G.nextRow = rand(2200, 3400);      /* the first row comes a bit sooner */
   G.lastTap = -9; G.tapClock = 0;
   G.freezeOwner = null; G.sirenOwner = null; G.effLog = [];
-  G.prevLane = -1; G.laneT = 9; G.dodgeFlash = 0;
+  G.prevLane = -1; G.laneT = 9;
   G.cdT = 0; G.cdStep = -1; G.wasCounting = false;
   G.raceT = 0; G.finishAt = 0; G.finished = null; G.results = [];
   G.tracksLeft = -1;
@@ -2639,7 +2637,6 @@ const BUMP_SLOW = 1.3;
 const ULT_ON_WRECK = -0.10;               /* what each event does to the meter */
 const ULT_ON_TRAP  = -0.05;
 const ULT_ON_KILL  =  0.10;
-const ULT_ON_DODGE =  0.05;
 const LAUNCH_TIME = 0.8, LAUNCH_BOOST = 1.35;                    /* both cars lose the same time to a bump */
 
 const ORB_COUNT = 3;
@@ -2843,7 +2840,6 @@ function update(dt){
 
   if(G.shake > 0) G.shake = Math.max(0, G.shake - dt*38);
   if(G.stepFlash > 0) G.stepFlash = Math.max(0, G.stepFlash - dt);
-  if(G.dodgeFlash > 0) G.dodgeFlash = Math.max(0, G.dodgeFlash - dt);
 }
 
 const TRAFFIC_PAINT = [
@@ -3249,8 +3245,6 @@ function dodgeCheck(o, box, bit, who, prevLane, since){
   const squeeze = Math.abs(o.x - box.x) < box.hw + half + carW*0.12;
   const swerved = prevLane >= 0 && lane === prevLane && since < 0.9;
   if(squeeze || swerved){
-    ultDelta(who, ULT_ON_DODGE);
-    if(who === "me") G.dodgeFlash = 0.5;         /* the meter pulses; no splash */
   }
 }
 
@@ -5037,7 +5031,6 @@ function paintHUD(force){
   const up = $("#ultPct");
   up.textContent = Math.round(G.ult*100) + "%";
   up.classList.toggle("ready", G.ult >= 1 && !G.ultOn);   /* the square handles the colour */
-  up.classList.toggle("gain", G.dodgeFlash > 0);
 }
 
 /* ---------------- loop ------------------------------------------- */
