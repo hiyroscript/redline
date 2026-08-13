@@ -282,6 +282,7 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   background:var(--black);display:flex;align-items:center;justify-content:center;
 }
 .car-art svg{width:56%;height:88%;display:block}
+.car-art .car-select-canvas{width:56%;height:88%;display:block}
 #garage{background:var(--gray-100)}
 .tabs{display:flex;gap:6px;padding:0 var(--pad) 12px}
 .tab{flex:1;appearance:none;border:0;cursor:pointer;padding:9px 6px;border-radius:var(--r-sm);
@@ -626,98 +627,27 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
 
       <div class="car-grid">
         <button class="car-opt " id="carRedd">
-          <span class="car-art">
-          <svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="0" y="26" width="13" height="22" rx="5"/><rect x="63" y="26" width="13" height="22" rx="5"/><rect x="0" y="86" width="13" height="24" rx="5"/><rect x="63" y="86" width="13" height="24" rx="5"/></g>
-            <rect x="7" y="4" width="62" height="124" rx="17" fill="#E21B22"/>
-            <rect x="12" y="6" width="52" height="12" rx="6" fill="#101116"/>
-            <rect x="16" y="9" width="10" height="5" rx="2.5" fill="#FFE9C4"/><rect x="50" y="9" width="10" height="5" rx="2.5" fill="#FFE9C4"/>
-            <rect x="19" y="30" width="38" height="26" rx="9" fill="#101116"/>
-            <rect x="23" y="34" width="30" height="17" rx="6" fill="#31343B"/>
-            <rect x="19" y="62" width="38" height="30" rx="9" fill="#101116"/>
-            <rect x="20" y="16" width="8" height="24" rx="2" fill="#101116"/><rect x="48" y="16" width="8" height="24" rx="2" fill="#101116"/>
-            <rect x="6" y="112" width="64" height="10" rx="5" fill="#101116"/>
-            <rect x="14" y="114" width="12" height="5" rx="2.5" fill="#FF5157"/><rect x="50" y="114" width="12" height="5" rx="2.5" fill="#FF5157"/>
-          </svg>
-        </span>
+          <span class="car-art"><canvas class="car-select-canvas" data-car="redd" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="redd">Redd</span>
         </button>
         <button class="car-opt phantom" id="carPhantom">
-          <span class="car-art">
-          <svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="1" y="26" width="12" height="21" rx="5"/><rect x="63" y="26" width="12" height="21" rx="5"/><rect x="1" y="86" width="12" height="21" rx="5"/><rect x="63" y="86" width="12" height="21" rx="5"/></g>
-            <path d="M17 4 Q38 -3 59 4 Q68 8 69 22 L70 84 Q70 124 59 128 L17 128 Q6 124 6 84 L7 22 Q8 8 17 4 Z" fill="#EDF1F6"/>
-            <path d="M38 1 L64 45 L12 45 Z" fill="#1E5FA8"/>
-            <rect x="5" y="52" width="7" height="34" fill="#1E5FA8"/><rect x="64" y="52" width="7" height="34" fill="#1E5FA8"/>
-            <rect x="27" y="4" width="7" height="124" fill="#1E5FA8"/><rect x="42" y="4" width="7" height="124" fill="#1E5FA8"/>
-            <rect x="14" y="14" width="15" height="4" rx="2" fill="#8FE3FF"/><rect x="47" y="14" width="15" height="4" rx="2" fill="#8FE3FF"/>
-            <rect x="14" y="46" width="48" height="42" rx="12" fill="#16305A"/>
-            <path d="M18 58 H58 L54 50 H22 Z" fill="#7FB3E8"/>
-            <path d="M20 76 H56 L53 84 H23 Z" fill="#7FB3E8"/>
-            <rect x="5" y="106" width="66" height="9" rx="4" fill="#1E5FA8"/>
-            <rect x="12" y="108" width="16" height="4" rx="2" fill="#8FE3FF"/><rect x="48" y="108" width="16" height="4" rx="2" fill="#8FE3FF"/>
-            <circle cx="27" cy="123" r="5" fill="#16305A"/><circle cx="49" cy="123" r="5" fill="#16305A"/>
-          </svg>
-        </span>
+          <span class="car-art"><canvas class="car-select-canvas" data-car="phantom" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="phantom">Phantom</span>
         </button>
         <button class="car-opt " id="carBolt">
-          <span class="car-art">
-          <svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="0" y="24" width="15" height="25" rx="6"/><rect x="61" y="24" width="15" height="25" rx="6"/><rect x="0" y="84" width="15" height="25" rx="6"/><rect x="61" y="84" width="15" height="25" rx="6"/></g>
-            <rect x="9" y="8" width="58" height="116" rx="14" fill="#F5C400"/>
-            <path d="M9 16 L38 8 L67 16 L67 24 L38 16 L9 24 Z" fill="#141414"/>
-            <path d="M9 56 L38 48 L67 56 L67 64 L38 56 L9 64 Z" fill="#141414"/>
-            <path d="M9 96 L38 88 L67 96 L67 104 L38 96 L9 104 Z" fill="#141414"/>
-            <rect x="5" y="4" width="66" height="10" rx="4" fill="#141414"/>
-            <rect x="15" y="6" width="13" height="5" rx="2" fill="#FFF3B0"/><rect x="48" y="6" width="13" height="5" rx="2" fill="#FFF3B0"/>
-            <rect x="20" y="44" width="36" height="42" rx="9" fill="#141414"/>
-            <rect x="24" y="48" width="28" height="34" rx="7" fill="#4A4636"/>
-            <path d="M22 46 L54 84 M54 46 L22 84 M21 65 H55" stroke="#DADADA" stroke-width="3" fill="none"/>
-            <rect x="3" y="104" width="70" height="11" rx="5" fill="#141414"/>
-            <rect x="12" y="118" width="14" height="5" rx="2" fill="#FF6A3A"/><rect x="50" y="118" width="14" height="5" rx="2" fill="#FF6A3A"/>
-          </svg>
-        </span>
+          <span class="car-art"><canvas class="car-select-canvas" data-car="bolt" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="bolt">Bolt</span>
         </button>
         <button class="car-opt timestamp" id="carTimestamp">
-          <span class="car-art"><svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="0" y="26" width="13" height="22" rx="5"/><rect x="63" y="26" width="13" height="22" rx="5"/><rect x="0" y="86" width="13" height="22" rx="5"/><rect x="63" y="86" width="13" height="22" rx="5"/></g>
-            <path d="M27 3 H49 Q68 6 69 22 L70 54 Q70 118 62 128 H14 Q6 118 6 54 L7 22 Q8 6 27 3 Z" fill="#1F7A4C"/>
-            <path d="M27 3 H49 Q60 5 62 20 H14 Q16 5 27 3 Z" fill="#0E0E10"/>
-            <rect x="12" y="3" width="52" height="8" rx="3" fill="#0E0E10"/>
-            <rect x="17" y="4" width="14" height="5" rx="2" fill="#D6FFE9"/><rect x="45" y="4" width="14" height="5" rx="2" fill="#D6FFE9"/>
-            <rect x="34" y="3" width="8" height="126" fill="#3FD98A"/>
-            <rect x="14" y="46" width="48" height="44" rx="11" fill="#0E0E10"/>
-            <path d="M19 62 H57 L52 50 H24 Z" fill="#7FE8B6"/>
-            <path d="M20 78 H56 L52 88 H24 Z" fill="#7FE8B6"/>
-            <circle cx="38" cy="30" r="9" fill="#0E0E10" stroke="#3FD98A" stroke-width="2.5"/>
-            <path d="M38 25 V30 L42 32" stroke="#3FD98A" stroke-width="2.5" fill="none"/>
-            <rect x="8" y="106" width="60" height="8" rx="3" fill="#0E0E10"/>
-            <rect x="13" y="108" width="50" height="4" rx="2" fill="#3FD98A"/>
-          </svg></span>
+          <span class="car-art"><canvas class="car-select-canvas" data-car="timestamp" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="timestamp">Timestamp</span>
         </button>
         <button class="car-opt rose" id="carRose">
-          <span class="car-art"><svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="1" y="26" width="13" height="21" rx="5"/><rect x="62" y="26" width="13" height="21" rx="5"/><rect x="0" y="86" width="14" height="21" rx="5"/><rect x="62" y="86" width="14" height="21" rx="5"/></g>
-            <path d="M30 4 H46 Q64 6 65 24 L67 74 Q69 118 54 128 H22 Q7 118 9 74 L11 24 Q12 6 30 4 Z" fill="#7B3FA8"/>
-            <rect x="7" y="60" width="8" height="42" fill="#FF7ACF"/><rect x="61" y="60" width="8" height="42" fill="#FF7ACF"/>
-            <rect x="34" y="4" width="8" height="124" fill="#FF7ACF"/>
-            <rect x="12" y="4" width="52" height="8" rx="3" fill="#2A1038"/>
-            <rect x="17" y="5" width="14" height="5" rx="2" fill="#FFF0FA"/><rect x="45" y="5" width="14" height="5" rx="2" fill="#FFF0FA"/>
-            <rect x="13" y="42" width="50" height="46" rx="13" fill="#2A1038"/>
-            <path d="M18 58 H58 L53 46 H23 Z" fill="#FFB6E6"/>
-            <path d="M19 74 H57 L53 84 H23 Z" fill="#FFB6E6"/>
-            <g fill="#FF7ACF"><circle cx="38" cy="22" r="5"/><circle cx="31" cy="27" r="5"/><circle cx="45" cy="27" r="5"/><circle cx="34" cy="34" r="5"/><circle cx="42" cy="34" r="5"/></g>
-            <circle cx="38" cy="28" r="4" fill="#FFF0FA"/>
-            <rect x="10" y="106" width="56" height="8" rx="3" fill="#2A1038"/>
-            <rect x="15" y="108" width="16" height="4" rx="2" fill="#FFD9F2"/><rect x="45" y="108" width="16" height="4" rx="2" fill="#FFD9F2"/>
-          </svg></span>
+          <span class="car-art"><canvas class="car-select-canvas" data-car="rose" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="rose">Rose</span>
         </button>
         <button class="car-opt siren" id="carSiren">
-          <span class="car-art"><svg viewBox="0 0 76 132"><g fill="#0C0D10"><rect x="0" y="26" width="14" height="23" rx="5"/><rect x="62" y="26" width="14" height="23" rx="5"/><rect x="0" y="86" width="14" height="23" rx="5"/><rect x="62" y="86" width="14" height="23" rx="5"/></g><rect x="8" y="4" width="60" height="124" rx="12" fill="#F2F3F5"/><rect x="8" y="46" width="60" height="42" fill="#101114"/><rect x="12" y="6" width="52" height="11" rx="4" fill="#101114"/><rect x="20" y="52" width="36" height="30" rx="7" fill="#5A6472"/><rect x="18" y="36" width="40" height="9" rx="4" fill="#101114"/><rect x="20" y="37" width="17" height="7" rx="3" fill="#4D8BFF"/><rect x="39" y="37" width="17" height="7" rx="3" fill="#FF4A50"/><rect x="6" y="112" width="64" height="10" rx="5" fill="#101114"/></svg></span>
+          <span class="car-art"><canvas class="car-select-canvas" data-car="siren" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="siren">Siren</span>
         </button>
       </div>
@@ -1344,7 +1274,8 @@ $("#btnHome").addEventListener("click", function(){ leave(); });
 /* ================================================================
    RACE ENGINE
    ================================================================ */
-const cv = $("#cv"), ctx = cv.getContext("2d");
+const cv = $("#cv");
+let ctx = cv.getContext("2d");
 let W=0, H=0, DPR=1;
 let roadX=0, roadW=0, laneW=0, sideW=0, carW=0, carH=0, playerY=0, vign=null;
 
@@ -3871,6 +3802,23 @@ function drawCruiser(w, h, p, isPlayer, boosting){
   if(boosting) flames(w, h, p.flame[0], p.flame[1]);
 }
 
+function renderSelectCars(){
+  document.querySelectorAll(".car-select-canvas").forEach(function(canvas){
+    const id = canvas.dataset.car;
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const w = 76, h = 132;
+    canvas.width = Math.round(w*dpr);
+    canvas.height = Math.round(h*dpr);
+    const selectCtx = canvas.getContext("2d");
+    const previousCtx = ctx;
+    ctx = selectCtx;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,w,h);
+    drawCar(w/2, h/2, 52, 92, CARS[id], 0, true, false);
+    ctx = previousCtx;
+  });
+}
+
 const ROOF = ["#22242A", "#1A1C21", "#2B2E35"];
 const ROCK = ["#B08A5E", "#9C7550", "#C4A277"];
 
@@ -3923,6 +3871,8 @@ function starBlock(b, x0, bw){
     ctx.fill();
   }
 }
+
+renderSelectCars();
 
 function drawSide(s, id){
   const arr = G.build[s];
