@@ -298,6 +298,8 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 }
 .kind.track{background:var(--gray-200);color:var(--icon)}
 .kind.trap{background:var(--red);color:#fff}
+.odds{float:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--black);
+  background:var(--gray-200);border-radius:5px;padding:3px 7px;margin-top:-1px}
 .kind.pickup{background:#7FB3E8;color:#0B0B0C}
 .info h3{margin:0 0 2px;font-family:var(--display);font-variation-settings:'wdth' 118,'wght' 750;
   text-transform:uppercase;font-size:16px;letter-spacing:.04em;color:var(--black)}
@@ -742,6 +744,8 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
       <button class="tab on" id="tabCars" data-i18n="tabCars">Cars</button>
       <button class="tab" id="tabTracks" data-i18n="tabTracks">Tracks
 traps</button>
+      <button class="tab" id="tabItems" data-i18n="tabItems">Bubble
+items</button>
       <button class="tab" id="tabEffects" data-i18n="tabEffects">Effects</button>
     </div>
     <div id="garageBody"></div>
@@ -962,6 +966,7 @@ const STR = {
   kindTrack:    {en:"Track",       fr:"Piste"},
   kindTrap:     {en:"Trap",        fr:"Pi\u00e8ge"},
   tabTracks:    {en:"Tracks\ntraps",               fr:"Pistes\npi\u00e8ges"},
+  tabItems:     {en:"Bubble\nitems",              fr:"Objets\nbulle"},
   tabEffects:   {en:"Effects",                     fr:"Effets"},
   byLine:       {en:"a game by hiyroscript",       fr:"un jeu de hiyroscript"},
   cityInfo:     {en:"Dark asphalt between pale rooftops, water tanks and helipads. White lane dashes, crosswalks and red hydrants along the kerb.",
@@ -1001,6 +1006,12 @@ const STR = {
   bubbleName:   {en:"Mystery bubble", fr:"Bulle myst\u00e8re"},
   bubbleInfo:   {en:"Three drift across the road together. Touch one for a random item; only one per row, and a new one replaces what you hold.",
                  fr:"Trois d\u00e9rivent ensemble. Touchez-en une pour un objet al\u00e9atoire ; une seule par rang\u00e9e, et la suivante remplace la pr\u00e9c\u00e9dente."},
+  rarityCommon:    {en:"Common",    fr:"Commun"},
+  rarityRare:      {en:"Rare",      fr:"Rare"},
+  rarityEpic:      {en:"Epic",      fr:"\u00c9pique"},
+  rarityLegendary: {en:"Legendary", fr:"L\u00e9gendaire"},
+  oddsNote:     {en:"The seeker never drops for whoever is leading.",
+                 fr:"Le missile ne tombe jamais pour le leader."},
   kindItem:     {en:"Item",        fr:"Objet"},
   kindBubble:   {en:"Pickup",      fr:"Bonus"},
   slipperyInfo: {en:"No grip: your steering is reversed. Left goes right and right goes left.",
@@ -1109,10 +1120,15 @@ const ITEMS = {
   seeker: { key:"itemSeeker", rarity:"legendary" }
 };
 const ITEM_IDS = ["can", "oil", "seeker"];
-const BUBBLE_GAP = 1500;                  /* road distance between rows */
+const BUBBLE_GAP = [5400, 8600];          /* road distance between rows */
 const CAN_TIME = 2.2, CAN_SPEED = 1.55;   /* the boost can */
 const OIL_LIFE = 22, SLIP_TIME = 4;       /* the slick, and how long it costs you */
 const MISSILE_SPEED = 2100;
+/* the seeker is a big piece of hardware: longer than a car and wider across
+   the fins, so it reads as a threat from the far end of the road */
+const MISSILE_LEN  = 1.45;                /* nose to tail, in car heights */
+const MISSILE_BODY = 0.55;                /* body half width, in car widths */
+const MISSILE_FIN  = 0.92;                /* fin reach from centre, in car widths */
 const BUBBLE_R = 21;
 
 const PIP_FAR = 500;                      /* beyond this the marker drops the number */
@@ -1156,12 +1172,24 @@ function buildGarage(){
     });
     html += '<div class="info"><span class="kind pickup">' + t("kindBubble") + '</span>' +
             '<h3>' + t("bubbleName") + '</h3><p>' + t("bubbleInfo") + '</p></div>';
-    ITEM_IDS.forEach(function(id){
+  } else if(garageTab === "items"){
+    /* Odds are computed from the same table the game rolls against, so what is
+       printed here can never drift from what actually drops. */
+    let total = 0;
+    ITEM_IDS.forEach(function(id){ total += RARITY[ITEMS[id].rarity].weight; });
+    ITEM_IDS.slice().sort(function(a, b){
+      return RARITY[ITEMS[b].rarity].weight - RARITY[ITEMS[a].rarity].weight;
+    }).forEach(function(id){
       const r = RARITY[ITEMS[id].rarity];
-      html += '<div class="info"><span class="kind item" style="background:' + r.col +
-              ';color:#0B0B0C">' + t("kindItem") + '</span>' +
-              '<h3>' + t(ITEMS[id].key) + '</h3><p>' + t(ITEMS[id].key + "Info") + '</p></div>';
+      const pct = (r.weight/total*100).toFixed(1).replace(/\.0$/, "");
+      html += '<div class="info">' +
+              '<span class="kind item" style="background:' + r.col + ';color:#0B0B0C">' +
+              t("rarity" + ITEMS[id].rarity) + '</span>' +
+              '<span class="odds">' + pct + '%</span>' +
+              '<h3>' + t(ITEMS[id].key) + '</h3>' +
+              '<p>' + t(ITEMS[id].key + "Info") + '</p></div>';
     });
+    html += '<p class="soon">' + t("oddsNote") + '</p>';
   } else {
     for(const id in EFFECTS){
       html += '<div class="info"><h3 style="color:' + EFFECTS[id].col + '">' + t(EFFECTS[id].key) +
@@ -1298,13 +1326,14 @@ $("#carSiren").addEventListener("click", function(){ pickCar("siren"); });
 $("#btnGarage").addEventListener("click", function(){ garageTab = "cars"; setTab(); show("garage"); });
 $("#btnCloseGarage").addEventListener("click", function(){ show("home"); });
 function setTab(){
-  ["cars","tracks","effects"].forEach(function(k){
+  ["cars","tracks","items","effects"].forEach(function(k){
     $("#tab" + k.charAt(0).toUpperCase() + k.slice(1)).classList.toggle("on", garageTab === k);
   });
   buildGarage();
 }
 $("#tabCars").addEventListener("click", function(){ garageTab = "cars"; setTab(); });
 $("#tabTracks").addEventListener("click", function(){ garageTab = "tracks"; setTab(); });
+$("#tabItems").addEventListener("click", function(){ garageTab = "items"; setTab(); });
 $("#tabEffects").addEventListener("click", function(){ garageTab = "effects"; setTab(); });
 $("#carRandom").addEventListener("click", function(){ pickCar(CAR_IDS[randi(0, CAR_IDS.length-1)]); });
 $("#itemBox").addEventListener("click", function(e){ if(e && e.stopPropagation) e.stopPropagation(); useItem("me"); });
@@ -1336,7 +1365,7 @@ const G = {
   mode:"endless", diff:"medium",
   orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
   frozenT:0, orderedT:0, bloomT:0, cleanseT:0, petals:[], freezeT:0, bloomOwner:null, effLog:[],
-  slipT:0, item:null, boxes:[], slicks:[], missiles:[], boxGap:0, canT:0, lastTap:-9, tapClock:0,
+  slipT:0, item:null, boxes:[], slicks:[], missiles:[], boxGap:0, nextRow:6000, canT:0, lastTap:-9, tapClock:0,
   freezeOwner:null, sirenOwner:null,
   raceT:0, tracksLeft:-1, finishAt:0, finished:null, results:[]
 };
@@ -2184,7 +2213,8 @@ function startRace(){
   G.ult = 0; G.ultOn = false; G.boostLock = false; G.ultArmed = true;
   G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.bumpCD = 0; G.ultFast = false;
   G.frozenT = 0; G.orderedT = 0; G.bloomT = 0; G.cleanseT = 0; G.petals = []; G.slipT = 0;
-  G.item = null; G.boxes = []; G.slicks = []; G.missiles = []; G.boxGap = 400; G.canT = 0;
+  G.item = null; G.boxes = []; G.slicks = []; G.missiles = []; G.canT = 0;
+  G.boxGap = 0; G.nextRow = rand(2200, 3400);      /* the first row comes a bit sooner */
   G.lastTap = -9; G.tapClock = 0;
   G.freezeOwner = null; G.sirenOwner = null; G.effLog = [];
   G.prevLane = -1; G.laneT = 9; G.dodgeFlash = 0;
@@ -2883,29 +2913,35 @@ function leaderOf(who){
 }
 
 function spawnBubbleRow(){
-  G.boxes.push({ y:-90, taken:0, s:Math.random() });
+  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random() });
 }
 
 function updateBubbles(dt, d, st){
   if(st === "running" && G.finished === null){
     G.boxGap += d;
-    if(G.boxGap >= BUBBLE_GAP){ G.boxGap = 0; spawnBubbleRow(); }
+    if(G.boxGap >= G.nextRow){
+      G.boxGap = 0; spawnBubbleRow();
+      G.nextRow = rand(BUBBLE_GAP[0], BUBBLE_GAP[1]);
+    }
   }
   const c = carHit();
   for(let i=G.boxes.length-1;i>=0;i--){
     const row = G.boxes[i];
     row.y += d;
     if(row.y > H + 120){ G.boxes.splice(i,1); continue; }
+    if(row.gone === 7){ G.boxes.splice(i,1); continue; }   /* all three collected */
     for(let l=0;l<3;l++){
+      if(row.gone & (1 << l)) continue;                     /* this one is already gone */
       const bx = laneCX(l), by = row.y + Math.sin(G.scroll*0.01 + l*2 + row.s*6)*6;
       /* you */
       if(!(row.taken & 1) && st === "running" && G.dead <= 0 && G.finished === null){
         const p = nearestOnCar(c, bx, by);
         const dx = p.x - bx, dy = p.y - by;
         if(dx*dx + dy*dy <= BUBBLE_R*BUBBLE_R){
-          row.taken |= 1;
+          row.taken |= 1; row.gone |= (1 << l);
           G.item = rollItem(leaderOf("me"));
           popFx(bx, by, RARITY[ITEMS[G.item].rarity].col);
+          break;
         }
       }
       /* and everyone else */
@@ -2917,7 +2953,7 @@ function updateBubbles(dt, d, st){
         const p2 = nearestOnCar(rc, bx, by);
         const ex = p2.x - bx, ey = p2.y - by;
         if(ex*ex + ey*ey <= BUBBLE_R*BUBBLE_R){
-          row.taken |= bit;
+          row.taken |= bit; row.gone |= (1 << l);
           R.item = rollItem(leaderOf(R));
           R.useT = rand(0.6, 2.4);
           popFx(bx, by, RARITY[ITEMS[R.item].rarity].col);
@@ -2973,12 +3009,39 @@ function seekerTarget(owner){
   others.sort(function(a, b){ return b.m - a.m; });
   return others[0];
 }
+/* every seeker measurement in one place, so the drawing and the collision
+   never drift apart */
+function missileDims(){
+  const len = carH*MISSILE_LEN;
+  return {
+    len:  len,
+    nose: len*0.58,                 /* how far the tip sits ahead of centre */
+    tail: len*0.42,                 /* how far the thruster sits behind it */
+    hw:   carW*MISSILE_BODY,        /* body half width */
+    fin:  carW*MISSILE_FIN          /* fins reach this far from centre */
+  };
+}
+/* it is long enough now that testing the centre alone lets the nose sail
+   clean through a car, so the whole spine gets sampled */
+function missileSpine(m){
+  const D = missileDims();
+  const len = Math.max(1, Math.sqrt(m.vx*m.vx + m.vy*m.vy));
+  const ux = m.vx/len, uy = m.vy/len;
+  return [
+    { x:m.x + ux*D.nose,      y:m.y + uy*D.nose },
+    { x:m.x + ux*D.nose*0.55, y:m.y + uy*D.nose*0.55 },
+    { x:m.x,                  y:m.y },
+    { x:m.x - ux*D.tail*0.6,  y:m.y - uy*D.tail*0.6 }
+  ];
+}
 function fireSeeker(owner){
   const t = seekerTarget(owner);
   if(!t) return;
+  const D = missileDims();
   const x = owner === "me" ? G.x : owner.x, y = owner === "me" ? playerY : owner.y;
   G.missiles.push({
-    x:x, y:y - carH*0.5, vx:0, vy:-MISSILE_SPEED*0.3,
+    /* clear of the launching car, tail first, so nothing overlaps the bonnet */
+    x:x, y:y - carH*0.5 - D.tail, vx:0, vy:-MISSILE_SPEED*0.3,
     owner:owner, mark:t.me ? "me" : t.obj, life:14, fade:0
   });
   noise(.4, .4); tone(210, .5, "sawtooth", .12);
@@ -3022,42 +3085,56 @@ function updateMissiles(dt, d){
     m.vx = lerp(m.vx, dx/len*MISSILE_SPEED, 1 - Math.pow(0.0005, dt));
     m.vy = lerp(m.vy, dy/len*MISSILE_SPEED, 1 - Math.pow(0.0005, dt));
     m.x += m.vx*dt; m.y += m.vy*dt;
-    addFx(m.x, m.y, rand(-50,50), rand(-30,60), .28, rand(3,5), "#FF8A3A");
+    const D = missileDims(), spine = missileSpine(m);
+    const back = spine[3];
+    for(let f=0;f<2;f++)
+      addFx(back.x + rand(-D.hw*0.6, D.hw*0.6), back.y, rand(-60,60), rand(-30,70),
+            .3, rand(D.hw*0.28, D.hw*0.55), f ? "#FFC078" : "#FF8A3A");
 
-    /* it clears everything it passes through */
+    /* it clears everything it passes through, along its whole length */
+    const sweep = D.hw*1.3, sw2 = sweep*sweep;
     for(let k=G.traps.length-1;k>=0;k--){
       const o = G.traps[k];
-      const ox = o.x - m.x, oy = o.y - m.y;
-      if(ox*ox + oy*oy < 46*46){ smashFx(o.x, o.y, 26, "#FFD9A0", G.car); G.traps.splice(k,1); }
+      for(let s=0;s<spine.length;s++){
+        const ox = o.x - spine[s].x, oy = o.y - spine[s].y;
+        if(ox*ox + oy*oy < sw2){ smashFx(o.x, o.y, 26, "#FFD9A0", G.car); G.traps.splice(k,1); break; }
+      }
     }
     for(let k=G.slicks.length-1;k>=0;k--){
       const o = G.slicks[k];
-      const ox = o.x - m.x, oy = o.y - m.y;
-      if(ox*ox + oy*oy < 46*46) G.slicks.splice(k,1);
+      for(let s=0;s<spine.length;s++){
+        const ox = o.x - spine[s].x, oy = o.y - spine[s].y;
+        if(ox*ox + oy*oy < sw2){ G.slicks.splice(k,1); break; }
+      }
     }
     const all = racers();
+    const hw2 = D.hw*D.hw;
     for(let k=0;k<all.length;k++){
       const a = all[k];
       if(a.out) continue;
       if(m.owner === "me" ? a.me : a.obj === m.owner) continue;
       const box = { x:a.me ? G.x : a.obj.x, y:a.y, hw:carW*0.40, hh:carH*0.42 };
-      const q2 = nearestOnCar(box, m.x, m.y);
-      const qx = q2.x - m.x, qy = q2.y - m.y;
-      if(qx*qx + qy*qy > 26*26) continue;
+      let px = 0, py = 0, touch = false;
+      for(let s=0;s<spine.length && !touch;s++){
+        const q2 = nearestOnCar(box, spine[s].x, spine[s].y);
+        const qx = q2.x - spine[s].x, qy = q2.y - spine[s].y;
+        if(qx*qx + qy*qy <= hw2){ touch = true; px = q2.x; py = q2.y; }
+      }
+      if(!touch) continue;
       const isMark = (m.mark === "me" && a.me) || m.mark === a.obj;
       if(a.me) destroyCar(); else wreckRival(a.obj, m.owner);
-      seekerBoom(m.x, m.y);
+      seekerBoom(px, py);
       if(isMark || true){ G.missiles.splice(i,1); break; }
     }
   }
 }
 function seekerBoom(x, y){
-  for(let i=0;i<34;i++){
-    const a = rand(0, 6.2832), sp = rand(80, 380);
-    addFx(x, y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.4,.9), rand(3,7),
+  for(let i=0;i<46;i++){
+    const a = rand(0, 6.2832), sp = rand(110, 540);
+    addFx(x, y, Math.cos(a)*sp, Math.sin(a)*sp, rand(.45,1.05), rand(4,10),
           i%3 === 0 ? "#FFE3B0" : (i%3 === 1 ? "#FF8A2B" : "#C6482A"));
   }
-  G.shake = Math.max(G.shake, 20);
+  G.shake = Math.max(G.shake, 26);
   noise(.6, .5); tone(80, .45, "sawtooth", .16);
 }
 
@@ -4506,9 +4583,12 @@ function drawOrbs(who, cx, cy){
 const ITEM_ICON = {
   can:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF9A4A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
       '<path d="M6 8h9v12H6z"/><path d="M15 11h3l2 3v6h-5"/><path d="M8 5h5v3H8z"/><path d="M9 12l-1 4h3l-1 4"/></svg>',
-  oil:'<svg viewBox="0 0 24 24" fill="none" stroke="#4D8BFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M12 3c3.5 4.6 5.5 7.6 5.5 10a5.5 5.5 0 0 1-11 0C6.5 10.6 8.5 7.6 12 3Z"/>' +
-      '<path d="M9.5 13.5a2.5 2.5 0 0 0 2.5 2.5"/></svg>',
+  /* a black droplet. The box behind it is nearly black, so it sits on a pale
+     disc - otherwise a black icon on a black panel is invisible. */
+  oil:'<svg viewBox="0 0 24 24">' +
+      '<circle cx="12" cy="12" r="11" fill="#D9DEE6"/>' +
+      '<path d="M12 4.2c3.2 4.2 5 7 5 9.2a5 5 0 0 1-10 0c0-2.2 1.8-5 5-9.2Z" fill="#0B0B0C"/>' +
+      '</svg>',
   seeker:'<svg viewBox="0 0 24 24" fill="none" stroke="#FFD24A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
       '<path d="M12 2c2.2 2.6 3.2 5.4 3.2 8.4V16H8.8v-5.6C8.8 7.4 9.8 4.6 12 2Z"/>' +
       '<path d="M8.8 12 5 16l3.8-.6M15.2 12 19 16l-3.8-.6"/><path d="M10.4 19h3.2l-1.6 3z"/></svg>'
@@ -4524,27 +4604,61 @@ function paintItemBox(){
 }
 
 function drawBubbles(){
-  for(let i=0;i<G.boxes.length;i++){
-    const row = G.boxes[i];
+  for(let n=0;n<G.boxes.length;n++){
+    const row = G.boxes[n];
     if(row.y < -80 || row.y > H + 80) continue;
     for(let l=0;l<3;l++){
+      if(row.gone & (1 << l)) continue;                  /* collected: it is gone */
       const x = laneCX(l);
-      const y = row.y + Math.sin(G.scroll*0.01 + l*2 + row.s*6)*6;
-      const gone = (row.taken & 1) !== 0;
+      const t = G.scroll*0.01 + l*2 + row.s*6;
+      const y = row.y + Math.sin(t)*7;
+      const r = BUBBLE_R*(1 + Math.sin(t*1.3)*0.045);     /* it breathes as it drifts */
+      const spent = (row.taken & 1) !== 0;                /* you already took one here */
+
       ctx.save();
-      ctx.globalAlpha = gone ? 0.25 : 1;
-      const g2 = ctx.createRadialGradient(x - BUBBLE_R*0.3, y - BUBBLE_R*0.35, 2, x, y, BUBBLE_R);
-      g2.addColorStop(0, "rgba(255,255,255,0.85)");
-      g2.addColorStop(0.55, "rgba(150,220,255,0.35)");
-      g2.addColorStop(1, "rgba(90,170,230,0.18)");
-      ctx.beginPath(); ctx.arc(x, y, BUBBLE_R, 0, 6.2832);
-      ctx.fillStyle = g2; ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.9)"; ctx.lineWidth = 2; ctx.stroke();
-      ctx.beginPath(); ctx.arc(x - BUBBLE_R*0.34, y - BUBBLE_R*0.38, BUBBLE_R*0.22, 0, 6.2832);
-      ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fill();
-      ctx.fillStyle = "#0B0B0C";
-      ctx.font = "700 20px ui-monospace, Menlo, Consolas, monospace";
+      ctx.globalAlpha = spent ? 0.3 : 1;
+
+      const glow = ctx.createRadialGradient(x, y, r*0.6, x, y, r*1.6);
+      glow.addColorStop(0, "rgba(180,225,255,0.30)");
+      glow.addColorStop(1, "rgba(180,225,255,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(x - r*1.7, y - r*1.7, r*3.4, r*3.4);
+
+      /* soap film: clear in the middle, bright at the edge */
+      const film = ctx.createRadialGradient(x, y, r*0.2, x, y, r);
+      film.addColorStop(0,    "rgba(255,255,255,0.05)");
+      film.addColorStop(0.62, "rgba(190,230,255,0.14)");
+      film.addColorStop(0.88, "rgba(255,255,255,0.42)");
+      film.addColorStop(1,    "rgba(255,255,255,0.08)");
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832);
+      ctx.fillStyle = film; ctx.fill();
+
+      /* thin-film colour sliding around the rim */
+      ctx.lineWidth = 2.4;
+      const tints = ["rgba(120,235,255,0.85)", "rgba(255,140,225,0.7)", "rgba(255,235,150,0.7)"];
+      for(let k=0;k<3;k++){
+        ctx.beginPath();
+        ctx.arc(x, y, r - 1, t*0.6 + k*2.1, t*0.6 + k*2.1 + 1.5);
+        ctx.strokeStyle = tints[k]; ctx.stroke();
+      }
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832);
+      ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1.2; ctx.stroke();
+
+      /* highlights */
+      ctx.beginPath();
+      if(ctx.ellipse) ctx.ellipse(x - r*0.34, y - r*0.40, r*0.26, r*0.16, -0.7, 0, 6.2832);
+      else ctx.arc(x - r*0.34, y - r*0.40, r*0.2, 0, 6.2832);
+      ctx.fillStyle = "rgba(255,255,255,0.92)"; ctx.fill();
+      ctx.beginPath(); ctx.arc(x + r*0.42, y + r*0.34, r*0.1, 0, 6.2832);
+      ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fill();
+
+      /* the question mark, readable over any track */
+      ctx.font = "700 " + Math.round(r*1.15) + "px Archivo, Arial Narrow, Helvetica, sans-serif";
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.lineWidth = 3.5; ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(11,11,12,0.72)";
+      ctx.strokeText("?", x, y + 1);
+      ctx.fillStyle = "#FFFFFF";
       ctx.fillText("?", x, y + 1);
       ctx.restore();
     }
@@ -4568,6 +4682,8 @@ function drawSlicks(){
 }
 
 function drawMissiles(){
+  const D = missileDims();
+  const nose = -D.nose, tail = D.tail, hw = D.hw, fin = D.fin;
   for(let i=0;i<G.missiles.length;i++){
     const m = G.missiles[i];
     const a = m.fade > 0 ? clamp(m.fade/1.2, 0, 1) : 1;
@@ -4575,19 +4691,91 @@ function drawMissiles(){
     ctx.save();
     ctx.globalAlpha = a;
     ctx.translate(m.x, m.y); ctx.rotate(ang);
-    ctx.beginPath(); ctx.arc(0, 26, 15, 0, 6.2832);
-    ctx.fillStyle = "rgba(255,150,60,0.35)"; ctx.fill();
+
+    /* the burn behind it */
+    const gl = ctx.createRadialGradient(0, tail*1.05, hw*0.25, 0, tail*1.05, hw*2.6);
+    gl.addColorStop(0, "rgba(255,196,120,0.55)");
+    gl.addColorStop(1, "rgba(255,138,42,0)");
+    ctx.fillStyle = gl;
+    ctx.beginPath(); ctx.arc(0, tail*1.05, hw*2.6, 0, 6.2832); ctx.fill();
+
+    /* a shadow so it sits above the road rather than on it */
+    ctx.globalAlpha = a*0.25;
+    ctx.fillStyle = "#000";
     ctx.beginPath();
-    ctx.moveTo(0, -26); ctx.lineTo(11, -4); ctx.lineTo(11, 20);
-    ctx.lineTo(-11, 20); ctx.lineTo(-11, -4);
+    if(ctx.ellipse) ctx.ellipse(hw*0.35, tail*0.30, hw*1.05, D.len*0.42, 0, 0, 6.2832);
+    else ctx.arc(hw*0.35, tail*0.30, hw*1.05, 0, 6.2832);
+    ctx.fill();
+    ctx.globalAlpha = a;
+
+    /* fins under the body */
+    ctx.fillStyle = "#5A6472";
+    ctx.beginPath();
+    ctx.moveTo(-hw*0.94, tail*0.02); ctx.lineTo(-fin, tail*0.96);
+    ctx.lineTo(-hw*0.94, tail*0.88); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(hw*0.94, tail*0.02); ctx.lineTo(fin, tail*0.96);
+    ctx.lineTo(hw*0.94, tail*0.88); ctx.closePath(); ctx.fill();
+    /* small forward canards, for the length */
+    ctx.beginPath();
+    ctx.moveTo(-hw*0.94, nose*0.44); ctx.lineTo(-fin*0.60, nose*0.18);
+    ctx.lineTo(-hw*0.94, nose*0.10); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(hw*0.94, nose*0.44); ctx.lineTo(fin*0.60, nose*0.18);
+    ctx.lineTo(hw*0.94, nose*0.10); ctx.closePath(); ctx.fill();
+
+    /* body */
+    ctx.beginPath();
+    ctx.moveTo(0, nose);
+    ctx.lineTo(hw*0.62, nose*0.72);
+    ctx.lineTo(hw, nose*0.40);
+    ctx.lineTo(hw, tail);
+    ctx.lineTo(-hw, tail);
+    ctx.lineTo(-hw, nose*0.40);
+    ctx.lineTo(-hw*0.62, nose*0.72);
     ctx.closePath();
     ctx.fillStyle = "#D8DEE6"; ctx.fill();
-    ctx.strokeStyle = "#5A6472"; ctx.lineWidth = 2; ctx.stroke();
+
+    /* red warhead */
+    ctx.save();
+    ctx.clip();
     ctx.fillStyle = "#E21B22";
-    ctx.beginPath(); ctx.moveTo(0, -26); ctx.lineTo(7, -8); ctx.lineTo(-7, -8); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = "#5A6472";
-    ctx.beginPath(); ctx.moveTo(-11, 8); ctx.lineTo(-20, 24); ctx.lineTo(-11, 22); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(11, 8); ctx.lineTo(20, 24); ctx.lineTo(11, 22); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-hw*1.2, nose*1.1); ctx.lineTo(hw*1.2, nose*1.1);
+    ctx.lineTo(hw*1.2, nose*0.22); ctx.lineTo(-hw*1.2, nose*0.22);
+    ctx.closePath(); ctx.fill();
+    /* a darker flank so the cylinder reads round */
+    ctx.fillStyle = "rgba(16,17,22,0.16)";
+    ctx.beginPath();
+    ctx.moveTo(hw*0.42, nose*1.1); ctx.lineTo(hw*1.2, nose*1.1);
+    ctx.lineTo(hw*1.2, tail); ctx.lineTo(hw*0.42, tail);
+    ctx.closePath(); ctx.fill();
+    /* panel lines */
+    ctx.strokeStyle = "rgba(90,100,114,0.5)";
+    ctx.lineWidth = Math.max(1.4, hw*0.10);
+    ctx.beginPath(); ctx.moveTo(-hw, nose*0.06); ctx.lineTo(hw, nose*0.06); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-hw, tail*0.44); ctx.lineTo(hw, tail*0.44); ctx.stroke();
+    ctx.restore();
+
+    /* thruster mouth */
+    ctx.fillStyle = "#101116";
+    ctx.beginPath();
+    ctx.moveTo(-hw*0.74, tail); ctx.lineTo(hw*0.74, tail);
+    ctx.lineTo(hw*0.54, tail - hw*0.40); ctx.lineTo(-hw*0.54, tail - hw*0.40);
+    ctx.closePath(); ctx.fill();
+
+    /* outline last, so the silhouette stays clean */
+    ctx.beginPath();
+    ctx.moveTo(0, nose);
+    ctx.lineTo(hw*0.62, nose*0.72);
+    ctx.lineTo(hw, nose*0.40);
+    ctx.lineTo(hw, tail);
+    ctx.lineTo(-hw, tail);
+    ctx.lineTo(-hw, nose*0.40);
+    ctx.lineTo(-hw*0.62, nose*0.72);
+    ctx.closePath();
+    ctx.strokeStyle = "#5A6472"; ctx.lineWidth = Math.max(2, hw*0.13); ctx.stroke();
+
     ctx.restore();
   }
 }
