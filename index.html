@@ -282,7 +282,6 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   background:var(--black);display:flex;align-items:center;justify-content:center;
 }
 .car-art svg{width:56%;height:88%;display:block}
-.car-art .car-select-canvas{width:56%;height:88%;display:block}
 #garage{background:var(--gray-100)}
 .tabs{display:flex;gap:6px;padding:0 var(--pad) 12px}
 .tab{flex:1;appearance:none;border:0;cursor:pointer;padding:9px 6px;border-radius:var(--r-sm);
@@ -299,16 +298,8 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 }
 .kind.track{background:var(--gray-200);color:var(--icon)}
 .kind.trap{background:var(--red);color:#fff}
- .odds{float:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--black);
+.odds{float:right;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--black);
   background:var(--gray-200);border-radius:5px;padding:3px 7px;margin-top:-1px}
-.mystery-intro{background:var(--black);color:#fff;border-radius:var(--r-md);padding:16px;margin-bottom:10px}
-.mystery-intro h3{margin:0 0 5px;font-family:var(--display);font-variation-settings:'wdth' 118,'wght' 750;text-transform:uppercase;font-size:18px;letter-spacing:.04em}
-.mystery-intro p{margin:0;color:#C9CCD3;font-size:13px;line-height:1.4}
-.rarity-line{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
-.rarity-chip{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;border-radius:5px;padding:4px 6px}
-.item-meta{display:flex;align-items:center;gap:7px;margin-bottom:6px}
-.item-meta .kind{margin:0}
-.item-meta .odds{float:none;margin:0}
 .kind.pickup{background:#7FB3E8;color:#0B0B0C}
 .info h3{margin:0 0 2px;font-family:var(--display);font-variation-settings:'wdth' 118,'wght' 750;
   text-transform:uppercase;font-size:16px;letter-spacing:.04em;color:var(--black)}
@@ -341,6 +332,8 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   background:var(--red-press);border-color:#fff;color:#fff;text-shadow:none;
   animation:ultPulse 1.05s ease-in-out infinite;
 }
+#ultPct.gain{animation:ultGain .5s ease}
+@keyframes ultGain{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
 @keyframes ultPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,127,.55)}50%{box-shadow:0 0 0 7px rgba(255,122,127,0)}}
 
 /* ============================================================
@@ -415,14 +408,6 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 #boostFill{height:100%;width:100%;background:var(--red);border-radius:3px;transition:background .2s ease}
 #boostWrap.full #boostFill{background:var(--red-press)}
 #boostWrap.locked #boostFill{background:rgba(255,255,255,.34)}
-#launchWrap{position:absolute;left:16px;right:16px;bottom:calc(24px + var(--safe-b));height:5px;background:rgba(255,255,255,.13);border-radius:3px;overflow:visible}
-#launchFill{height:100%;width:100%;background:#FFD24A;border-radius:3px;transition:background .18s ease}
-#launchWrap.ready #launchFill{background:#FFFFFF}
-#launchWrap.cooldown #launchFill{background:rgba(255,255,255,.28)}
-#launchMin{position:absolute;top:-3px;bottom:-3px;left:75%;width:1px;background:rgba(255,255,255,.9);box-shadow:0 0 5px rgba(255,255,255,.5)}
-#launchMin::after{content:"MIN";position:absolute;left:3px;top:-13px;font:600 7px var(--mono);letter-spacing:.08em;color:rgba(255,255,255,.8)}
-#launchHint{position:absolute;left:16px;right:16px;bottom:calc(31px + var(--safe-b));font:600 7px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.62);text-align:right;pointer-events:none}
-#launchWrap.cooldown #launchMin{opacity:.35}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 
 /* countdown gantry */
@@ -557,7 +542,6 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
         <span class="key">&#8592;</span><span class="key">&#8594;</span>
         <span class="lbl" data-i18n="k1">lanes</span>
         <span class="key">&#8593;</span><span class="lbl" data-i18n="k2">boost</span>
-        <span class="key">&#8595;</span><span class="lbl">launch</span>
         <span class="key">Shift</span><span class="lbl" data-i18n="k4">ultimate</span>
         <span class="key">E</span><span class="lbl" data-i18n="k5">item</span>
         <span class="key">P</span><span class="lbl" data-i18n="k3">pause</span>
@@ -644,27 +628,98 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
 
       <div class="car-grid">
         <button class="car-opt " id="carRedd">
-          <span class="car-art"><canvas class="car-select-canvas" data-car="redd" aria-hidden="true"></canvas></span>
+          <span class="car-art">
+          <svg viewBox="0 0 76 132" aria-hidden="true">
+            <g fill="#0C0D10"><rect x="0" y="26" width="13" height="22" rx="5"/><rect x="63" y="26" width="13" height="22" rx="5"/><rect x="0" y="86" width="13" height="24" rx="5"/><rect x="63" y="86" width="13" height="24" rx="5"/></g>
+            <rect x="7" y="4" width="62" height="124" rx="17" fill="#E21B22"/>
+            <rect x="12" y="6" width="52" height="12" rx="6" fill="#101116"/>
+            <rect x="16" y="9" width="10" height="5" rx="2.5" fill="#FFE9C4"/><rect x="50" y="9" width="10" height="5" rx="2.5" fill="#FFE9C4"/>
+            <rect x="19" y="30" width="38" height="26" rx="9" fill="#101116"/>
+            <rect x="23" y="34" width="30" height="17" rx="6" fill="#31343B"/>
+            <rect x="19" y="62" width="38" height="30" rx="9" fill="#101116"/>
+            <rect x="20" y="16" width="8" height="24" rx="2" fill="#101116"/><rect x="48" y="16" width="8" height="24" rx="2" fill="#101116"/>
+            <rect x="6" y="112" width="64" height="10" rx="5" fill="#101116"/>
+            <rect x="14" y="114" width="12" height="5" rx="2.5" fill="#FF5157"/><rect x="50" y="114" width="12" height="5" rx="2.5" fill="#FF5157"/>
+          </svg>
+        </span>
           <span class="mode-name" data-i18n="redd">Redd</span>
         </button>
         <button class="car-opt phantom" id="carPhantom">
-          <span class="car-art"><canvas class="car-select-canvas" data-car="phantom" aria-hidden="true"></canvas></span>
+          <span class="car-art">
+          <svg viewBox="0 0 76 132" aria-hidden="true">
+            <g fill="#0C0D10"><rect x="1" y="26" width="12" height="21" rx="5"/><rect x="63" y="26" width="12" height="21" rx="5"/><rect x="1" y="86" width="12" height="21" rx="5"/><rect x="63" y="86" width="12" height="21" rx="5"/></g>
+            <path d="M17 4 Q38 -3 59 4 Q68 8 69 22 L70 84 Q70 124 59 128 L17 128 Q6 124 6 84 L7 22 Q8 8 17 4 Z" fill="#EDF1F6"/>
+            <path d="M38 1 L64 45 L12 45 Z" fill="#1E5FA8"/>
+            <rect x="5" y="52" width="7" height="34" fill="#1E5FA8"/><rect x="64" y="52" width="7" height="34" fill="#1E5FA8"/>
+            <rect x="27" y="4" width="7" height="124" fill="#1E5FA8"/><rect x="42" y="4" width="7" height="124" fill="#1E5FA8"/>
+            <rect x="14" y="14" width="15" height="4" rx="2" fill="#8FE3FF"/><rect x="47" y="14" width="15" height="4" rx="2" fill="#8FE3FF"/>
+            <rect x="14" y="46" width="48" height="42" rx="12" fill="#16305A"/>
+            <path d="M18 58 H58 L54 50 H22 Z" fill="#7FB3E8"/>
+            <path d="M20 76 H56 L53 84 H23 Z" fill="#7FB3E8"/>
+            <rect x="5" y="106" width="66" height="9" rx="4" fill="#1E5FA8"/>
+            <rect x="12" y="108" width="16" height="4" rx="2" fill="#8FE3FF"/><rect x="48" y="108" width="16" height="4" rx="2" fill="#8FE3FF"/>
+            <circle cx="27" cy="123" r="5" fill="#16305A"/><circle cx="49" cy="123" r="5" fill="#16305A"/>
+          </svg>
+        </span>
           <span class="mode-name" data-i18n="phantom">Phantom</span>
         </button>
         <button class="car-opt " id="carBolt">
-          <span class="car-art"><canvas class="car-select-canvas" data-car="bolt" aria-hidden="true"></canvas></span>
+          <span class="car-art">
+          <svg viewBox="0 0 76 132" aria-hidden="true">
+            <g fill="#0C0D10"><rect x="0" y="24" width="15" height="25" rx="6"/><rect x="61" y="24" width="15" height="25" rx="6"/><rect x="0" y="84" width="15" height="25" rx="6"/><rect x="61" y="84" width="15" height="25" rx="6"/></g>
+            <rect x="9" y="8" width="58" height="116" rx="14" fill="#F5C400"/>
+            <path d="M9 16 L38 8 L67 16 L67 24 L38 16 L9 24 Z" fill="#141414"/>
+            <path d="M9 56 L38 48 L67 56 L67 64 L38 56 L9 64 Z" fill="#141414"/>
+            <path d="M9 96 L38 88 L67 96 L67 104 L38 96 L9 104 Z" fill="#141414"/>
+            <rect x="5" y="4" width="66" height="10" rx="4" fill="#141414"/>
+            <rect x="15" y="6" width="13" height="5" rx="2" fill="#FFF3B0"/><rect x="48" y="6" width="13" height="5" rx="2" fill="#FFF3B0"/>
+            <rect x="20" y="44" width="36" height="42" rx="9" fill="#141414"/>
+            <rect x="24" y="48" width="28" height="34" rx="7" fill="#4A4636"/>
+            <path d="M22 46 L54 84 M54 46 L22 84 M21 65 H55" stroke="#DADADA" stroke-width="3" fill="none"/>
+            <rect x="3" y="104" width="70" height="11" rx="5" fill="#141414"/>
+            <rect x="12" y="118" width="14" height="5" rx="2" fill="#FF6A3A"/><rect x="50" y="118" width="14" height="5" rx="2" fill="#FF6A3A"/>
+          </svg>
+        </span>
           <span class="mode-name" data-i18n="bolt">Bolt</span>
         </button>
         <button class="car-opt timestamp" id="carTimestamp">
-          <span class="car-art"><canvas class="car-select-canvas" data-car="timestamp" aria-hidden="true"></canvas></span>
+          <span class="car-art"><svg viewBox="0 0 76 132" aria-hidden="true">
+            <g fill="#0C0D10"><rect x="0" y="26" width="13" height="22" rx="5"/><rect x="63" y="26" width="13" height="22" rx="5"/><rect x="0" y="86" width="13" height="22" rx="5"/><rect x="63" y="86" width="13" height="22" rx="5"/></g>
+            <path d="M27 3 H49 Q68 6 69 22 L70 54 Q70 118 62 128 H14 Q6 118 6 54 L7 22 Q8 6 27 3 Z" fill="#1F7A4C"/>
+            <path d="M27 3 H49 Q60 5 62 20 H14 Q16 5 27 3 Z" fill="#0E0E10"/>
+            <rect x="12" y="3" width="52" height="8" rx="3" fill="#0E0E10"/>
+            <rect x="17" y="4" width="14" height="5" rx="2" fill="#D6FFE9"/><rect x="45" y="4" width="14" height="5" rx="2" fill="#D6FFE9"/>
+            <rect x="34" y="3" width="8" height="126" fill="#3FD98A"/>
+            <rect x="14" y="46" width="48" height="44" rx="11" fill="#0E0E10"/>
+            <path d="M19 62 H57 L52 50 H24 Z" fill="#7FE8B6"/>
+            <path d="M20 78 H56 L52 88 H24 Z" fill="#7FE8B6"/>
+            <circle cx="38" cy="30" r="9" fill="#0E0E10" stroke="#3FD98A" stroke-width="2.5"/>
+            <path d="M38 25 V30 L42 32" stroke="#3FD98A" stroke-width="2.5" fill="none"/>
+            <rect x="8" y="106" width="60" height="8" rx="3" fill="#0E0E10"/>
+            <rect x="13" y="108" width="50" height="4" rx="2" fill="#3FD98A"/>
+          </svg></span>
           <span class="mode-name" data-i18n="timestamp">Timestamp</span>
         </button>
         <button class="car-opt rose" id="carRose">
-          <span class="car-art"><canvas class="car-select-canvas" data-car="rose" aria-hidden="true"></canvas></span>
+          <span class="car-art"><svg viewBox="0 0 76 132" aria-hidden="true">
+            <g fill="#0C0D10"><rect x="1" y="26" width="13" height="21" rx="5"/><rect x="62" y="26" width="13" height="21" rx="5"/><rect x="0" y="86" width="14" height="21" rx="5"/><rect x="62" y="86" width="14" height="21" rx="5"/></g>
+            <path d="M30 4 H46 Q64 6 65 24 L67 74 Q69 118 54 128 H22 Q7 118 9 74 L11 24 Q12 6 30 4 Z" fill="#7B3FA8"/>
+            <rect x="7" y="60" width="8" height="42" fill="#FF7ACF"/><rect x="61" y="60" width="8" height="42" fill="#FF7ACF"/>
+            <rect x="34" y="4" width="8" height="124" fill="#FF7ACF"/>
+            <rect x="12" y="4" width="52" height="8" rx="3" fill="#2A1038"/>
+            <rect x="17" y="5" width="14" height="5" rx="2" fill="#FFF0FA"/><rect x="45" y="5" width="14" height="5" rx="2" fill="#FFF0FA"/>
+            <rect x="13" y="42" width="50" height="46" rx="13" fill="#2A1038"/>
+            <path d="M18 58 H58 L53 46 H23 Z" fill="#FFB6E6"/>
+            <path d="M19 74 H57 L53 84 H23 Z" fill="#FFB6E6"/>
+            <g fill="#FF7ACF"><circle cx="38" cy="22" r="5"/><circle cx="31" cy="27" r="5"/><circle cx="45" cy="27" r="5"/><circle cx="34" cy="34" r="5"/><circle cx="42" cy="34" r="5"/></g>
+            <circle cx="38" cy="28" r="4" fill="#FFF0FA"/>
+            <rect x="10" y="106" width="56" height="8" rx="3" fill="#2A1038"/>
+            <rect x="15" y="108" width="16" height="4" rx="2" fill="#FFD9F2"/><rect x="45" y="108" width="16" height="4" rx="2" fill="#FFD9F2"/>
+          </svg></span>
           <span class="mode-name" data-i18n="rose">Rose</span>
         </button>
         <button class="car-opt siren" id="carSiren">
-          <span class="car-art"><canvas class="car-select-canvas" data-car="siren" aria-hidden="true"></canvas></span>
+          <span class="car-art"><svg viewBox="0 0 76 132"><g fill="#0C0D10"><rect x="0" y="26" width="14" height="23" rx="5"/><rect x="62" y="26" width="14" height="23" rx="5"/><rect x="0" y="86" width="14" height="23" rx="5"/><rect x="62" y="86" width="14" height="23" rx="5"/></g><rect x="8" y="4" width="60" height="124" rx="12" fill="#F2F3F5"/><rect x="8" y="46" width="60" height="42" fill="#101114"/><rect x="12" y="6" width="52" height="11" rx="4" fill="#101114"/><rect x="20" y="52" width="36" height="30" rx="7" fill="#5A6472"/><rect x="18" y="36" width="40" height="9" rx="4" fill="#101114"/><rect x="20" y="37" width="17" height="7" rx="3" fill="#4D8BFF"/><rect x="39" y="37" width="17" height="7" rx="3" fill="#FF4A50"/><rect x="6" y="112" width="64" height="10" rx="5" fill="#101114"/></svg></span>
           <span class="mode-name" data-i18n="siren">Siren</span>
         </button>
       </div>
@@ -689,8 +744,8 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
       <button class="tab on" id="tabCars" data-i18n="tabCars">Cars</button>
       <button class="tab" id="tabTracks" data-i18n="tabTracks">Tracks
 traps</button>
-      <button class="tab" id="tabItems" data-i18n="tabItems">Mystery
-bubble</button>
+      <button class="tab" id="tabItems" data-i18n="tabItems">Bubble
+items</button>
       <button class="tab" id="tabEffects" data-i18n="tabEffects">Effects</button>
     </div>
     <div id="garageBody"></div>
@@ -723,8 +778,6 @@ bubble</button>
       <div id="immuneTag"></div>
       <div id="cleanseTag"></div>
       <button id="itemBox" aria-label="Use item"><span id="itemIcon"></span></button>
-      <div id="launchHint">hold ↓ / S or swipe down</div>
-      <div id="launchWrap"><div id="launchFill"></div><span id="launchMin"></span></div>
       <div id="boostWrap"><div id="boostFill"></div></div>
     </div>
     <div id="flash"></div>
@@ -908,13 +961,12 @@ const STR = {
   efOrdered:    {en:"Ordered",    fr:"Somm\u00e9"},
   efCleansed:   {en:"Cleansed",   fr:"Purifi\u00e9"},
   efSlippery:   {en:"Slippery",   fr:"Glissant"},
-  efLaunched:   {en:"Launched",   fr:"Propulsé"},
   garage:       {en:"Cars & more",                 fr:"Voitures et plus"},
   tabCars:      {en:"Cars",                        fr:"Voitures"},
   kindTrack:    {en:"Track",       fr:"Piste"},
   kindTrap:     {en:"Trap",        fr:"Pi\u00e8ge"},
   tabTracks:    {en:"Tracks\ntraps",               fr:"Pistes\npi\u00e8ges"},
-  tabItems:     {en:"Mystery\nbubble",             fr:"Bulle\nmystère"},
+  tabItems:     {en:"Bubble\nitems",              fr:"Objets\nbulle"},
   tabEffects:   {en:"Effects",                     fr:"Effets"},
   byLine:       {en:"a game by hiyroscript",       fr:"un jeu de hiyroscript"},
   cityInfo:     {en:"Dark asphalt between pale rooftops, water tanks and helipads. White lane dashes, crosswalks and red hydrants along the kerb.",
@@ -960,7 +1012,6 @@ const STR = {
   rarityLegendary: {en:"Legendary", fr:"L\u00e9gendaire"},
   oddsNote:     {en:"The seeker never drops for whoever is leading.",
                  fr:"Le missile ne tombe jamais pour le leader."},
-  dropChance:   {en:"drop chance",   fr:"chance"},
   kindItem:     {en:"Item",        fr:"Objet"},
   kindBubble:   {en:"Pickup",      fr:"Bonus"},
   slipperyInfo: {en:"No grip: your steering is reversed. Left goes right and right goes left.",
@@ -1042,8 +1093,7 @@ const EFFECTS = {
   ghosted:  { key:"efGhosted",   col:"#8FD0FF" },
   ordered:  { key:"efOrdered",   col:"#4D8BFF" },
   cleansed: { key:"efCleansed",  col:"#B96BFF" },
-  slippery: { key:"efSlippery",  col:"#0B0B0C" },
-  launched:  { key:"efLaunched",  col:"#FFD24A" }
+  slippery: { key:"efSlippery",  col:"#0B0B0C" }
 };
 const ULT_EFFECTS = {
   burn:   ["boosted","onfire"],
@@ -1071,9 +1121,8 @@ const ITEMS = {
 };
 const ITEM_IDS = ["can", "oil", "seeker"];
 const BUBBLE_GAP = [5400, 8600];          /* road distance between rows */
-const BUBBLE_LIFE = 10, BUBBLE_BLINK = 2; /* bubbles fade out after 10s; last 2s blink */
 const CAN_TIME = 2.2, CAN_SPEED = 1.55;   /* the boost can */
-const OIL_LIFE = 15, OIL_FADE = 2, SLIP_TIME = 4;       /* the slick, and how long it costs you */
+const OIL_LIFE = 22, SLIP_TIME = 4;       /* the slick, and how long it costs you */
 const MISSILE_SPEED = 2100;
 /* the seeker is a big piece of hardware: longer than a car and wider across
    the fins, so it reads as a threat from the far end of the road */
@@ -1121,36 +1170,26 @@ function buildGarage(){
       html += '<div class="info"><span class="kind trap">' + t("kindTrap") + '</span>' +
               '<h3>' + t(id + "Name") + '</h3><p>' + t(id + "Info") + '</p></div>';
     });
+    html += '<div class="info"><span class="kind pickup">' + t("kindBubble") + '</span>' +
+            '<h3>' + t("bubbleName") + '</h3><p>' + t("bubbleInfo") + '</p></div>';
   } else if(garageTab === "items"){
-    /* Mystery Bubbles: publish the real roll weights used by rollItem().
-       Seeker has a 5/90 base chance, but is unavailable while leading. */
-    const baseTotal = ITEM_IDS.reduce(function(sum, id){
-      return sum + RARITY[ITEMS[id].rarity].weight;
-    }, 0);
-    html += '<div class="mystery-intro"><h3>' + t("bubbleName") + '</h3>' +
-            '<p>' + t("bubbleInfo") + '</p>' +
-            '<div class="rarity-line">' +
-            '<span class="rarity-chip" style="background:' + RARITY.common.col + ';color:#0B0B0C">' + t("rarityCommon") + '</span>' +
-            '<span class="rarity-chip" style="background:' + RARITY.rare.col + ';color:#fff">' + t("rarityRare") + '</span>' +
-            '<span class="rarity-chip" style="background:' + RARITY.legendary.col + ';color:#0B0B0C">' + t("rarityLegendary") + '</span>' +
-            '</div></div>';
-
-    ITEM_IDS.forEach(function(id){
-      const item = ITEMS[id];
-      const r = RARITY[item.rarity];
-      const pct = (r.weight / baseTotal * 100).toFixed(1) + '%';
-      const leaderNote = id === 'seeker' ? '<p class="item-rule">' + t("oddsNote") + '</p>' : '';
-      html += '<div class="info mystery-item">' +
-              '<div class="item-meta">' +
-              '<span class="kind item" style="background:' + r.col + ';color:#0B0B0C">' + t("kindItem") + '</span>' +
-              '<span class="kind item" style="background:' + r.col + ';color:#0B0B0C">' + t("rarity" + item.rarity) + '</span>' +
-              '<span class="odds">' + pct + ' ' + t("dropChance") + '</span>' +
-              '</div>' +
-              '<h3>' + t(item.key) + '</h3>' +
-              '<p>' + t(item.key + "Info") + '</p>' +
-              leaderNote +
-              '</div>';
+    /* Odds are computed from the same table the game rolls against, so what is
+       printed here can never drift from what actually drops. */
+    let total = 0;
+    ITEM_IDS.forEach(function(id){ total += RARITY[ITEMS[id].rarity].weight; });
+    ITEM_IDS.slice().sort(function(a, b){
+      return RARITY[ITEMS[b].rarity].weight - RARITY[ITEMS[a].rarity].weight;
+    }).forEach(function(id){
+      const r = RARITY[ITEMS[id].rarity];
+      const pct = (r.weight/total*100).toFixed(1).replace(/\.0$/, "");
+      html += '<div class="info">' +
+              '<span class="kind item" style="background:' + r.col + ';color:#0B0B0C">' +
+              t("rarity" + ITEMS[id].rarity) + '</span>' +
+              '<span class="odds">' + pct + '%</span>' +
+              '<h3>' + t(ITEMS[id].key) + '</h3>' +
+              '<p>' + t(ITEMS[id].key + "Info") + '</p></div>';
     });
+    html += '<p class="soon">' + t("oddsNote") + '</p>';
   } else {
     for(const id in EFFECTS){
       html += '<div class="info"><h3 style="color:' + EFFECTS[id].col + '">' + t(EFFECTS[id].key) +
@@ -1307,8 +1346,7 @@ $("#btnHome").addEventListener("click", function(){ leave(); });
 /* ================================================================
    RACE ENGINE
    ================================================================ */
-const cv = $("#cv");
-let ctx = cv.getContext("2d");
+const cv = $("#cv"), ctx = cv.getContext("2d");
 let W=0, H=0, DPR=1;
 let roadX=0, roadW=0, laneW=0, sideW=0, carW=0, carH=0, playerY=0, vign=null;
 
@@ -1322,10 +1360,10 @@ const G = {
   traps:[], fx:[], trapGap:0, nextTrap:600,
   tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0,
   car:"redd", ult:0, ultOn:false, ultKey:false, ultArmed:true,
-  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9, parkWait:0,
+  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9, dodgeFlash:0, parkWait:0,
   cdT:0, cdStep:-1, wasCounting:false,
   mode:"endless", diff:"medium",
-  orbs:0, bolts:[], shockT:0, launchT:0, launchSpeed:1, launchCharge:1, launchHold:false, launchRecover:false, launchCooldown:0, bumpCD:0, ultFast:false,
+  orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
   frozenT:0, orderedT:0, bloomT:0, cleanseT:0, petals:[], freezeT:0, bloomOwner:null, effLog:[],
   slipT:0, item:null, boxes:[], slicks:[], missiles:[], boxGap:0, nextRow:6000, canT:0, lastTap:-9, tapClock:0,
   freezeOwner:null, sirenOwner:null,
@@ -2173,13 +2211,13 @@ function startRace(){
   G.tier = 0; G.speedT = SPEED_SECONDS; G.blind = 0; G.blindPts = [];
   G.dead = 0; G.immune = 0; G.slowT = 0; G.swipeLock = 0;
   G.ult = 0; G.ultOn = false; G.boostLock = false; G.ultArmed = true;
-  G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.launchSpeed = 1; G.launchCharge = 1; G.launchHold = false; G.launchRecover = false; G.launchCooldown = 0; G.bumpCD = 0; G.ultFast = false;
+  G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.bumpCD = 0; G.ultFast = false;
   G.frozenT = 0; G.orderedT = 0; G.bloomT = 0; G.cleanseT = 0; G.petals = []; G.slipT = 0;
   G.item = null; G.boxes = []; G.slicks = []; G.missiles = []; G.canT = 0;
   G.boxGap = 0; G.nextRow = rand(2200, 3400);      /* the first row comes a bit sooner */
   G.lastTap = -9; G.tapClock = 0;
   G.freezeOwner = null; G.sirenOwner = null; G.effLog = [];
-  G.prevLane = -1; G.laneT = 9;
+  G.prevLane = -1; G.laneT = 9; G.dodgeFlash = 0;
   G.cdT = 0; G.cdStep = -1; G.wasCounting = false;
   G.raceT = 0; G.finishAt = 0; G.finished = null; G.results = [];
   G.tracksLeft = -1;
@@ -2444,8 +2482,7 @@ function syncEffects(){
     onfire:    G.ultOn && p === "burn",
     ghosted:   G.ultOn && p === "phase",
     ordered:   G.orderedT > 0,
-    slippery:  G.slipT > 0,
-    launched:   G.launchT > 0
+    slippery:  G.slipT > 0
   };
   for(const id in on){
     if(on[id]) logEffect(id, 0);
@@ -2502,85 +2539,6 @@ function sirenWail(){
   later(function(){ tone(560, .35, "square", .07); }, 360);
 }
 
-const LAUNCH_MIN_CHARGE = 0.75;   /* at least 25% of the meter must be spent */
-const LAUNCH_DRAIN = 0.62;         /* about 1.6 seconds from full to empty */
-const LAUNCH_RECOVER = 1.8;        /* failed attempt fills back quickly */
-const LAUNCH_COOLDOWN = 10;
-const LAUNCH_BASE_SPEED = 1.9;
-const LAUNCH_MAX_SPEED = 3.8;
-const LAUNCH_BASE_TIME = 0.95;
-const LAUNCH_MAX_TIME = 2.2;
-
-function launchReady(){
-  return G.state === "running" && G.dead <= 0 && G.finished === null &&
-         G.launchCooldown <= 0 && G.launchT <= 0 &&
-         G.shockT <= 0 && G.frozenT <= 0 && G.orderedT <= 0 && !G.ultOn && G.orbs <= 0;
-}
-function beginLaunchHold(){
-  if(!launchReady()) return false;
-  G.launchHold = true; G.launchRecover = false;
-  G.keyBoost = false; G.ptrBoost = false; G.boosting = false;
-  return true;
-}
-function cancelLaunchHold(){
-  if(!G.launchHold) return;
-  G.launchHold = false;
-  if(G.launchCharge <= LAUNCH_MIN_CHARGE){
-    const spent = 1 - G.launchCharge;
-    const strength = clamp((spent - (1-LAUNCH_MIN_CHARGE)) / LAUNCH_MIN_CHARGE, 0, 1);
-    G.launchSpeed = lerp(LAUNCH_BASE_SPEED, LAUNCH_MAX_SPEED, strength);
-    G.launchT = lerp(LAUNCH_BASE_TIME, LAUNCH_MAX_TIME, strength);
-    G.launchCooldown = LAUNCH_COOLDOWN;
-    G.launchRecover = false;
-    G.launchCharge = 0;
-    logEffect("launched", G.launchT);
-    ultBurst(G.car, G.x, playerY);
-    tone(180 - strength*60, .22, "sawtooth", .1);
-    later(function(){ tone(520 + strength*260, .25, "square", .08); }, 90);
-    G.shake = Math.max(G.shake, 11 + strength*12);
-  } else {
-    G.launchRecover = true;
-  }
-}
-function resolveLaunchLanding(){
-  /* Cars are passed over while airborne; landing on one destroys it. */
-  const all = racers();
-  for(let i=0;i<all.length;i++){
-    const a = all[i];
-    if(a.me || a.out || immuneCar(a.obj)) continue;
-    if(a.lane === G.lane && Math.abs(a.y - playerY) < carH*0.9){
-      wreckRival(a.obj, "me");
-      break;
-    }
-  }
-  /* Ground hazards are ignored while airborne, but the landing frame gets
-     their normal collision rule if one is directly underneath. */
-  const c = carHit();
-  for(let i=G.slicks.length-1;i>=0;i--){
-    const o = G.slicks[i];
-    if(puddleHits(o, c, o.y)){
-      G.slipT = SLIP_TIME;
-      G.slicks.splice(i, 1);
-      noise(.2, .2);
-      return;
-    }
-  }
-  for(let i=G.traps.length-1;i>=0;i--){
-    const o = G.traps[i];
-    if(o.kind === "puddle" && puddleHits(o, c, o.y)){
-      o.hit |= 1; hitPuddle(); return;
-    }
-    if(o.kind === "weed") {
-      const p = nearestOnCar(c, o.x, o.y), dx = p.x-o.x, dy = p.y-o.y;
-      if(dx*dx + dy*dy <= o.r*o.r*0.86){ hitWeed(o); G.traps.splice(i,1); return; }
-    }
-    if(o.kind === "meteor") {
-      const p = nearestOnCar(c, o.x, o.y), dx = p.x-o.x, dy = p.y-o.y;
-      if(dx*dx + dy*dy <= o.r*o.r){ detonate(o, true); return; }
-    }
-  }
-}
-
 function setBoost(){
   G.boosting = (G.keyBoost || G.ptrBoost) && !G.boostLock && G.charge > 0
                && G.state === "running" && G.dead <= 0 && G.finished === null
@@ -2602,7 +2560,6 @@ document.addEventListener("keydown", function(e){
   if(k === "arrowleft" || k === "a"){ e.preventDefault(); move(-1); }
   else if(k === "arrowright" || k === "d"){ e.preventDefault(); move(1); }
   else if(k === "arrowup" || k === "w"){ e.preventDefault(); G.keyBoost = true; setBoost(); }
-  else if(k === "arrowdown" || k === "s"){ e.preventDefault(); beginLaunchHold(); }
   else if(k === "p" || k === "escape"){
     e.preventDefault();
     pause(G.state === "running" || G.state === "countdown");
@@ -2614,17 +2571,16 @@ document.addEventListener("keyup", function(e){
   if(!e.key) return;
   const k = e.key.toLowerCase();
   if(k === "arrowup" || k === "w"){ G.keyBoost = false; setBoost(); }
-  if(k === "arrowdown" || k === "s"){ cancelLaunchHold(); }
   if(k === "shift" || k === " ") G.ultKey = false;
 });
 
-let ptr = {on:false, x:0, y:0, sx:0, sy:0, moved:false, launchStarted:false};
+let ptr = {on:false, x:0, y:0, sx:0, sy:0, moved:false};
 let ptrCount = 0;
 const ptrDown = {};
 cv.addEventListener("pointerdown", function(e){
   if(!ptrDown[e.pointerId]){ ptrDown[e.pointerId] = true; ptrCount++; }
   ptr.on = true; ptr.x = ptr.sx = e.clientX; ptr.y = ptr.sy = e.clientY; ptr.moved = false;
-  ptr.hold = 0; ptr.launchStarted = false;
+  ptr.hold = 0;
   if(cv.setPointerCapture) try{ cv.setPointerCapture(e.pointerId); }catch(err){}
 });
 cv.addEventListener("pointermove", function(e){
@@ -2639,16 +2595,6 @@ cv.addEventListener("pointermove", function(e){
       G.swipeLock = SWIPE_LOCK;
     }
     ptr.x = e.clientX; ptr.y = e.clientY; ptr.moved = true;
-  } else if(dy > 10 && Math.abs(dy) > Math.abs(dx)){
-    /* A real downward drag starts the launch immediately.  Once started,
-       continued finger travel or simply holding the finger keeps draining
-       the meter until release. */
-    if(!ptr.launchStarted){
-      ptr.launchStarted = beginLaunchHold();
-    }
-    ptr.moved = true;
-  } else if(G.launchHold && dy >= 0){
-    ptr.moved = true;
   } else if(dy < -34 && Math.abs(dy) > Math.abs(dx)){
     G.ptrBoost = true; setBoost(); ptr.moved = true;
   } else if(Math.abs(dx) > TAP_SLOP || Math.abs(dy) > TAP_SLOP){
@@ -2665,8 +2611,7 @@ function endPtr(e){
   if(e && ptrDown[e.pointerId]){ delete ptrDown[e.pointerId]; ptrCount = Math.max(0, ptrCount - 1); }
   else { ptrCount = 0; for(const k in ptrDown) delete ptrDown[k]; }
   if(ptrCount === 0){
-    cancelLaunchHold();
-    ptr.on = false; ptr.launchStarted = false; G.ptrBoost = false; setBoost();
+    ptr.on = false; G.ptrBoost = false; setBoost();
     G.ultArmed = true;             /* the ultimate needs a long press, not a tap */
   }
 }
@@ -2694,6 +2639,7 @@ const BUMP_SLOW = 1.3;
 const ULT_ON_WRECK = -0.10;               /* what each event does to the meter */
 const ULT_ON_TRAP  = -0.05;
 const ULT_ON_KILL  =  0.10;
+const ULT_ON_DODGE =  0.05;
 const LAUNCH_TIME = 0.8, LAUNCH_BOOST = 1.35;                    /* both cars lose the same time to a bump */
 
 const ORB_COUNT = 3;
@@ -2721,8 +2667,7 @@ function update(dt){
     else if(G.slowT > 0) target *= 0.5;
     if(G.boosting) target *= 1.5;
     if(G.canT > 0) target *= CAN_SPEED;          /* the can is free speed */
-    if(G.launchHold) target *= G.launchCharge;  /* the longer you hold, the slower you get */
-    if(G.launchT > 0) target *= G.launchSpeed;
+    if(G.launchT > 0) target *= LAUNCH_BOOST;
   }
   G.speed = lerp(G.speed, target, 1 - Math.pow(0.001, dt));
   G.scroll += G.speed*dt;
@@ -2741,22 +2686,6 @@ function update(dt){
   } else if(st === "running"){
     G.charge = clamp(G.charge + dt*0.14, 0, 1);
     if(G.charge >= 1) G.boostLock = false;       /* only back once it is full */
-  }
-  if(G.launchCooldown > 0) G.launchCooldown = Math.max(0, G.launchCooldown - dt);
-  if(G.launchHold){
-    G.launchCharge = clamp(G.launchCharge - dt*LAUNCH_DRAIN, 0, 1);
-  } else if(G.launchRecover){
-    G.launchCharge = clamp(G.launchCharge + dt*LAUNCH_RECOVER, 0, 1);
-    if(G.launchCharge >= 1){ G.launchCharge = 1; G.launchRecover = false; }
-  } else if(G.launchCooldown > 0){
-    G.launchCharge = clamp(G.launchCharge + dt*0.12, 0, 1);
-  } else if(G.launchT <= 0){
-    G.launchCharge = clamp(G.launchCharge + dt*0.32, 0, 1);
-  }
-  if(G.launchT > 0){
-    const was = G.launchT;
-    G.launchT = Math.max(0, G.launchT - dt);
-    if(was > 0 && G.launchT === 0) resolveLaunchLanding();
   }
   setBoost();
 
@@ -2851,6 +2780,7 @@ function update(dt){
   if(G.bloomT > 0){ G.bloomT = Math.max(0, G.bloomT - dt); if(G.bloomT === 0) G.petals = []; }
   if(G.cleanseT > 0) G.cleanseT = Math.max(0, G.cleanseT - dt);
   if(G.freezeT > 0){ G.freezeT = Math.max(0, G.freezeT - dt); if(G.freezeT === 0) endFreeze(); }
+  if(G.launchT > 0) G.launchT = Math.max(0, G.launchT - dt);
   G.laneT += dt;
   G.tapClock += dt;
   if(G.bumpCD > 0) G.bumpCD = Math.max(0, G.bumpCD - dt);
@@ -2865,7 +2795,7 @@ function update(dt){
   updateSlicks(dt, d, st);
   updateMissiles(dt, d);
   updateTraps(dt, d, st);
-  if(st === "running" && G.dead <= 0 && G.launchT <= 0 && !G.launchHold){
+  if(st === "running" && G.dead <= 0){
     const inFront = carAt(G.lane, playerY, "me");
     if(inFront && inFront.y < playerY) rearEnd("me", inFront);
   }
@@ -2913,6 +2843,7 @@ function update(dt){
 
   if(G.shake > 0) G.shake = Math.max(0, G.shake - dt*38);
   if(G.stepFlash > 0) G.stepFlash = Math.max(0, G.stepFlash - dt);
+  if(G.dodgeFlash > 0) G.dodgeFlash = Math.max(0, G.dodgeFlash - dt);
 }
 
 const TRAFFIC_PAINT = [
@@ -2982,7 +2913,7 @@ function leaderOf(who){
 }
 
 function spawnBubbleRow(){
-  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random(), age:0 });
+  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random() });
 }
 
 function updateBubbles(dt, d, st){
@@ -2997,8 +2928,6 @@ function updateBubbles(dt, d, st){
   for(let i=G.boxes.length-1;i>=0;i--){
     const row = G.boxes[i];
     row.y += d;
-    row.age += dt;
-    if(row.age >= BUBBLE_LIFE){ G.boxes.splice(i,1); continue; }
     if(row.y > H + 120){ G.boxes.splice(i,1); continue; }
     if(row.gone === 7){ G.boxes.splice(i,1); continue; }   /* all three collected */
     for(let l=0;l<3;l++){
@@ -3062,8 +2991,7 @@ function useItem(who){
     tone(320, .18, "square", .09);
     later(function(){ tone(560, .22, "square", .08); }, 110);
   } else if(id === "oil"){
-    G.slicks.push({ x:x, y:y + carH*0.75,
-                    rx:rand(34, 48), ry:rand(18, 28), s:Math.random(),
+    G.slicks.push({ x:x, y:y + carH*0.75, r:rand(26, 34), s:Math.random(),
                     life:OIL_LIFE, owner:me ? "me" : who });
     tone(150, .25, "sawtooth", .07);
   } else if(id === "seeker"){
@@ -3175,8 +3103,8 @@ function updateMissiles(dt, d){
     for(let k=G.slicks.length-1;k>=0;k--){
       const o = G.slicks[k];
       for(let s=0;s<spine.length;s++){
-        const ox = (o.x - spine[s].x) / o.rx, oy = (o.y - spine[s].y) / o.ry;
-        if(ox*ox + oy*oy < 1){ G.slicks.splice(k,1); break; }
+        const ox = o.x - spine[s].x, oy = o.y - spine[s].y;
+        if(ox*ox + oy*oy < sw2){ G.slicks.splice(k,1); break; }
       }
     }
     const all = racers();
@@ -3219,10 +3147,8 @@ function updateSlicks(dt, d, st){
     if(o.life <= 0 || o.y > H + 120){ G.slicks.splice(i,1); continue; }
     if(st === "running" && !immuneMe() && G.finished === null){
       const p = nearestOnCar(c, o.x, o.y);
-      const dx = (p.x - o.x) / o.rx, dy = (p.y - o.y) / o.ry;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      const hitRadius = dist === 0 ? 0 : puddleFactor(o, Math.atan2(dy, dx));
-      if(dist <= hitRadius){
+      const dx = p.x - o.x, dy = p.y - o.y;
+      if(dx*dx + dy*dy <= o.r*o.r){
         G.slipT = SLIP_TIME; G.slicks.splice(i,1);
         noise(.2, .2); continue;
       }
@@ -3233,10 +3159,8 @@ function updateSlicks(dt, d, st){
       if(immuneCar(R)) continue;
       const rc = { x:R.x, y:R.y, hw:carW*0.40, hh:carH*0.42 };
       const p2 = nearestOnCar(rc, o.x, o.y);
-      const ex = (p2.x - o.x) / o.rx, ey = (p2.y - o.y) / o.ry;
-      const dist2 = Math.sqrt(ex*ex + ey*ey);
-      const hitRadius2 = dist2 === 0 ? 0 : puddleFactor(o, Math.atan2(ey, ex));
-      if(dist2 <= hitRadius2){ R.slip = SLIP_TIME; hit = true; break; }
+      const ex = p2.x - o.x, ey = p2.y - o.y;
+      if(ex*ex + ey*ey <= o.r*o.r){ R.slip = SLIP_TIME; hit = true; break; }
     }
     if(hit) G.slicks.splice(i,1);
   }
@@ -3325,6 +3249,8 @@ function dodgeCheck(o, box, bit, who, prevLane, since){
   const squeeze = Math.abs(o.x - box.x) < box.hw + half + carW*0.12;
   const swerved = prevLane >= 0 && lane === prevLane && since < 0.9;
   if(squeeze || swerved){
+    ultDelta(who, ULT_ON_DODGE);
+    if(who === "me") G.dodgeFlash = 0.5;         /* the meter pulses; no splash */
   }
 }
 
@@ -3336,7 +3262,7 @@ function updateTraps(dt, d, st){
   const racing = st === "running" && G.dead <= 0;
   const power = G.ultOn ? CARS[G.car].power : null;
   const shielded = G.ultOn && CARS[G.car].power !== "storm";
-  const live = racing && G.immune <= 0 && !shielded && G.shockT <= 0 && !finishedMe() && G.launchT <= 0 && !G.launchHold;
+  const live = racing && G.immune <= 0 && !shielded && G.shockT <= 0 && !finishedMe();
   const smash = racing && power === "burn";           /* Redd wrecks what it touches */
   const c = carHit();
   for(let i=G.traps.length-1;i>=0;i--){
@@ -3951,23 +3877,6 @@ function drawCruiser(w, h, p, isPlayer, boosting){
   if(boosting) flames(w, h, p.flame[0], p.flame[1]);
 }
 
-function renderSelectCars(){
-  document.querySelectorAll(".car-select-canvas").forEach(function(canvas){
-    const id = canvas.dataset.car;
-    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-    const w = 76, h = 132;
-    canvas.width = Math.round(w*dpr);
-    canvas.height = Math.round(h*dpr);
-    const selectCtx = canvas.getContext("2d");
-    const previousCtx = ctx;
-    ctx = selectCtx;
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    ctx.clearRect(0,0,w,h);
-    drawCar(w/2, h/2, 52, 92, CARS[id], 0, true, false);
-    ctx = previousCtx;
-  });
-}
-
 const ROOF = ["#22242A", "#1A1C21", "#2B2E35"];
 const ROCK = ["#B08A5E", "#9C7550", "#C4A277"];
 
@@ -4020,8 +3929,6 @@ function starBlock(b, x0, bw){
     ctx.fill();
   }
 }
-
-renderSelectCars();
 
 function drawSide(s, id){
   const arr = G.build[s];
@@ -4622,7 +4529,7 @@ function drawLadder(){
 /* the distance badge, parked to the left of its dot */
 function drawGapBadge(m, g){
   const gap = Math.abs(Math.round(m.gap));
-  const far = gap > PIP_FAR;
+  const far = gap >= PIP_FAR;
   const w = far ? 30 : 58;
   const right = g.x - 13;
   const x = right - w/2;
@@ -4700,10 +4607,6 @@ function drawBubbles(){
   for(let n=0;n<G.boxes.length;n++){
     const row = G.boxes[n];
     if(row.y < -80 || row.y > H + 80) continue;
-    const timeLeft = BUBBLE_LIFE - row.age;
-    const blinking = timeLeft <= BUBBLE_BLINK;
-    const blinkVisible = !blinking || Math.floor(row.age * 8) % 2 === 0;
-    if(blinking && !blinkVisible) continue;
     for(let l=0;l<3;l++){
       if(row.gone & (1 << l)) continue;                  /* collected: it is gone */
       const x = laneCX(l);
@@ -4762,41 +4665,18 @@ function drawBubbles(){
   }
 }
 
-/* Oil uses the same randomized puddle silhouette system as water, so every
-   deployment gets its own irregular shape instead of a generic oval. */
-function oilPuddlePath(p, k){
-  const n = 11, pts = [];
-  for(let i=0;i<n;i++){
-    const a = (i/n)*6.2832;
-    const j = 0.68 + ((p.s*131.7 + i*47.31) % 1)*0.56;
-    pts.push({ x:p.x + Math.cos(a)*p.rx*j*k, y:p.y + Math.sin(a)*p.ry*j*k });
-  }
-  smoothPath(pts);
-}
 function drawSlicks(){
   for(let i=0;i<G.slicks.length;i++){
     const o = G.slicks[i];
-    if(o.y < -90 || o.y > H + 90) continue;
-    const alpha = Math.min(1, o.life / OIL_FADE);
+    if(o.y < -60 || o.y > H + 60) continue;
     ctx.save();
-    ctx.globalAlpha = alpha;
-    oilPuddlePath(o, 1);
-    ctx.fillStyle = "rgba(12,13,17,0.88)"; ctx.fill();
-    oilPuddlePath(o, 0.72);
-    const sheen = ctx.createLinearGradient(o.x-o.rx, o.y-o.ry, o.x+o.rx, o.y+o.ry);
-    sheen.addColorStop(0, "rgba(42,48,60,0.72)");
-    sheen.addColorStop(0.34, "rgba(116,91,151,0.46)");
-    sheen.addColorStop(0.58, "rgba(20,105,120,0.32)");
-    sheen.addColorStop(1, "rgba(12,13,17,0.08)");
-    ctx.fillStyle = sheen; ctx.fill();
-    ctx.globalAlpha = alpha * 0.55;
-    ctx.beginPath();
-    if(ctx.ellipse) ctx.ellipse(o.x - o.rx*0.22, o.y - o.ry*0.25, o.rx*0.34, o.ry*0.16, -0.28, 0, 6.2832);
-    else ctx.arc(o.x, o.y, Math.min(o.rx,o.ry)*0.2, 0, 6.2832);
-    ctx.fillStyle = "rgba(220,230,255,0.38)"; ctx.fill();
-    ctx.globalAlpha = alpha * 0.72;
-    oilPuddlePath(o, 1);
-    ctx.strokeStyle = "rgba(126,140,170,0.32)"; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.globalAlpha = Math.min(1, o.life/2);
+    ctx.fillStyle = "rgba(10,10,14,0.86)";
+    blob(o.x, o.y, o.r, o.s);
+    ctx.globalAlpha = Math.min(1, o.life/2)*0.5;
+    ctx.fillStyle = "rgba(120,90,160,0.5)";
+    blob(o.x - o.r*0.2, o.y - o.r*0.15, o.r*0.5, o.s + 0.4);
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 }
@@ -5122,14 +5002,6 @@ function paintHUD(force){
   if(force || m !== lastM){ lastM = m; $("#hudDist").textContent = m; }
   const f = $("#boostFill");
   f.style.width = (G.charge*100).toFixed(1) + "%";
-  const lf = $("#launchFill"), lw = $("#launchWrap");
-  if(lf && lw){
-    lf.style.width = (G.launchCharge*100).toFixed(1) + "%";
-    lw.classList.toggle("ready", G.launchCharge <= LAUNCH_MIN_CHARGE && G.launchCooldown <= 0);
-    lw.classList.toggle("cooldown", G.launchCooldown > 0);
-    lw.title = G.launchCooldown > 0 ? ("Launch cooldown: " + G.launchCooldown.toFixed(1) + "s") :
-      (G.launchCharge <= LAUNCH_MIN_CHARGE ? "Release to launch" : "Hold longer to launch");
-  }
   $("#boostWrap").classList.toggle("full", G.charge > 0.98);
   $("#boostWrap").classList.toggle("locked", G.boostLock);
   syncEffects();
@@ -5165,6 +5037,7 @@ function paintHUD(force){
   const up = $("#ultPct");
   up.textContent = Math.round(G.ult*100) + "%";
   up.classList.toggle("ready", G.ult >= 1 && !G.ultOn);   /* the square handles the colour */
+  up.classList.toggle("gain", G.dodgeFlash > 0);
 }
 
 /* ---------------- loop ------------------------------------------- */
