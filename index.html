@@ -327,10 +327,16 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   color:rgba(255,255,255,.78);text-shadow:0 1px 6px rgba(0,0,0,.85);
   transition:background .18s ease,border-color .18s ease,color .18s ease;
 }
-/* charged: the square itself goes light red, the number white */
+/* charged: light red + white outline, with red lightning VFX */
 #ultPct.ready{
-  background:var(--red-press);border-color:#fff;color:#fff;text-shadow:none;
-  animation:ultPulse 1.05s ease-in-out infinite;
+  background:rgba(11,11,12,.62);color:#fff;text-shadow:none;
+  border-color: #FF7A7F;
+  box-shadow: 0 0 8px 2px rgba(226,27,34,.6), inset 0 0 6px rgba(255,122,127,.5), 0 0 0 1px rgba(255,255,255,.8);
+  animation: ultPulse 1.05s ease-in-out infinite, ultLightning .15s linear infinite;
+}
+@keyframes ultLightning{
+  0%,100%{filter:brightness(1)}
+  50%{filter:brightness(1.35)}
 }
 #ultPct.gain{animation:ultGain .5s ease}
 @keyframes ultGain{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
