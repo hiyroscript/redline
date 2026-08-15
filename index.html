@@ -330,13 +330,70 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 /* charged: light red + white outline, with red lightning VFX */
 #ultPct.ready{
   background:rgba(11,11,12,.62);color:#fff;text-shadow:none;
-  border-color: #FF7A7F;
-  box-shadow: 0 0 8px 2px rgba(226,27,34,.6), inset 0 0 6px rgba(255,122,127,.5), 0 0 0 1px rgba(255,255,255,.8);
-  animation: ultPulse 1.05s ease-in-out infinite, ultLightning .15s linear infinite;
+  border-color: #ff4d4d;
+  box-shadow: 
+    0 0 15px 4px rgba(255, 77, 77, 0.6),
+    inset 0 0 20px rgba(255, 77, 77, 0.4),
+    0 0 0 1px rgba(255,255,255,.8);
+  position: relative;
+  overflow: visible;
+  animation: ultPulse 0.8s ease-in-out infinite alternate;
 }
-@keyframes ultLightning{
-  0%,100%{filter:brightness(1)}
-  50%{filter:brightness(1.35)}
+
+/* Lightning arcs overlay */
+#ultPct.ready::before,
+#ultPct.ready::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160%;
+  height: 160%;
+  transform: translate(-50%, -50%);
+  background: transparent;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Arc 1 - Diagonal lightning */
+#ultPct.ready::before {
+  background: linear-gradient(45deg, 
+    transparent 42%, 
+    rgba(255, 255, 255, 0.9) 46%, 
+    rgba(255, 50, 50, 0.7) 50%, 
+    rgba(255, 255, 255, 0.9) 54%, 
+    transparent 58%);
+  filter: blur(1px);
+  animation: lightningFlash 0.12s infinite, rotateArc1 0.6s linear infinite;
+}
+
+/* Arc 2 - Opposite diagonal lightning */
+#ultPct.ready::after {
+  background: linear-gradient(-45deg, 
+    transparent 42%, 
+    rgba(255, 255, 255, 0.95) 46%, 
+    rgba(255, 30, 30, 0.75) 50%, 
+    rgba(255, 255, 255, 0.95) 54%, 
+    transparent 58%);
+  filter: blur(0.8px);
+  animation: lightningFlash 0.1s infinite reverse, rotateArc2 0.5s linear infinite;
+}
+
+@keyframes rotateArc1 {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes rotateArc2 {
+  0% { transform: translate(-50%, -50%) rotate(360deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+@keyframes lightningFlash {
+  0%, 100% { opacity: 0.3; filter: blur(2px); }
+  40% { opacity: 1; filter: blur(0.5px); }
+  50% { opacity: 0.5; filter: blur(1px); }
+  70% { opacity: 0.9; filter: blur(0.6px); }
 }
 #ultPct.gain{animation:ultGain .5s ease}
 @keyframes ultGain{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
