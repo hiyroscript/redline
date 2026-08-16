@@ -325,79 +325,37 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   background:rgba(11,11,12,.62);
   font-family:var(--mono);font-weight:600;font-size:15px;
   color:rgba(255,255,255,.78);text-shadow:0 1px 6px rgba(0,0,0,.85);
-  transition:background .18s ease,border-color .18s ease,color .18s ease;
+  transition:background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;
 }
-/* charged: light red + white outline, with red lightning VFX */
+/* charged: keep the inside dark; the outline and surrounding light pulse instead */
 #ultPct.ready{
-  background:rgba(11,11,12,.62);color:#fff;text-shadow:none;
-  border-color: #ff4d4d;
-  box-shadow: 
-    0 0 15px 4px rgba(255, 77, 77, 0.6),
-    inset 0 0 20px rgba(255, 77, 77, 0.4),
-    0 0 0 1px rgba(255,255,255,.8);
-  position: relative;
-  overflow: visible;
-  animation: ultPulse 0.8s ease-in-out infinite alternate;
-}
-
-/* Lightning arcs overlay */
-#ultPct.ready::before,
-#ultPct.ready::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 160%;
-  height: 160%;
-  transform: translate(-50%, -50%);
-  background: transparent;
-  z-index: -1;
-  pointer-events: none;
-}
-
-/* Arc 1 - Diagonal lightning */
-#ultPct.ready::before {
-  background: linear-gradient(45deg, 
-    transparent 42%, 
-    rgba(255, 255, 255, 0.9) 46%, 
-    rgba(255, 50, 50, 0.7) 50%, 
-    rgba(255, 255, 255, 0.9) 54%, 
-    transparent 58%);
-  filter: blur(1px);
-  animation: lightningFlash 0.12s infinite, rotateArc1 0.6s linear infinite;
-}
-
-/* Arc 2 - Opposite diagonal lightning */
-#ultPct.ready::after {
-  background: linear-gradient(-45deg, 
-    transparent 42%, 
-    rgba(255, 255, 255, 0.95) 46%, 
-    rgba(255, 30, 30, 0.75) 50%, 
-    rgba(255, 255, 255, 0.95) 54%, 
-    transparent 58%);
-  filter: blur(0.8px);
-  animation: lightningFlash 0.1s infinite reverse, rotateArc2 0.5s linear infinite;
-}
-
-@keyframes rotateArc1 {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-@keyframes rotateArc2 {
-  0% { transform: translate(-50%, -50%) rotate(360deg); }
-  100% { transform: translate(-50%, -50%) rotate(0deg); }
-}
-
-@keyframes lightningFlash {
-  0%, 100% { opacity: 0.3; filter: blur(2px); }
-  40% { opacity: 1; filter: blur(0.5px); }
-  50% { opacity: 0.5; filter: blur(1px); }
-  70% { opacity: 0.9; filter: blur(0.6px); }
+  background:rgba(11,11,12,.62);
+  border-color:#FF7A7F;
+  color:#fff;
+  text-shadow:0 0 8px rgba(255,255,255,.28);
+  animation:ultReady 1.15s ease-in-out infinite;
 }
 #ultPct.gain{animation:ultGain .5s ease}
+#ultPct.ready.gain{animation:ultGain .5s ease,ultReady 1.15s ease-in-out infinite}
 @keyframes ultGain{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
-@keyframes ultPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,127,.55)}50%{box-shadow:0 0 0 7px rgba(255,122,127,0)}}
+@keyframes ultReady{
+  0%,100%{
+    border-color:#FF7A7F;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.72),
+      0 0 10px rgba(255,64,72,.74),
+      0 0 22px rgba(226,27,34,.52),
+      0 0 34px rgba(226,27,34,.24);
+  }
+  50%{
+    border-color:#fff;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.98),
+      0 0 14px rgba(255,122,127,.98),
+      0 0 28px rgba(226,27,34,.68),
+      0 0 44px rgba(226,27,34,.36);
+  }
+}
 
 /* ============================================================
    5. Race
