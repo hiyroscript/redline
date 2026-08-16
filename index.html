@@ -425,6 +425,33 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 #itemBox:active{transform:scale(.92)}
 #itemBox.full{background:rgba(11,11,12,.8)}
 #itemBox svg{width:30px;height:30px;display:block}
+#launchWrap{
+  position:absolute;left:16px;right:16px;bottom:calc(27px + var(--safe-b));
+  height:18px;pointer-events:none;z-index:2;
+}
+#launchMeta{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:4px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.72);text-shadow:0 1px 7px rgba(0,0,0,.85);
+}
+#launchReady{color:rgba(255,255,255,.55)}
+#launchTrack{
+  position:relative;width:100%;height:4px;background:rgba(255,255,255,.14);
+  border-radius:3px;overflow:visible;
+}
+#launchFill{
+  height:100%;width:100%;background:rgba(255,122,127,.9);border-radius:3px;
+  box-shadow:0 0 8px rgba(255,74,80,.22);
+  transition:width .08s linear,background .15s ease,box-shadow .15s ease;
+}
+#launchMark{
+  position:absolute;top:-3px;bottom:-3px;left:75%;
+  width:2px;background:#fff;opacity:.9;border-radius:2px;
+  box-shadow:0 0 6px rgba(255,255,255,.7);
+}
+#launchWrap.ready #launchFill{background:var(--red-press);box-shadow:0 0 12px rgba(255,74,80,.8)}
+#launchWrap.cooldown #launchFill{background:rgba(255,255,255,.28);box-shadow:none}
 #boostWrap{position:absolute;left:16px;right:16px;bottom:calc(14px + var(--safe-b));height:4px;background:rgba(255,255,255,.16);border-radius:3px;overflow:hidden}
 #boostFill{height:100%;width:100%;background:var(--red);border-radius:3px;transition:background .2s ease}
 #boostWrap.full #boostFill{background:var(--red-press)}
@@ -563,6 +590,7 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
         <span class="key">&#8592;</span><span class="key">&#8594;</span>
         <span class="lbl" data-i18n="k1">lanes</span>
         <span class="key">&#8593;</span><span class="lbl" data-i18n="k2">boost</span>
+        <span class="key">&#8595; / S</span><span class="lbl">hold / release&nbsp; launch</span>
         <span class="key">Shift</span><span class="lbl" data-i18n="k4">ultimate</span>
         <span class="key">E</span><span class="lbl" data-i18n="k5">item</span>
         <span class="key">P</span><span class="lbl" data-i18n="k3">pause</span>
@@ -799,6 +827,13 @@ items</button>
       <div id="immuneTag"></div>
       <div id="cleanseTag"></div>
       <button id="itemBox" aria-label="Use item"><span id="itemIcon"></span></button>
+      <div id="launchWrap" aria-label="Launch hold meter">
+        <div id="launchMeta"><span id="launchName">Launch</span><span id="launchReady">HOLD 25%</span></div>
+        <div id="launchTrack">
+          <div id="launchFill"></div>
+          <i id="launchMark" aria-hidden="true"></i>
+        </div>
+      </div>
       <div id="boostWrap"><div id="boostFill"></div></div>
     </div>
     <div id="flash"></div>
@@ -972,6 +1007,10 @@ const STR = {
   sirenUlt:     {en:"Lights up and orders everyone nearby out of the way.",
                  fr:"S'allume et ordonne aux autres de d\u00e9gager."},
   efSlowed:     {en:"Slowed",     fr:"Ralenti"},
+  efLaunched:   {en:"Launched",   fr:"Propulsé"},
+  launchName:   {en:"Launch",     fr:"Propulsion"},
+  launchHold:   {en:"HOLD 25%",    fr:"MAINT. 25 %"},
+  launchReady:  {en:"READY",       fr:"PRÊT"},
   efImmune:     {en:"Immune",     fr:"Immunis\u00e9"},
   efCluttered:  {en:"Cluttered",  fr:"Encombr\u00e9"},
   efBoosted:    {en:"Boosted",    fr:"Acc\u00e9l\u00e9r\u00e9"},
@@ -1105,6 +1144,7 @@ const DIFF_IDS = ["easy","medium","hard","brutal"];
 /* Every state a car can be in, and what it is called on screen */
 const EFFECTS = {
   slowed:   { key:"efSlowed",    col:"#8A9099" },
+  launched: { key:"efLaunched",  col:"#FF4A50" },
   immune:   { key:"efImmune",    col:"#FFD86B" },
   cluttered:{ key:"efCluttered", col:"#B07A4A" },
   boosted:  { key:"efBoosted",   col:"#FF9A4A" },
@@ -1385,6 +1425,7 @@ const G = {
   cdT:0, cdStep:-1, wasCounting:false,
   mode:"endless", diff:"medium",
   orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
+  launchRushT:0, launchPower:0, launchCooldown:0, launchCharge:1, launchHolding:false, launchRecover:0,
   frozenT:0, orderedT:0, bloomT:0, cleanseT:0, petals:[], freezeT:0, bloomOwner:null, effLog:[],
   slipT:0, item:null, boxes:[], slicks:[], missiles:[], boxGap:0, nextRow:6000, canT:0, lastTap:-9, tapClock:0,
   freezeOwner:null, sirenOwner:null,
@@ -2233,6 +2274,7 @@ function startRace(){
   G.dead = 0; G.immune = 0; G.slowT = 0; G.swipeLock = 0;
   G.ult = 0; G.ultOn = false; G.boostLock = false; G.ultArmed = true;
   G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.bumpCD = 0; G.ultFast = false;
+  G.launchRushT = 0; G.launchPower = 0; G.launchCooldown = 0; G.launchCharge = 1; G.launchHolding = false; G.launchRecover = 0;
   G.frozenT = 0; G.orderedT = 0; G.bloomT = 0; G.cleanseT = 0; G.petals = []; G.slipT = 0;
   G.item = null; G.boxes = []; G.slicks = []; G.missiles = []; G.canT = 0;
   G.boxGap = 0; G.nextRow = rand(2200, 3400);      /* the first row comes a bit sooner */
@@ -2496,8 +2538,9 @@ function syncEffects(){
   const p = CARS[G.car].power;
   const on = {
     slowed:    G.slowT > 0,
+    launched:  G.launchRushT > 0,
     cluttered: G.blind > 0 || G.bloomT > 0,
-    boosted:   G.boosting || G.launchT > 0 || (G.ultOn && ULT_EFFECTS[p].indexOf("boosted") >= 0) || G.orbs > 0,
+    boosted:   G.boosting || G.launchT > 0 || G.launchRushT > 0 || (G.ultOn && ULT_EFFECTS[p].indexOf("boosted") >= 0) || G.orbs > 0,
     shocked:   G.shockT > 0,
     frozen:    G.frozenT > 0,
     onfire:    G.ultOn && p === "burn",
@@ -2560,6 +2603,88 @@ function sirenWail(){
   later(function(){ tone(560, .35, "square", .07); }, 360);
 }
 
+function canStartLaunch(){
+  return G.state === "running" && G.dead <= 0 && G.finished === null
+         && G.shockT <= 0 && G.frozenT <= 0 && G.orderedT <= 0
+         && G.immune <= 0 && G.launchRushT <= 0 && G.launchCooldown <= 0;
+}
+function beginLaunchHold(){
+  if(G.launchHolding || !canStartLaunch()) return false;
+  G.launchHolding = true;
+  G.launchCharge = 1;
+  G.launchRecover = 0;
+  G.ultArmed = false;
+  G.keyBoost = false;
+  G.ptrBoost = false;
+  setBoost();
+  return true;
+}
+function updateLaunchHold(distance){
+  if(!G.launchHolding) return;
+  G.launchCharge = clamp(1 - Math.max(0, distance)/LAUNCH_DRAG_PX, 0, 1);
+}
+function resolveLaunchLanding(){
+  if(G.dead > 0 || G.finished !== null || G.state !== "running") return;
+  const carAhead = carAt(G.lane, playerY, "me");
+  if(carAhead && !carAhead.out && !ghosting(carAhead.me ? "me" : carAhead.obj)){
+    if(carAhead.obj){
+      wreckRival(carAhead.obj, "me");
+      G.meters += 6;
+    }
+  }
+  for(let i=G.traffic.length-1;i>=0;i--){
+    const tr = G.traffic[i];
+    if(Math.abs(tr.x - G.x) < (carW + tr.w)*0.42 &&
+       Math.abs(tr.y - playerY) < (carH + tr.h)*0.44){
+      smashFx(tr.x, tr.y, Math.max(tr.w, tr.h)*0.72, "#FF7A3A", G.car);
+      G.traffic.splice(i,1);
+      G.meters += 4;
+      ultDelta("me", ULT_ON_KILL);
+      G.shake = Math.max(G.shake, 5);
+    }
+  }
+}
+function fireLaunch(){
+  if(!G.launchHolding) return;
+  const held = clamp(1 - G.launchCharge, 0, 1);
+  G.launchHolding = false;
+  if(held < LAUNCH_MIN_HOLD || !canStartLaunch()){
+    G.launchRecover = 1;
+    G.launchCharge = Math.max(G.launchCharge, 0.02);
+    tone(180, .08, "sine", .04);
+    return;
+  }
+  const strength = clamp((held - LAUNCH_MIN_HOLD)/(1 - LAUNCH_MIN_HOLD), 0, 1);
+  G.launchPower = strength;
+  G.launchRushT = LAUNCH_TIME_BASE + strength*LAUNCH_TIME_BONUS;
+  G.launchCooldown = LAUNCH_COOLDOWN;
+  G.launchCharge = 0;
+  G.launchRecover = 0;
+  G.boosting = false;
+  G.keyBoost = false;
+  G.ptrBoost = false;
+  logEffect("launched", 0);
+  for(let i=0;i<32;i++){
+    const a = (i/32)*6.2832;
+    const speed = rand(110, 360)*(0.6 + strength*0.9);
+    addFx(G.x + Math.cos(a)*carW*0.55, playerY + Math.sin(a)*carH*0.42,
+          Math.cos(a)*speed, Math.sin(a)*speed, rand(.35,.8), rand(2,6),
+          i % 3 === 0 ? "#FFFFFF" : (i % 2 ? "#FF7A3A" : "#E21B22"));
+  }
+  G.shake = Math.max(G.shake, 9 + strength*7);
+  noise(.16 + strength*.12, .24 + strength*.18);
+  tone(180 + strength*120, .14, "sawtooth", .06 + strength*.03);
+  later(function(){ tone(680 + strength*260, .16, "square", .06 + strength*.03); }, 80);
+}
+function endLaunchHold(shouldLaunch){
+  if(!G.launchHolding) return;
+  if(shouldLaunch) fireLaunch();
+  else {
+    G.launchHolding = false;
+    G.launchRecover = 1;
+    G.launchCharge = 1;
+  }
+}
 function setBoost(){
   G.boosting = (G.keyBoost || G.ptrBoost) && !G.boostLock && G.charge > 0
                && G.state === "running" && G.dead <= 0 && G.finished === null
@@ -2581,6 +2706,7 @@ document.addEventListener("keydown", function(e){
   if(k === "arrowleft" || k === "a"){ e.preventDefault(); move(-1); }
   else if(k === "arrowright" || k === "d"){ e.preventDefault(); move(1); }
   else if(k === "arrowup" || k === "w"){ e.preventDefault(); G.keyBoost = true; setBoost(); }
+  else if(k === "arrowdown" || k === "s"){ e.preventDefault(); beginLaunchHold(); }
   else if(k === "p" || k === "escape"){
     e.preventDefault();
     pause(G.state === "running" || G.state === "countdown");
@@ -2592,22 +2718,29 @@ document.addEventListener("keyup", function(e){
   if(!e.key) return;
   const k = e.key.toLowerCase();
   if(k === "arrowup" || k === "w"){ G.keyBoost = false; setBoost(); }
+  if(k === "arrowdown" || k === "s"){ e.preventDefault(); endLaunchHold(true); }
   if(k === "shift" || k === " ") G.ultKey = false;
 });
 
-let ptr = {on:false, x:0, y:0, sx:0, sy:0, moved:false};
+let ptr = {on:false, x:0, y:0, sx:0, sy:0, moved:false, launchDist:0};
 let ptrCount = 0;
 const ptrDown = {};
 cv.addEventListener("pointerdown", function(e){
   if(!ptrDown[e.pointerId]){ ptrDown[e.pointerId] = true; ptrCount++; }
   ptr.on = true; ptr.x = ptr.sx = e.clientX; ptr.y = ptr.sy = e.clientY; ptr.moved = false;
-  ptr.hold = 0;
+  ptr.hold = 0; ptr.launchDist = 0;
   if(cv.setPointerCapture) try{ cv.setPointerCapture(e.pointerId); }catch(err){}
 });
 cv.addEventListener("pointermove", function(e){
   if(!ptr.on) return;
   const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y;
-  if(Math.abs(dx) > SWIPE_STEP && Math.abs(dx) > Math.abs(dy)){
+  if(G.launchHolding || (dy > 18 && Math.abs(dy) > Math.abs(dx) && G.state === "running")){
+    if(!G.launchHolding && !beginLaunchHold()){ ptr.moved = true; return; }
+    const down = Math.max(0, e.clientY - ptr.sy);
+    ptr.launchDist = Math.max(ptr.launchDist, down);
+    updateLaunchHold(ptr.launchDist);
+    ptr.x = e.clientX; ptr.y = e.clientY; ptr.moved = true;
+  } else if(Math.abs(dx) > SWIPE_STEP && Math.abs(dx) > Math.abs(dy)){
     /* Each step of travel is one lane, but a flick covers several steps in
        one instant - the lock keeps that to a single lane, while a drag held
        and continued keeps stepping across. */
@@ -2632,7 +2765,9 @@ function endPtr(e){
   if(e && ptrDown[e.pointerId]){ delete ptrDown[e.pointerId]; ptrCount = Math.max(0, ptrCount - 1); }
   else { ptrCount = 0; for(const k in ptrDown) delete ptrDown[k]; }
   if(ptrCount === 0){
+    const wasLaunching = G.launchHolding;
     ptr.on = false; G.ptrBoost = false; setBoost();
+    if(wasLaunching) fireLaunch();
     G.ultArmed = true;             /* the ultimate needs a long press, not a tap */
   }
 }
@@ -2661,7 +2796,12 @@ const ULT_ON_WRECK = -0.10;               /* what each event does to the meter *
 const ULT_ON_TRAP  = -0.05;
 const ULT_ON_KILL  =  0.10;
 const ULT_ON_DODGE =  0.05;
-const LAUNCH_TIME = 0.8, LAUNCH_BOOST = 1.35;                    /* both cars lose the same time to a bump */
+const LAUNCH_TIME = 0.8, LAUNCH_BOOST = 1.35;                    /* bump shove */
+const LAUNCH_MIN_HOLD = 0.25;                                     /* 25% of the bar must be drained */
+const LAUNCH_DRAG_PX = 280;                                       /* full stop at this downward travel */
+const LAUNCH_COOLDOWN = 10;                                       /* seconds between launches */
+const LAUNCH_TIME_BASE = 1.05, LAUNCH_TIME_BONUS = 0.85;          /* 1.05s to 1.90s of flight */
+const LAUNCH_SPEED_BASE = 1.55, LAUNCH_SPEED_BONUS = 1.55;        /* 1.55x to 3.10x speed */
 
 const ORB_COUNT = 3;
 const RACE_MINUTES = 5;                   /* bots mode: then three tracks to the flag */
@@ -2689,6 +2829,8 @@ function update(dt){
     if(G.boosting) target *= 1.5;
     if(G.canT > 0) target *= CAN_SPEED;          /* the can is free speed */
     if(G.launchT > 0) target *= LAUNCH_BOOST;
+    if(G.launchRushT > 0) target *= (LAUNCH_SPEED_BASE + G.launchPower*LAUNCH_SPEED_BONUS);
+    else if(G.launchHolding) target *= G.launchCharge;  /* the longer the drag, the harder the brake */
   }
   G.speed = lerp(G.speed, target, 1 - Math.pow(0.001, dt));
   G.scroll += G.speed*dt;
@@ -2802,6 +2944,19 @@ function update(dt){
   if(G.cleanseT > 0) G.cleanseT = Math.max(0, G.cleanseT - dt);
   if(G.freezeT > 0){ G.freezeT = Math.max(0, G.freezeT - dt); if(G.freezeT === 0) endFreeze(); }
   if(G.launchT > 0) G.launchT = Math.max(0, G.launchT - dt);
+  const wasRushing = G.launchRushT > 0;
+  if(G.launchRushT > 0){
+    G.launchRushT = Math.max(0, G.launchRushT - dt);
+    if(G.launchRushT === 0) resolveLaunchLanding();
+  }
+  if(G.launchCooldown > 0) G.launchCooldown = Math.max(0, G.launchCooldown - dt);
+  if(!G.launchHolding){
+    if(G.launchRecover > 0) G.launchRecover = Math.max(0, G.launchRecover - dt);
+    const refill = G.launchRecover > 0 ? 1.9 : 0.42;
+    G.launchCharge = clamp(G.launchCharge + dt*refill, 0, 1);
+    if(G.launchCharge >= 1) G.launchRecover = 0;
+  }
+  if(wasRushing && G.launchRushT === 0) G.launchPower = 0;
   G.laneT += dt;
   G.tapClock += dt;
   if(G.bumpCD > 0) G.bumpCD = Math.max(0, G.bumpCD - dt);
@@ -2816,7 +2971,7 @@ function update(dt){
   updateSlicks(dt, d, st);
   updateMissiles(dt, d);
   updateTraps(dt, d, st);
-  if(st === "running" && G.dead <= 0){
+  if(st === "running" && G.dead <= 0 && G.launchRushT <= 0){
     const inFront = carAt(G.lane, playerY, "me");
     if(inFront && inFront.y < playerY) rearEnd("me", inFront);
   }
@@ -2844,7 +2999,7 @@ function update(dt){
       t.passed = true;
       if(st === "running" && Math.abs(t.x - G.x) < laneW*1.25){ G.meters += 4; tone(1180, .04, "sine", .05); }
     }
-    if(st === "running" &&
+    if(st === "running" && G.launchRushT <= 0 &&
        Math.abs(t.x - G.x) < (carW + t.w)*0.42 &&
        Math.abs(t.y - playerY) < (carH + t.h)*0.44) crash();
   }
@@ -3283,7 +3438,7 @@ function updateTraps(dt, d, st){
   const racing = st === "running" && G.dead <= 0;
   const power = G.ultOn ? CARS[G.car].power : null;
   const shielded = G.ultOn && CARS[G.car].power !== "storm";
-  const live = racing && G.immune <= 0 && !shielded && G.shockT <= 0 && !finishedMe();
+  const live = racing && G.immune <= 0 && !shielded && G.shockT <= 0 && !finishedMe() && G.launchRushT <= 0;
   const smash = racing && power === "burn";           /* Redd wrecks what it touches */
   const c = carHit();
   for(let i=G.traps.length-1;i>=0;i--){
@@ -4382,6 +4537,7 @@ function render(){
     if(G.ultOn && car.power === "freeze") drawTimeAura(car, G.x, playerY);
     if(G.ultOn && car.power === "bloom") drawPetalTrail(car, G.x, playerY);
     if(G.ultOn && car.power === "burn") drawBurn(car, G.x, playerY);
+    if(G.launchRushT > 0) drawLaunchRush(G.x, playerY, G.launchPower);
     if(G.ultOn && car.power === "phase"){
       for(let i=2;i>=1;i--){                       /* after-images trailing behind */
         ctx.globalAlpha = 0.16/i;
@@ -4430,6 +4586,41 @@ function render(){
   if(G.bloomT > 0) drawBloom();
   if(G.freezeT > 0) drawFrost();
   if(G.frozenT > 0) drawFreeze();
+  ctx.restore();
+}
+
+/* Launch: a red-white speed tunnel that intensifies with stored power. */
+function drawLaunchRush(cx, cy, power){
+  const p = clamp(power, 0, 1);
+  const pulse = 0.58 + Math.sin(G.scroll*0.045)*0.12;
+  const glow = ctx.createRadialGradient(cx, cy, carW*0.25, cx, cy, carW*(1.9 + p*1.3));
+  glow.addColorStop(0, "rgba(255,255,255," + (0.22 + p*0.16).toFixed(2) + ")");
+  glow.addColorStop(0.24, "rgba(255,74,80," + (0.44 + p*0.30).toFixed(2) + ")");
+  glow.addColorStop(1, "rgba(226,27,34,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(cx - carW*3.0, cy - carH*2.0, carW*6.0, carH*4.0);
+
+  ctx.save();
+  ctx.lineCap = "round";
+  const lines = 10 + Math.round(p*8);
+  for(let i=0;i<lines;i++){
+    const x = cx + rand(-carW*1.45, carW*1.45);
+    const len = carH*(0.55 + p*0.75) * (0.65 + pulse*0.55);
+    const y = cy + carH*0.35 + rand(-carH*0.15, carH*0.35);
+    ctx.strokeStyle = i%3 === 0
+      ? "rgba(255,255,255," + (0.25 + p*0.34).toFixed(2) + ")"
+      : "rgba(255,74,80," + (0.22 + p*0.34).toFixed(2) + ")";
+    ctx.lineWidth = 1.4 + p*2.4;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + len); ctx.stroke();
+  }
+  ctx.globalAlpha = 0.62 + p*0.2;
+  ctx.strokeStyle = "#FF7A7F";
+  ctx.lineWidth = 2 + p*2;
+  ctx.beginPath();
+  ctx.moveTo(cx - carW*0.58, cy + carH*0.44);
+  ctx.lineTo(cx, cy + carH*(0.95 + p*0.45));
+  ctx.lineTo(cx + carW*0.58, cy + carH*0.44);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -5025,6 +5216,25 @@ function paintHUD(force){
   f.style.width = (G.charge*100).toFixed(1) + "%";
   $("#boostWrap").classList.toggle("full", G.charge > 0.98);
   $("#boostWrap").classList.toggle("locked", G.boostLock);
+
+  const launch = $("#launchWrap");
+  const launchFill = $("#launchFill");
+  const launchReady = $("#launchReady");
+  launchFill.style.width = (G.launchCharge*100).toFixed(1) + "%";
+  const launchReadyThreshold = 1 - LAUNCH_MIN_HOLD;
+  const launchReadyNow = G.launchCharge <= launchReadyThreshold && !G.launchHolding && G.launchCooldown <= 0 && G.launchRushT <= 0;
+  launch.classList.toggle("ready", launchReadyNow || (G.launchHolding && G.launchCharge <= launchReadyThreshold));
+  launch.classList.toggle("cooldown", G.launchCooldown > 0);
+  $("#launchName").textContent = t("launchName");
+  if(G.launchCooldown > 0){
+    launchReady.textContent = "CD " + G.launchCooldown.toFixed(1) + "s";
+  } else if(G.launchHolding && G.launchCharge <= launchReadyThreshold){
+    launchReady.textContent = t("launchReady");
+  } else if(G.launchRushT > 0){
+    launchReady.textContent = t("efLaunched");
+  } else {
+    launchReady.textContent = t("launchHold");
+  }
   syncEffects();
   paintItemBox();
   const board = [{ me:true, m:G.meters, car:G.car }].concat(G.rivals.map(function(R){
