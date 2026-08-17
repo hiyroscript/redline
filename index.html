@@ -332,7 +332,7 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   background:rgba(11,11,12,.62);
   border-color:#FF7A7F;
   color:#fff;
-  text-shadow:0 0 8px rgba(255,255,255,.28);
+  text-shadow:0 0 10px rgba(255,255,255,.34);
   animation:ultReady 1.15s ease-in-out infinite;
 }
 #ultPct.gain{animation:ultGain .5s ease}
@@ -342,17 +342,17 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   0%,100%{
     border-color:#FF7A7F;
     box-shadow:
-      0 0 0 1px rgba(255,255,255,.72),
-      0 0 10px rgba(255,64,72,.74),
-      0 0 22px rgba(226,27,34,.52),
-      0 0 34px rgba(226,27,34,.24);
+      0 0 0 1px rgba(255,255,255,.74),
+      0 0 12px rgba(255,64,72,.82),
+      0 0 26px rgba(226,27,34,.58),
+      0 0 42px rgba(226,27,34,.28);
   }
   50%{
     border-color:#fff;
     box-shadow:
-      0 0 0 1px rgba(255,255,255,.98),
-      0 0 14px rgba(255,122,127,.98),
-      0 0 28px rgba(226,27,34,.68),
+      0 0 0 1px rgba(255,255,255,1),
+      0 0 16px rgba(255,122,127,1),
+      0 0 32px rgba(226,27,34,.72),
       0 0 44px rgba(226,27,34,.36);
   }
 }
@@ -377,8 +377,10 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:4px;
   font-family:var(--mono);opacity:.62;
 }
-.readout .pos.mine{opacity:1}
+.readout .pos.mine{opacity:1;animation:placePulse 1.15s ease-in-out infinite}
+.readout .pos.mine .p,.readout .pos.mine .n{color:#fff;text-shadow:0 0 10px rgba(255,255,255,.55),0 0 18px rgba(255,255,255,.18)}
 .readout .pos .p{font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+@keyframes placePulse{0%,100%{opacity:.72;transform:translateX(0)}50%{opacity:1;transform:translateX(-2px)}}
 .readout .pos .n{font-size:13px;font-weight:600;min-width:50px;text-align:right}
 .readout .pos.mine .n{font-size:14px}
 #gauges{position:absolute;left:16px;top:calc(66px + var(--safe-t));pointer-events:none}
@@ -495,8 +497,8 @@ body.desk .keys{display:flex}
 
 /* On a computer the race runs across the screen instead of down it. */
 body.desk #shell{
-  width:min(520px, calc(100dvh * 0.62));
-  height:min(100dvh, 900px);
+  width:min(1180px, 92vw);
+  height:min(760px, 92vh);
   max-width:none;
   border-radius:18px;
 }
@@ -768,7 +770,21 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
           <span class="mode-name" data-i18n="rose">Rose</span>
         </button>
         <button class="car-opt siren" id="carSiren">
-          <span class="car-art"><svg viewBox="0 0 76 132"><g fill="#0C0D10"><rect x="0" y="26" width="14" height="23" rx="5"/><rect x="62" y="26" width="14" height="23" rx="5"/><rect x="0" y="86" width="14" height="23" rx="5"/><rect x="62" y="86" width="14" height="23" rx="5"/></g><rect x="8" y="4" width="60" height="124" rx="12" fill="#F2F3F5"/><rect x="8" y="46" width="60" height="42" fill="#101114"/><rect x="12" y="6" width="52" height="11" rx="4" fill="#101114"/><rect x="20" y="52" width="36" height="30" rx="7" fill="#5A6472"/><rect x="18" y="36" width="40" height="9" rx="4" fill="#101114"/><rect x="20" y="37" width="17" height="7" rx="3" fill="#4D8BFF"/><rect x="39" y="37" width="17" height="7" rx="3" fill="#FF4A50"/><rect x="6" y="112" width="64" height="10" rx="5" fill="#101114"/></svg></span>
+          <span class="car-art"><svg viewBox="0 0 76 132">
+            <g fill="#0C0D10"><rect x="0" y="28" width="13" height="22" rx="5"/><rect x="63" y="28" width="13" height="22" rx="5"/><rect x="0" y="86" width="13" height="22" rx="5"/><rect x="63" y="86" width="13" height="22" rx="5"/></g>
+            <rect x="8" y="5" width="60" height="122" rx="6" fill="#F2F3F5" stroke="#101114" stroke-width="2"/>
+            <rect x="5" y="2" width="66" height="6" rx="2" fill="#101114"/>
+            <rect x="12" y="45" width="52" height="37" fill="#101114"/>
+            <rect x="19" y="49" width="38" height="27" rx="6" fill="#5A6472"/>
+            <rect x="18" y="33" width="40" height="9" rx="3" fill="#101114"/>
+            <rect x="18" y="8" width="18" height="4" rx="2" fill="#FFF3D0"/>
+            <rect x="40" y="8" width="18" height="4" rx="2" fill="#FFF3D0"/>
+            <rect x="18" y="34" width="18" height="6" rx="2" fill="#4D8BFF"/>
+            <rect x="40" y="34" width="18" height="6" rx="2" fill="#FF4A50"/>
+            <rect x="8" y="106" width="60" height="9" rx="2" fill="#101114"/>
+            <rect x="17" y="108" width="16" height="4" rx="2" fill="#FF4A50"/>
+            <rect x="43" y="108" width="16" height="4" rx="2" fill="#FF4A50"/>
+          </svg></span>
           <span class="mode-name" data-i18n="siren">Siren</span>
         </button>
       </div>
@@ -1058,7 +1074,7 @@ const STR = {
   itemCanInfo:  {en:"Common. A short burst of extra speed that does not touch your boost meter.",
                  fr:"Commun. Une courte acc\u00e9l\u00e9ration sans toucher \u00e0 votre jauge de boost."},
   itemOil:      {en:"Oily oil",    fr:"Huile"},
-  itemOilInfo:  {en:"Rare. Drops a slick behind you. The first racer to touch it loses all grip.",
+  itemOilInfo:  {en:"Rare. Drops a slick behind you for 15 seconds. The first racer to touch it loses all grip.",
                  fr:"Rare. Laisse une flaque d'huile. Le premier qui la touche perd toute adh\u00e9rence."},
   itemSeeker:   {en:"Seeker",      fr:"Traqueur"},
   itemSeekerInfo:{en:"Legendary. A missile that hunts the leader, destroying whatever it passes through.",
@@ -1073,7 +1089,7 @@ const STR = {
   oddsNote:     {en:"The seeker never drops for whoever is leading.",
                  fr:"Le missile ne tombe jamais pour le leader."},
   kindItem:     {en:"Item",        fr:"Objet"},
-  kindBubble:   {en:"Pickup",      fr:"Bonus"},
+  kindBubble:   {en:"Mystery bubble", fr:"Bulle mystère"},
   slipperyInfo: {en:"No grip: your steering is reversed. Left goes right and right goes left.",
                  fr:"Aucune adh\u00e9rence : direction invers\u00e9e. Gauche va \u00e0 droite et droite \u00e0 gauche."},
   finished:     {en:"Finished",                    fr:"Arriv\u00e9e"},
@@ -1182,8 +1198,9 @@ const ITEMS = {
 };
 const ITEM_IDS = ["can", "oil", "seeker"];
 const BUBBLE_GAP = [5400, 8600];          /* road distance between rows */
+const BUBBLE_LIFE = 10, BUBBLE_BLINK = 2; /* 10s total, blink for the final 2s */
 const CAN_TIME = 2.2, CAN_SPEED = 1.55;   /* the boost can */
-const OIL_LIFE = 22, SLIP_TIME = 4;       /* the slick, and how long it costs you */
+const OIL_LIFE = 15, SLIP_TIME = 4;       /* the slick, and how long it costs you */
 const MISSILE_SPEED = 2100;
 /* the seeker is a big piece of hardware: longer than a car and wider across
    the fins, so it reads as a threat from the far end of the road */
@@ -1234,6 +1251,10 @@ function buildGarage(){
     html += '<div class="info"><span class="kind pickup">' + t("kindBubble") + '</span>' +
             '<h3>' + t("bubbleName") + '</h3><p>' + t("bubbleInfo") + '</p></div>';
   } else if(garageTab === "items"){
+    html += '<div class="info" style="border-left:4px solid #B96BFF">' +
+            '<span class="kind pickup">' + t("kindBubble") + '</span>' +
+            '<h3>' + t("bubbleName") + '</h3>' +
+            '<p>' + t("bubbleInfo") + '</p></div>';
     /* Odds are computed from the same table the game rolls against, so what is
        printed here can never drift from what actually drops. */
     let total = 0;
@@ -2795,7 +2816,6 @@ const BUMP_SLOW = 1.3;
 const ULT_ON_WRECK = -0.10;               /* what each event does to the meter */
 const ULT_ON_TRAP  = -0.05;
 const ULT_ON_KILL  =  0.10;
-const ULT_ON_DODGE =  0.05;
 const LAUNCH_TIME = 0.8, LAUNCH_BOOST = 1.35;                    /* bump shove */
 const LAUNCH_MIN_HOLD = 0.25;                                     /* 25% of the bar must be drained */
 const LAUNCH_DRAG_PX = 280;                                       /* full stop at this downward travel */
@@ -3089,7 +3109,7 @@ function leaderOf(who){
 }
 
 function spawnBubbleRow(){
-  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random() });
+  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random(), life:BUBBLE_LIFE });
 }
 
 function updateBubbles(dt, d, st){
@@ -3104,7 +3124,8 @@ function updateBubbles(dt, d, st){
   for(let i=G.boxes.length-1;i>=0;i--){
     const row = G.boxes[i];
     row.y += d;
-    if(row.y > H + 120){ G.boxes.splice(i,1); continue; }
+    row.life -= dt;
+    if(row.life <= 0 || row.y > H + 120){ G.boxes.splice(i,1); continue; }
     if(row.gone === 7){ G.boxes.splice(i,1); continue; }   /* all three collected */
     for(let l=0;l<3;l++){
       if(row.gone & (1 << l)) continue;                     /* this one is already gone */
@@ -3425,8 +3446,7 @@ function dodgeCheck(o, box, bit, who, prevLane, since){
   const squeeze = Math.abs(o.x - box.x) < box.hw + half + carW*0.12;
   const swerved = prevLane >= 0 && lane === prevLane && since < 0.9;
   if(squeeze || swerved){
-    ultDelta(who, ULT_ON_DODGE);
-    if(who === "me") G.dodgeFlash = 0.5;         /* the meter pulses; no splash */
+    if(who === "me") G.dodgeFlash = 0.5;         /* lane feedback only; no ultimate charge */
   }
 }
 
@@ -4680,8 +4700,14 @@ function ladderGeom(){
   const half = clamp((bottom - top)/2, 60, 150);
   return { x:W - 30, cy:(top + bottom)/2, half:half };
 }
+function ladderRange(){
+  if(G.mode === "bots" && G.tracksLeft >= 0 && G.finishAt){
+    return Math.max(500, Math.min(1200, G.finishAt - G.meters));
+  }
+  return PIP_FAR;
+}
 function ladderY(gap, g){
-  return g.cy - clamp(gap/PIP_FAR, -1, 1)*g.half;   /* ahead is up, behind is down */
+  return g.cy - clamp(gap/ladderRange(), -1, 1)*g.half;   /* ahead is up, behind is down */
 }
 
 function drawLadder(){
@@ -4741,7 +4767,7 @@ function drawLadder(){
 /* the distance badge, parked to the left of its dot */
 function drawGapBadge(m, g){
   const gap = Math.abs(Math.round(m.gap));
-  const far = gap >= PIP_FAR;
+  const far = gap > PIP_FAR;
   const w = far ? 30 : 58;
   const right = g.x - 13;
   const x = right - w/2;
@@ -4819,6 +4845,8 @@ function drawBubbles(){
   for(let n=0;n<G.boxes.length;n++){
     const row = G.boxes[n];
     if(row.y < -80 || row.y > H + 80) continue;
+    const blinking = row.life <= BUBBLE_BLINK;
+    if(blinking && Math.floor(row.life * 8) % 2 === 0) continue;
     for(let l=0;l<3;l++){
       if(row.gone & (1 << l)) continue;                  /* collected: it is gone */
       const x = laneCX(l);
@@ -4882,10 +4910,10 @@ function drawSlicks(){
     const o = G.slicks[i];
     if(o.y < -60 || o.y > H + 60) continue;
     ctx.save();
-    ctx.globalAlpha = Math.min(1, o.life/2);
+    ctx.globalAlpha = Math.min(1, o.life/3);
     ctx.fillStyle = "rgba(10,10,14,0.86)";
     blob(o.x, o.y, o.r, o.s);
-    ctx.globalAlpha = Math.min(1, o.life/2)*0.5;
+    ctx.globalAlpha = Math.min(1, o.life/3)*0.5;
     ctx.fillStyle = "rgba(120,90,160,0.5)";
     blob(o.x - o.r*0.2, o.y - o.r*0.15, o.r*0.5, o.s + 0.4);
     ctx.globalAlpha = 1;
@@ -5268,7 +5296,7 @@ function paintHUD(force){
   const up = $("#ultPct");
   up.textContent = Math.round(G.ult*100) + "%";
   up.classList.toggle("ready", G.ult >= 1 && !G.ultOn);   /* the square handles the colour */
-  up.classList.toggle("gain", G.dodgeFlash > 0);
+  up.classList.remove("gain");
 }
 
 /* ---------------- loop ------------------------------------------- */
