@@ -281,7 +281,7 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   width:100%;aspect-ratio:1/1;border-radius:var(--r-sm);
   background:var(--black);display:flex;align-items:center;justify-content:center;
 }
-.car-art svg{width:56%;height:88%;display:block}
+.car-art canvas{width:100%;height:100%;display:block}
 #garage{background:var(--gray-100)}
 .tabs{display:flex;gap:6px;padding:0 var(--pad) 12px}
 .tab{flex:1;appearance:none;border:0;cursor:pointer;padding:9px 6px;border-radius:var(--r-sm);
@@ -332,8 +332,6 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   background:var(--red-press);border-color:#fff;color:#fff;text-shadow:none;
   animation:ultPulse 1.05s ease-in-out infinite;
 }
-#ultPct.gain{animation:ultGain .5s ease}
-@keyframes ultGain{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
 @keyframes ultPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,127,.55)}50%{box-shadow:0 0 0 7px rgba(255,122,127,0)}}
 
 /* ============================================================
@@ -626,100 +624,31 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
         <span data-i18n="randomCar">Surprise me</span>
       </button>
 
+      <!-- The art is painted by the same code that draws the car on the road,
+           so an icon can never drift away from its model. -->
       <div class="car-grid">
         <button class="car-opt " id="carRedd">
-          <span class="car-art">
-          <svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="0" y="26" width="13" height="22" rx="5"/><rect x="63" y="26" width="13" height="22" rx="5"/><rect x="0" y="86" width="13" height="24" rx="5"/><rect x="63" y="86" width="13" height="24" rx="5"/></g>
-            <rect x="7" y="4" width="62" height="124" rx="17" fill="#E21B22"/>
-            <rect x="12" y="6" width="52" height="12" rx="6" fill="#101116"/>
-            <rect x="16" y="9" width="10" height="5" rx="2.5" fill="#FFE9C4"/><rect x="50" y="9" width="10" height="5" rx="2.5" fill="#FFE9C4"/>
-            <rect x="19" y="30" width="38" height="26" rx="9" fill="#101116"/>
-            <rect x="23" y="34" width="30" height="17" rx="6" fill="#31343B"/>
-            <rect x="19" y="62" width="38" height="30" rx="9" fill="#101116"/>
-            <rect x="20" y="16" width="8" height="24" rx="2" fill="#101116"/><rect x="48" y="16" width="8" height="24" rx="2" fill="#101116"/>
-            <rect x="6" y="112" width="64" height="10" rx="5" fill="#101116"/>
-            <rect x="14" y="114" width="12" height="5" rx="2.5" fill="#FF5157"/><rect x="50" y="114" width="12" height="5" rx="2.5" fill="#FF5157"/>
-          </svg>
-        </span>
+          <span class="car-art"><canvas class="car-cv" data-car="redd" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="redd">Redd</span>
         </button>
         <button class="car-opt phantom" id="carPhantom">
-          <span class="car-art">
-          <svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="1" y="26" width="12" height="21" rx="5"/><rect x="63" y="26" width="12" height="21" rx="5"/><rect x="1" y="86" width="12" height="21" rx="5"/><rect x="63" y="86" width="12" height="21" rx="5"/></g>
-            <path d="M17 4 Q38 -3 59 4 Q68 8 69 22 L70 84 Q70 124 59 128 L17 128 Q6 124 6 84 L7 22 Q8 8 17 4 Z" fill="#EDF1F6"/>
-            <path d="M38 1 L64 45 L12 45 Z" fill="#1E5FA8"/>
-            <rect x="5" y="52" width="7" height="34" fill="#1E5FA8"/><rect x="64" y="52" width="7" height="34" fill="#1E5FA8"/>
-            <rect x="27" y="4" width="7" height="124" fill="#1E5FA8"/><rect x="42" y="4" width="7" height="124" fill="#1E5FA8"/>
-            <rect x="14" y="14" width="15" height="4" rx="2" fill="#8FE3FF"/><rect x="47" y="14" width="15" height="4" rx="2" fill="#8FE3FF"/>
-            <rect x="14" y="46" width="48" height="42" rx="12" fill="#16305A"/>
-            <path d="M18 58 H58 L54 50 H22 Z" fill="#7FB3E8"/>
-            <path d="M20 76 H56 L53 84 H23 Z" fill="#7FB3E8"/>
-            <rect x="5" y="106" width="66" height="9" rx="4" fill="#1E5FA8"/>
-            <rect x="12" y="108" width="16" height="4" rx="2" fill="#8FE3FF"/><rect x="48" y="108" width="16" height="4" rx="2" fill="#8FE3FF"/>
-            <circle cx="27" cy="123" r="5" fill="#16305A"/><circle cx="49" cy="123" r="5" fill="#16305A"/>
-          </svg>
-        </span>
+          <span class="car-art"><canvas class="car-cv" data-car="phantom" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="phantom">Phantom</span>
         </button>
         <button class="car-opt " id="carBolt">
-          <span class="car-art">
-          <svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="0" y="24" width="15" height="25" rx="6"/><rect x="61" y="24" width="15" height="25" rx="6"/><rect x="0" y="84" width="15" height="25" rx="6"/><rect x="61" y="84" width="15" height="25" rx="6"/></g>
-            <rect x="9" y="8" width="58" height="116" rx="14" fill="#F5C400"/>
-            <path d="M9 16 L38 8 L67 16 L67 24 L38 16 L9 24 Z" fill="#141414"/>
-            <path d="M9 56 L38 48 L67 56 L67 64 L38 56 L9 64 Z" fill="#141414"/>
-            <path d="M9 96 L38 88 L67 96 L67 104 L38 96 L9 104 Z" fill="#141414"/>
-            <rect x="5" y="4" width="66" height="10" rx="4" fill="#141414"/>
-            <rect x="15" y="6" width="13" height="5" rx="2" fill="#FFF3B0"/><rect x="48" y="6" width="13" height="5" rx="2" fill="#FFF3B0"/>
-            <rect x="20" y="44" width="36" height="42" rx="9" fill="#141414"/>
-            <rect x="24" y="48" width="28" height="34" rx="7" fill="#4A4636"/>
-            <path d="M22 46 L54 84 M54 46 L22 84 M21 65 H55" stroke="#DADADA" stroke-width="3" fill="none"/>
-            <rect x="3" y="104" width="70" height="11" rx="5" fill="#141414"/>
-            <rect x="12" y="118" width="14" height="5" rx="2" fill="#FF6A3A"/><rect x="50" y="118" width="14" height="5" rx="2" fill="#FF6A3A"/>
-          </svg>
-        </span>
+          <span class="car-art"><canvas class="car-cv" data-car="bolt" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="bolt">Bolt</span>
         </button>
         <button class="car-opt timestamp" id="carTimestamp">
-          <span class="car-art"><svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="0" y="26" width="13" height="22" rx="5"/><rect x="63" y="26" width="13" height="22" rx="5"/><rect x="0" y="86" width="13" height="22" rx="5"/><rect x="63" y="86" width="13" height="22" rx="5"/></g>
-            <path d="M27 3 H49 Q68 6 69 22 L70 54 Q70 118 62 128 H14 Q6 118 6 54 L7 22 Q8 6 27 3 Z" fill="#1F7A4C"/>
-            <path d="M27 3 H49 Q60 5 62 20 H14 Q16 5 27 3 Z" fill="#0E0E10"/>
-            <rect x="12" y="3" width="52" height="8" rx="3" fill="#0E0E10"/>
-            <rect x="17" y="4" width="14" height="5" rx="2" fill="#D6FFE9"/><rect x="45" y="4" width="14" height="5" rx="2" fill="#D6FFE9"/>
-            <rect x="34" y="3" width="8" height="126" fill="#3FD98A"/>
-            <rect x="14" y="46" width="48" height="44" rx="11" fill="#0E0E10"/>
-            <path d="M19 62 H57 L52 50 H24 Z" fill="#7FE8B6"/>
-            <path d="M20 78 H56 L52 88 H24 Z" fill="#7FE8B6"/>
-            <circle cx="38" cy="30" r="9" fill="#0E0E10" stroke="#3FD98A" stroke-width="2.5"/>
-            <path d="M38 25 V30 L42 32" stroke="#3FD98A" stroke-width="2.5" fill="none"/>
-            <rect x="8" y="106" width="60" height="8" rx="3" fill="#0E0E10"/>
-            <rect x="13" y="108" width="50" height="4" rx="2" fill="#3FD98A"/>
-          </svg></span>
+          <span class="car-art"><canvas class="car-cv" data-car="timestamp" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="timestamp">Timestamp</span>
         </button>
         <button class="car-opt rose" id="carRose">
-          <span class="car-art"><svg viewBox="0 0 76 132" aria-hidden="true">
-            <g fill="#0C0D10"><rect x="1" y="26" width="13" height="21" rx="5"/><rect x="62" y="26" width="13" height="21" rx="5"/><rect x="0" y="86" width="14" height="21" rx="5"/><rect x="62" y="86" width="14" height="21" rx="5"/></g>
-            <path d="M30 4 H46 Q64 6 65 24 L67 74 Q69 118 54 128 H22 Q7 118 9 74 L11 24 Q12 6 30 4 Z" fill="#7B3FA8"/>
-            <rect x="7" y="60" width="8" height="42" fill="#FF7ACF"/><rect x="61" y="60" width="8" height="42" fill="#FF7ACF"/>
-            <rect x="34" y="4" width="8" height="124" fill="#FF7ACF"/>
-            <rect x="12" y="4" width="52" height="8" rx="3" fill="#2A1038"/>
-            <rect x="17" y="5" width="14" height="5" rx="2" fill="#FFF0FA"/><rect x="45" y="5" width="14" height="5" rx="2" fill="#FFF0FA"/>
-            <rect x="13" y="42" width="50" height="46" rx="13" fill="#2A1038"/>
-            <path d="M18 58 H58 L53 46 H23 Z" fill="#FFB6E6"/>
-            <path d="M19 74 H57 L53 84 H23 Z" fill="#FFB6E6"/>
-            <g fill="#FF7ACF"><circle cx="38" cy="22" r="5"/><circle cx="31" cy="27" r="5"/><circle cx="45" cy="27" r="5"/><circle cx="34" cy="34" r="5"/><circle cx="42" cy="34" r="5"/></g>
-            <circle cx="38" cy="28" r="4" fill="#FFF0FA"/>
-            <rect x="10" y="106" width="56" height="8" rx="3" fill="#2A1038"/>
-            <rect x="15" y="108" width="16" height="4" rx="2" fill="#FFD9F2"/><rect x="45" y="108" width="16" height="4" rx="2" fill="#FFD9F2"/>
-          </svg></span>
+          <span class="car-art"><canvas class="car-cv" data-car="rose" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="rose">Rose</span>
         </button>
         <button class="car-opt siren" id="carSiren">
-          <span class="car-art"><svg viewBox="0 0 76 132"><g fill="#0C0D10"><rect x="0" y="26" width="14" height="23" rx="5"/><rect x="62" y="26" width="14" height="23" rx="5"/><rect x="0" y="86" width="14" height="23" rx="5"/><rect x="62" y="86" width="14" height="23" rx="5"/></g><rect x="8" y="4" width="60" height="124" rx="12" fill="#F2F3F5"/><rect x="8" y="46" width="60" height="42" fill="#101114"/><rect x="12" y="6" width="52" height="11" rx="4" fill="#101114"/><rect x="20" y="52" width="36" height="30" rx="7" fill="#5A6472"/><rect x="18" y="36" width="40" height="9" rx="4" fill="#101114"/><rect x="20" y="37" width="17" height="7" rx="3" fill="#4D8BFF"/><rect x="39" y="37" width="17" height="7" rx="3" fill="#FF4A50"/><rect x="6" y="112" width="64" height="10" rx="5" fill="#101114"/></svg></span>
+          <span class="car-art"><canvas class="car-cv" data-car="siren" aria-hidden="true"></canvas></span>
           <span class="mode-name" data-i18n="siren">Siren</span>
         </button>
       </div>
@@ -1069,16 +998,23 @@ const CARS = {
 };
 const CAR_IDS = ["redd","phantom","bolt","timestamp","rose","siren"];
 
-/* ---------------- opposition ------------------------------------- */
+/* ---------------- opposition -------------------------------------
+   ultRate multiplies the passive ULT_CHARGE clock. It was raised across the
+   board when dodging stopped paying: a bot squeezes past 2-7 traps a minute
+   and used to bank charge for every one, so the old bonus was worth roughly
+   a third of a hard bot's meter. The player has no such multiplier - a flat
+   45s - so without this the field would charge slower than the person they
+   are meant to be hunting. These values put each difficulty back within a
+   few percent of the rate it actually ran at before. */
 const DIFFS = {
   easy:   { key:"diffEasy",   lapse:0.52, react:[0.70,1.40], tick:[0.50,0.95],
-            block:0.00, aggro:0.00, boost:0.10, ult:0.05, keep:0.00, look:0,   ultRate:0.30 },
+            block:0.00, aggro:0.00, boost:0.10, ult:0.05, keep:0.00, look:0,   ultRate:0.46 },
   medium: { key:"diffMedium", lapse:0.26, react:[0.35,0.75], tick:[0.34,0.68],
-            block:0.10, aggro:0.04, boost:0.34, ult:0.28, keep:0.10, look:110, ultRate:0.55 },
+            block:0.10, aggro:0.04, boost:0.34, ult:0.28, keep:0.10, look:110, ultRate:0.82 },
   hard:   { key:"diffHard",   lapse:0.10, react:[0.18,0.42], tick:[0.22,0.46],
-            block:0.38, aggro:0.22, boost:0.70, ult:0.70, keep:0.24, look:250, ultRate:0.80 },
+            block:0.38, aggro:0.22, boost:0.70, ult:0.70, keep:0.24, look:250, ultRate:1.07 },
   brutal: { key:"diffBrutal", lapse:0.03, react:[0.07,0.22], tick:[0.14,0.30],
-            block:0.72, aggro:0.52, boost:1.00, ult:1.00, keep:0.32, look:380, ultRate:1.00 }
+            block:0.72, aggro:0.52, boost:1.00, ult:1.00, keep:0.32, look:380, ultRate:1.27 }
 };
 const DIFF_IDS = ["easy","medium","hard","brutal"];
 /* Every state a car can be in, and what it is called on screen */
@@ -1131,7 +1067,7 @@ const MISSILE_BODY = 0.55;                /* body half width, in car widths */
 const MISSILE_FIN  = 0.92;                /* fin reach from centre, in car widths */
 const BUBBLE_R = 21;
 
-const PIP_FAR = 500;                      /* beyond this the marker drops the number */
+const PIP_FAR = 500;                      /* an off-screen racer only gets an arrow past this */
 const SHOCK_TIME = 10;                    /* Bolt: how long a hit car is pinned */
 const SHOCK_STACK = 5;                    /* every further hit adds this */
 const SHOCK_MAX = 25;
@@ -1346,7 +1282,10 @@ $("#btnHome").addEventListener("click", function(){ leave(); });
 /* ================================================================
    RACE ENGINE
    ================================================================ */
-const cv = $("#cv"), ctx = cv.getContext("2d");
+const cv = $("#cv"), roadCtx = cv.getContext("2d");
+/* Every model draws through this one handle. The select-screen icon painter
+   borrows it for a moment so the icons come out of the same code as the road. */
+let ctx = roadCtx;
 let W=0, H=0, DPR=1;
 let roadX=0, roadW=0, laneW=0, sideW=0, carW=0, carH=0, playerY=0, vign=null;
 
@@ -1360,7 +1299,7 @@ const G = {
   traps:[], fx:[], trapGap:0, nextTrap:600,
   tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0,
   car:"redd", ult:0, ultOn:false, ultKey:false, ultArmed:true,
-  boostLock:false, rivals:[], stepFlash:0, prevLane:-1, laneT:9, dodgeFlash:0, parkWait:0,
+  boostLock:false, rivals:[], stepFlash:0, parkWait:0,
   cdT:0, cdStep:-1, wasCounting:false,
   mode:"endless", diff:"medium",
   orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
@@ -1398,8 +1337,43 @@ function resize(){
   }
   layout();
 }
-window.addEventListener("resize", function(){ if($("#race").classList.contains("on")) resize(); });
+window.addEventListener("resize", function(){
+  if($("#race").classList.contains("on")) resize();
+  paintCarIcons();
+});
 window.addEventListener("orientationchange", function(){ setTimeout(resize, 250); });
+
+/* ---------------- select-screen car art --------------------------
+   Painted with drawCar, the same call the race loop makes, so the icon and
+   the car on the road are the same drawing at two sizes. Nothing here is
+   hand-copied, so an icon cannot fall out of step with its model. */
+function paintCarIcon(el, id){
+  const p = CARS[id];
+  if(!p || !el.getContext) return;
+  const box = el.getBoundingClientRect();
+  const cw = Math.round(box.width), ch = Math.round(box.height);
+  if(cw < 4 || ch < 4) return;                  /* not laid out yet */
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  el.width = Math.round(cw*dpr); el.height = Math.round(ch*dpr);
+  const c2 = el.getContext("2d");
+  if(!c2) return;
+  const prev = ctx;
+  ctx = c2;
+  try{
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cw, ch);
+    /* the models hang bull bars, wings and wheels outside their own box, so
+       size to the widest overhang rather than to the body */
+    const w = Math.min(cw*0.78, ch*0.43);
+    drawCar(cw/2, ch/2, w, w*1.86, p, 0, true, false);
+  } finally {
+    ctx = prev;
+  }
+}
+function paintCarIcons(){
+  const list = document.querySelectorAll("canvas.car-cv");
+  for(let i=0;i<list.length;i++) paintCarIcon(list[i], list[i].getAttribute("data-car"));
+}
 
 /* ---------------- tracks ----------------------------------------- */
 const TRACK_SECONDS = 60;
@@ -1525,7 +1499,7 @@ function spawnRivals(){
       slow:0, blind:0, dead:0, immune:0, shock:0, launch:0, bumpCD:0,
       frozen:0, ordered:0, clutter:0, orderDir:1, slip:0,
       item:null, itemRow:-1, canT:0, useT:rand(0.6, 2.4), item:null, canT:0, useT:0,
-      inDanger:false, willReact:true, reactT:0, prevLane:-1, laneT:9,
+      inDanger:false, willReact:true, reactT:0,
       ult:0, ultOn:false, ultWait:rand(1, 3), orbs:0, fireT:0,
       charge:1, boostLock:false, boosting:false,
       finished:null
@@ -1714,7 +1688,6 @@ function rivalSteer(R, lane){
 
 function rivalLaneTo(R, lane){
   const dir = lane > R.lane ? 1 : -1;
-  R.prevLane = R.lane; R.laneT = 0;
   const victim = carAt(lane, R.y, R);
   if(victim) bumpTarget(victim, dir, R);
   R.lane = lane;
@@ -1804,7 +1777,6 @@ function updateRival(R, dt, st){
   if(R.launch > 0) R.launch = Math.max(0, R.launch - dt);
   if(R.bumpCD > 0) R.bumpCD = Math.max(0, R.bumpCD - dt);
   if(R.changeT > 0) R.changeT -= dt;
-  R.laneT += dt;
   if(R.reactT > 0)  R.reactT -= dt;
   if(R.fireT > 0)   R.fireT -= dt;
 
@@ -1936,7 +1908,7 @@ function updateRival(R, dt, st){
       const hit = o.kind === "puddle"
         ? puddleHits(o, rc)
         : dx*dx + dy*dy <= o.r*o.r*0.86;
-      if(!hit){ dodgeCheck(o, rc, bit, R, R.prevLane, R.laneT); continue; }
+      if(!hit){ markPassed(o, rc, bit); continue; }
       o.hit |= bit;
       if(smash){ smashFx(o.x, o.y, (o.rx || o.r)*1.1, "#D8C49A", R.car); G.traps.splice(i,1); continue; }
       ultDelta(R, ULT_ON_TRAP);
@@ -2217,7 +2189,6 @@ function startRace(){
   G.boxGap = 0; G.nextRow = rand(2200, 3400);      /* the first row comes a bit sooner */
   G.lastTap = -9; G.tapClock = 0;
   G.freezeOwner = null; G.sirenOwner = null; G.effLog = [];
-  G.prevLane = -1; G.laneT = 9; G.dodgeFlash = 0;
   G.cdT = 0; G.cdStep = -1; G.wasCounting = false;
   G.raceT = 0; G.finishAt = 0; G.finished = null; G.results = [];
   G.tracksLeft = -1;
@@ -2322,7 +2293,6 @@ function move(dir){
   if(G.slipT > 0) dir = -dir;                    /* no grip: the steering is reversed */
   const n = clamp(G.lane + dir, 0, 2);
   if(n === G.lane) return;
-  G.prevLane = G.lane; G.laneT = 0;
 
   /* Barge into the lane you want. If the other car has room it is shoved
      across and left labouring; if it is already against a barrier the hit
@@ -2422,7 +2392,6 @@ function forceLane(n){
   if(t2 === G.lane) return;
   const victim = carAt(t2, playerY, "me");
   if(victim) bumpTarget(victim, t2 > G.lane ? 1 : -1, "me");
-  G.prevLane = G.lane; G.laneT = 0;
   G.lane = t2;
 }
 /* Cleansed: wipes slowed, cluttered and shocked, once */
@@ -2639,7 +2608,6 @@ const BUMP_SLOW = 1.3;
 const ULT_ON_WRECK = -0.10;               /* what each event does to the meter */
 const ULT_ON_TRAP  = -0.05;
 const ULT_ON_KILL  =  0.10;
-const ULT_ON_DODGE =  0.05;
 const LAUNCH_TIME = 0.8, LAUNCH_BOOST = 1.35;                    /* both cars lose the same time to a bump */
 
 const ORB_COUNT = 3;
@@ -2781,7 +2749,6 @@ function update(dt){
   if(G.cleanseT > 0) G.cleanseT = Math.max(0, G.cleanseT - dt);
   if(G.freezeT > 0){ G.freezeT = Math.max(0, G.freezeT - dt); if(G.freezeT === 0) endFreeze(); }
   if(G.launchT > 0) G.launchT = Math.max(0, G.launchT - dt);
-  G.laneT += dt;
   G.tapClock += dt;
   if(G.bumpCD > 0) G.bumpCD = Math.max(0, G.bumpCD - dt);
   if(G.slowT > 0)  G.slowT  = Math.max(0, G.slowT - dt);
@@ -2843,7 +2810,6 @@ function update(dt){
 
   if(G.shake > 0) G.shake = Math.max(0, G.shake - dt*38);
   if(G.stepFlash > 0) G.stepFlash = Math.max(0, G.stepFlash - dt);
-  if(G.dodgeFlash > 0) G.dodgeFlash = Math.max(0, G.dodgeFlash - dt);
 }
 
 const TRAFFIC_PAINT = [
@@ -3239,19 +3205,13 @@ function ultDelta(who, amount){
 /* did this hazard slip past close enough to count as a dodge? */
 /* Credit for getting out of the way at the last moment: either you squeezed
    past it, or you swerved out of the lane it was about to take you in. */
-function dodgeCheck(o, box, bit, who, prevLane, since){
+/* A trap that has gone past without touching anybody. Dodging pays nothing
+   any more, but the mark still has to be set: the rival clutter roll reads
+   this bitmask to decide which traps a cluttered driver fails to see. */
+function markPassed(o, box, bit){
   if(o.nm & bit) return;
   if(o.y < box.y) return;                        /* not past us yet */
   o.nm |= bit;
-  if(o.hit & bit) return;                        /* you drove through it, not round it */
-  const half = o.kind === "puddle" ? o.rx : (o.kind === "meteor" ? o.r : o.r);
-  const lane = clamp(Math.floor((o.x - roadX)/laneW), 0, 2);
-  const squeeze = Math.abs(o.x - box.x) < box.hw + half + carW*0.12;
-  const swerved = prevLane >= 0 && lane === prevLane && since < 0.9;
-  if(squeeze || swerved){
-    ultDelta(who, ULT_ON_DODGE);
-    if(who === "me") G.dodgeFlash = 0.5;         /* the meter pulses; no splash */
-  }
 }
 
 function nearestOnCar(c, px, py){
@@ -3326,7 +3286,7 @@ function updateTraps(dt, d, st){
       if(smash){ smashFx(o.x, o.y, o.rx*1.1, "#7FC2EC", G.car); G.traps.splice(i,1); continue; }
       hitPuddle();
     }
-    dodgeCheck(o, c, 1, "me", G.prevLane, G.laneT);
+    markPassed(o, c, 1);
   }
 }
 
@@ -4501,11 +4461,24 @@ function drawLadder(){
   }
   marks.push({ col: pipColour(G.car), gap: 0, y: g.cy, off: false, me: true });
 
-  /* badges must not sit on top of each other */
-  const badges = marks.filter(function(m){ return m.off; })
-                      .sort(function(a, b){ return a.y - b.y; });
-  for(let i=1;i<badges.length;i++)
-    if(badges[i].by === undefined && badges[i-1].by === undefined) badges[i].by = badges[i].y;
+  /* Only the far field gets a badge: below 500m the dot on the ladder already
+     tells you where they are, and six stacked badges buried the HUD. Two at
+     most, the nearest one up the road and the nearest one back. */
+  let ahead = null, behind = null;
+  for(let i=0;i<marks.length;i++){
+    const m = marks[i];
+    /* gate on the number the badge will actually print, so a badge that says
+       500m is a badge that is shown */
+    if(!m.off || Math.round(Math.abs(m.gap)) < PIP_FAR) continue;
+    if(m.gap > 0){ if(!ahead  || m.gap < ahead.gap)  ahead  = m; }
+    else         { if(!behind || m.gap > behind.gap) behind = m; }
+  }
+  const badges = [];
+  if(ahead)  badges.push(ahead);
+  if(behind) badges.push(behind);
+  badges.sort(function(a, b){ return a.y - b.y; });
+
+  /* keep the pair off each other, then off the bottom of the screen */
   let last = -1e9;
   for(let i=0;i<badges.length;i++){
     badges[i].by = Math.max(badges[i].y, last + 28);
@@ -4526,11 +4499,14 @@ function drawLadder(){
   }
 }
 
-/* the distance badge, parked to the left of its dot */
+/* The distance badge, parked to the left of its dot. Every badge shown is now
+   a far one, so it carries the double chevron for direction and the distance
+   itself - past 500m the dot is pinned at the end of the ladder and no longer
+   tells you anything. */
 function drawGapBadge(m, g){
   const gap = Math.abs(Math.round(m.gap));
-  const far = gap >= PIP_FAR;
-  const w = far ? 30 : 58;
+  const label = gap >= 1000 ? (gap/1000).toFixed(1).replace(/\.0$/, "") + "km" : gap + "m";
+  const w = 62;
   const right = g.x - 13;
   const x = right - w/2;
   const y = m.by;
@@ -4547,16 +4523,13 @@ function drawGapBadge(m, g){
     else       { ctx.moveTo(cx - 4.5, cy - 3); ctx.lineTo(cx, cy + 3); ctx.lineTo(cx + 4.5, cy - 3); }
     ctx.stroke();
   };
-  if(far){
-    chevron(x, y + (m.above ? 3.5 : -3.5));
-    chevron(x, y + (m.above ? -3.5 : 3.5));
-  } else {
-    chevron(x - 18, y);
-    ctx.fillStyle = c;
-    ctx.font = "600 11px ui-monospace, Menlo, Consolas, monospace";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(gap + "m", x + 5, y + 0.5);
-  }
+  chevron(x - 19, y + (m.above ? 3.5 : -3.5));       /* two, stacked the way they are going */
+  chevron(x - 19, y + (m.above ? -3.5 : 3.5));
+
+  ctx.fillStyle = c;
+  ctx.font = "600 11px ui-monospace, Menlo, Consolas, monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(label, x + 7, y + 0.5);
   ctx.restore();
 }
 
@@ -5037,7 +5010,6 @@ function paintHUD(force){
   const up = $("#ultPct");
   up.textContent = Math.round(G.ult*100) + "%";
   up.classList.toggle("ready", G.ult >= 1 && !G.ultOn);   /* the square handles the colour */
-  up.classList.toggle("gain", G.dodgeFlash > 0);
 }
 
 /* ---------------- loop ------------------------------------------- */
@@ -5056,6 +5028,12 @@ function loopStop(){ if(raf){ cancelAnimationFrame(raf); raf = 0; } }
 document.addEventListener("visibilitychange", function(){
   if(document.hidden && G.state === "running") pause(true);
 });
+
+/* Last thing at boot: every constant and model is defined by now, so the
+   select-screen art can safely be painted from CARS and drawCar. */
+paintCarIcons();
+requestAnimationFrame(paintCarIcons);          /* again once fonts and layout settle */
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(paintCarIcons);
 
 })();
 </script>
