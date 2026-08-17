@@ -264,6 +264,8 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 .mode-name{font-family:var(--display);font-variation-settings:'wdth' 118,'wght' 750;text-transform:uppercase;font-size:18px;letter-spacing:.04em;color:var(--black)}
 .mode-desc{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
 .soon{margin:14px 2px 0;font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono);letter-spacing:.06em}
+.sect{margin:0 2px 4px;font-size:13px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.lede{margin:0 2px 12px;font-size:13px;line-height:1.45;color:var(--muted)}
 
 .car-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
 .car-opt{
@@ -673,8 +675,8 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
       <button class="tab on" id="tabCars" data-i18n="tabCars">Cars</button>
       <button class="tab" id="tabTracks" data-i18n="tabTracks">Tracks
 traps</button>
-      <button class="tab" id="tabItems" data-i18n="tabItems">Bubble
-items</button>
+      <button class="tab" id="tabItems" data-i18n="tabItems">Mystery
+bubbles</button>
       <button class="tab" id="tabEffects" data-i18n="tabEffects">Effects</button>
     </div>
     <div id="garageBody"></div>
@@ -895,7 +897,7 @@ const STR = {
   kindTrack:    {en:"Track",       fr:"Piste"},
   kindTrap:     {en:"Trap",        fr:"Pi\u00e8ge"},
   tabTracks:    {en:"Tracks\ntraps",               fr:"Pistes\npi\u00e8ges"},
-  tabItems:     {en:"Bubble\nitems",              fr:"Objets\nbulle"},
+  tabItems:     {en:"Mystery\nbubbles",             fr:"Bulles\nmyst\u00e8re"},
   tabEffects:   {en:"Effects",                     fr:"Effets"},
   byLine:       {en:"a game by hiyroscript",       fr:"un jeu de hiyroscript"},
   cityInfo:     {en:"Dark asphalt between pale rooftops, water tanks and helipads. White lane dashes, crosswalks and red hydrants along the kerb.",
@@ -924,14 +926,14 @@ const STR = {
   orderedInfo:  {en:"Siren has ordered you aside. Your controls are gone.", fr:"Siren vous somme de d\u00e9gager. Vos commandes sont coup\u00e9es."},
   cleansedInfo: {en:"A one-off wipe of slowed, cluttered and shocked.", fr:"Efface d'un coup ralenti, encombr\u00e9 et \u00e9lectrocut\u00e9."},
   itemCan:      {en:"Boost can",   fr:"Bidon de boost"},
-  itemCanInfo:  {en:"Common. A short burst of extra speed that does not touch your boost meter.",
-                 fr:"Commun. Une courte acc\u00e9l\u00e9ration sans toucher \u00e0 votre jauge de boost."},
+  itemCanInfo:  {en:"A short burst of extra speed that does not touch your boost meter.",
+                 fr:"Une courte acc\u00e9l\u00e9ration sans toucher \u00e0 votre jauge de boost."},
   itemOil:      {en:"Oily oil",    fr:"Huile"},
-  itemOilInfo:  {en:"Rare. Drops a slick behind you that lasts fifteen seconds. The first racer to touch it loses all grip, and takes the slick with them.",
-                 fr:"Rare. Laisse une flaque d'huile qui dure quinze secondes. Le premier qui la touche perd toute adh\u00e9rence et emporte la flaque avec lui."},
+  itemOilInfo:  {en:"Drops a slick behind you that lasts fifteen seconds. The first racer to touch it loses all grip, and takes the slick with them.",
+                 fr:"Laisse une flaque d'huile qui dure quinze secondes. Le premier qui la touche perd toute adh\u00e9rence et emporte la flaque avec lui."},
   itemSeeker:   {en:"Seeker",      fr:"Traqueur"},
-  itemSeekerInfo:{en:"Legendary. A missile that hunts the leader, destroying whatever it passes through.",
-                 fr:"L\u00e9gendaire. Un missile qui traque le premier et d\u00e9truit tout sur son passage."},
+  itemSeekerInfo:{en:"A missile that hunts the leader, destroying whatever it passes through.",
+                 fr:"Un missile qui traque le premier et d\u00e9truit tout sur son passage."},
   bubbleName:   {en:"Mystery bubble", fr:"Bulle myst\u00e8re"},
   bubbleInfo:   {en:"Three drift across the road together. Touch one for a random item; only one per row, and a new one replaces what you hold.",
                  fr:"Trois d\u00e9rivent ensemble. Touchez-en une pour un objet al\u00e9atoire ; une seule par rang\u00e9e, et la suivante remplace la pr\u00e9c\u00e9dente."},
@@ -939,8 +941,12 @@ const STR = {
   rarityRare:      {en:"Rare",      fr:"Rare"},
   rarityEpic:      {en:"Epic",      fr:"\u00c9pique"},
   rarityLegendary: {en:"Legendary", fr:"L\u00e9gendaire"},
-  oddsNote:     {en:"The seeker never drops for whoever is leading.",
-                 fr:"Le missile ne tombe jamais pour le leader."},
+  itemsHead:    {en:"Mystery bubble items",
+                 fr:"Objets des bulles myst\u00e8re"},
+  itemsLede:    {en:"What a mystery bubble can hand you, and how often.",
+                 fr:"Ce qu'une bulle myst\u00e8re peut vous donner, et \u00e0 quelle fr\u00e9quence."},
+  oddsNote:     {en:"The seeker never drops for whoever is leading. Out in front, its share goes to the other two.",
+                 fr:"Le traqueur ne tombe jamais pour le leader. En t\u00eate, sa part revient aux deux autres."},
   kindItem:     {en:"Item",        fr:"Objet"},
   kindBubble:   {en:"Pickup",      fr:"Bonus"},
   slipperyInfo: {en:"No grip: your steering is reversed. Left goes right and right goes left.",
@@ -952,7 +958,15 @@ const STR = {
 };
 let lang = store.get("redline.lang") || null;
 let curTrackKey = "trackCity";
-function t(k){ return STR[k][lang || "en"]; }
+function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+/* A missing string used to throw, which took down whatever screen asked for
+   it - one bad key blanked the whole bubble-items tab. Show the key instead:
+   visibly wrong beats invisibly gone. */
+function t(k){
+  const e = STR[k];
+  if(!e) return k;
+  return e[lang || "en"] || e.en || k;
+}
 
 function applyLang(){
   const L = lang || "en";
@@ -1123,6 +1137,8 @@ function buildGarage(){
     html += '<div class="info"><span class="kind pickup">' + t("kindBubble") + '</span>' +
             '<h3>' + t("bubbleName") + '</h3><p>' + t("bubbleInfo") + '</p></div>';
   } else if(garageTab === "items"){
+    html += '<h2 class="sect">' + t("itemsHead") + '</h2>' +
+            '<p class="lede">' + t("itemsLede") + '</p>';
     /* Odds are computed from the same table the game rolls against, so what is
        printed here can never drift from what actually drops. */
     let total = 0;
@@ -1134,7 +1150,7 @@ function buildGarage(){
       const pct = (r.weight/total*100).toFixed(1).replace(/\.0$/, "");
       html += '<div class="info">' +
               '<span class="kind item" style="background:' + r.col + ';color:#0B0B0C">' +
-              t("rarity" + ITEMS[id].rarity) + '</span>' +
+              t("rarity" + cap(ITEMS[id].rarity)) + '</span>' +
               '<span class="odds">' + pct + '%</span>' +
               '<h3>' + t(ITEMS[id].key) + '</h3>' +
               '<p>' + t(ITEMS[id].key + "Info") + '</p></div>';
