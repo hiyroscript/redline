@@ -927,8 +927,8 @@ const STR = {
   itemCanInfo:  {en:"Common. A short burst of extra speed that does not touch your boost meter.",
                  fr:"Commun. Une courte acc\u00e9l\u00e9ration sans toucher \u00e0 votre jauge de boost."},
   itemOil:      {en:"Oily oil",    fr:"Huile"},
-  itemOilInfo:  {en:"Rare. Drops a slick behind you. The first racer to touch it loses all grip.",
-                 fr:"Rare. Laisse une flaque d'huile. Le premier qui la touche perd toute adh\u00e9rence."},
+  itemOilInfo:  {en:"Rare. Drops a slick behind you that lasts fifteen seconds. The first racer to touch it loses all grip, and takes the slick with them.",
+                 fr:"Rare. Laisse une flaque d'huile qui dure quinze secondes. Le premier qui la touche perd toute adh\u00e9rence et emporte la flaque avec lui."},
   itemSeeker:   {en:"Seeker",      fr:"Traqueur"},
   itemSeekerInfo:{en:"Legendary. A missile that hunts the leader, destroying whatever it passes through.",
                  fr:"L\u00e9gendaire. Un missile qui traque le premier et d\u00e9truit tout sur son passage."},
@@ -1058,7 +1058,21 @@ const ITEMS = {
 const ITEM_IDS = ["can", "oil", "seeker"];
 const BUBBLE_GAP = [5400, 8600];          /* road distance between rows */
 const CAN_TIME = 2.2, CAN_SPEED = 1.55;   /* the boost can */
-const OIL_LIFE = 22, SLIP_TIME = 4;       /* the slick, and how long it costs you */
+/* The slick is live for fifteen seconds, then fades out harmlessly. Anything
+   it catches takes it with it there and then, so what you can see on the road
+   is always what can still catch you. */
+const OIL_LIFE = 15, OIL_FADE = 0.9, SLIP_TIME = 4;
+/* Four ways oil lands on tarmac, so no two drops read the same: a round pool,
+   a long smear laid down at speed, a scattered splatter, and a thin ribbon.
+   Each drop then gets its own seed on top, which jitters the outline, throws
+   the sheen off-centre and scatters the droplets - so even two pools differ.
+   jit is how ragged the edge is, spots is how many droplets get flung clear. */
+const SLICK_KINDS = [
+  { rx:[30, 39], ry:[23, 29], rot:0.14, jit:0.26, sheen:0.95, spots:[0, 2] },
+  { rx:[19, 25], ry:[34, 45], rot:0.10, jit:0.20, sheen:0.70, spots:[2, 5] },
+  { rx:[25, 32], ry:[21, 27], rot:0.30, jit:0.46, sheen:0.50, spots:[3, 6] },
+  { rx:[15, 20], ry:[30, 41], rot:0.34, jit:0.16, sheen:1.00, spots:[1, 3] }
+];
 const MISSILE_SPEED = 2100;
 /* the seeker is a big piece of hardware: longer than a car and wider across
    the fins, so it reads as a threat from the far end of the road */
@@ -2957,8 +2971,22 @@ function useItem(who){
     tone(320, .18, "square", .09);
     later(function(){ tone(560, .22, "square", .08); }, 110);
   } else if(id === "oil"){
-    G.slicks.push({ x:x, y:y + carH*0.75, r:rand(26, 34), s:Math.random(),
-                    life:OIL_LIFE, owner:me ? "me" : who });
+    const k = SLICK_KINDS[(Math.random()*SLICK_KINDS.length)|0];
+    const rx = rand(k.rx[0], k.rx[1]), ry = rand(k.ry[0], k.ry[1]);
+    const o = {
+      x:x, y:y + carH*0.42 + ry,
+      rx:rx, ry:ry, r:Math.max(rx, ry),
+      rot:rand(-k.rot, k.rot), jit:k.jit, sheen:k.sheen,
+      spots:Math.floor(rand(k.spots[0], k.spots[1] + 0.999)),
+      s:Math.random(), life:OIL_LIFE, fade:0, owner:me ? "me" : who
+    };
+    /* Back it off until the collision test itself says the car that dropped it
+       is clear. Rotation, the ragged edge and the shape all push the real reach
+       past ry, so ask the predicate rather than guess a margin - this stays
+       right even if the families are retuned later. */
+    const own = { x:x, y:y, hw:carW*0.40, hh:carH*0.42 };
+    for(let g=0; g<16 && slickHits(o, own); g++) o.y += 5;
+    G.slicks.push(o);
     tone(150, .25, "sawtooth", .07);
   } else if(id === "seeker"){
     fireSeeker(me ? "me" : who);
@@ -3104,31 +3132,96 @@ function seekerBoom(x, y){
   noise(.6, .5); tone(80, .45, "sawtooth", .16);
 }
 
-/* the slick sits there until somebody drives through it */
+/* The slick catches people for fifteen seconds and then stops being a threat,
+   fading out where it lies. A catch removes it on the spot - no fade, so there
+   is never a frame where a spent-looking slick is still live. */
 function updateSlicks(dt, d, st){
   const c = carHit();
   for(let i=G.slicks.length-1;i>=0;i--){
     const o = G.slicks[i];
-    o.y += d; o.life -= dt;
-    if(o.life <= 0 || o.y > H + 120){ G.slicks.splice(i,1); continue; }
-    if(st === "running" && !immuneMe() && G.finished === null){
-      const p = nearestOnCar(c, o.x, o.y);
-      const dx = p.x - o.x, dy = p.y - o.y;
-      if(dx*dx + dy*dy <= o.r*o.r){
-        G.slipT = SLIP_TIME; G.slicks.splice(i,1);
+    o.y += d;
+    if(o.y > H + 120){ G.slicks.splice(i,1); continue; }
+
+    if(o.fade > 0){                              /* spent: still visible, harmless */
+      o.fade -= dt;
+      if(o.fade <= 0) G.slicks.splice(i,1);
+      continue;
+    }
+    o.life -= dt;
+    if(o.life <= 0){ o.fade = OIL_FADE; continue; }
+
+    /* vapour goes straight over it - the same rule the traps use, and the one
+       the garage promises: Phantom passes through everything */
+    if(st === "running" && !immuneMe() && !ghosting("me") && G.finished === null){
+      if(slickHits(o, c)){
+        G.slipT = SLIP_TIME;
+        slickSplash(o); G.slicks.splice(i,1);
         noise(.2, .2); continue;
       }
     }
-    let hit = false;
     for(let n=0;n<G.rivals.length;n++){
       const R = G.rivals[n];
-      if(immuneCar(R)) continue;
+      if(immuneCar(R) || ghosting(R)) continue;
       const rc = { x:R.x, y:R.y, hw:carW*0.40, hh:carH*0.42 };
-      const p2 = nearestOnCar(rc, o.x, o.y);
-      const ex = p2.x - o.x, ey = p2.y - o.y;
-      if(ex*ex + ey*ey <= o.r*o.r){ R.slip = SLIP_TIME; hit = true; break; }
+      if(slickHits(o, rc)){
+        R.slip = SLIP_TIME;
+        slickSplash(o); G.slicks.splice(i,1);
+        break;
+      }
     }
-    if(hit) G.slicks.splice(i,1);
+  }
+}
+/* The outline read back as a number, so the edge you can see is the edge that
+   catches you - the same trick the puddles use. */
+function slickFactor(o, ang){
+  const n = 9;
+  const a = ((ang % 6.2832) + 6.2832) % 6.2832;
+  const f = a/6.2832*n, i0 = Math.floor(f) % n, i1 = (i0 + 1) % n, tt = f - Math.floor(f);
+  const j0 = 1 - o.jit + ((o.s*113.3 + i0*41.17) % 1)*o.jit*2;
+  const j1 = 1 - o.jit + ((o.s*113.3 + i1*41.17) % 1)*o.jit*2;
+  return lerp(j0, j1, tt)*0.95;
+}
+function slickPath(o, k){
+  const ca = Math.cos(o.rot), sa = Math.sin(o.rot);
+  const n = 30;
+  ctx.beginPath();
+  for(let i=0;i<=n;i++){
+    const a = i/n*6.2832;
+    const f = slickFactor(o, a)*k;
+    const px = Math.cos(a)*o.rx*f, py = Math.sin(a)*o.ry*f;
+    const x = o.x + px*ca - py*sa, y = o.y + px*sa + py*ca;
+    if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+/* Turn the car into the slick's frame, then squash that frame until the slick
+   is a unit circle - then the nearest-point test is exact against the ragged
+   outline rather than against a circle that never matched it. The rotated car
+   is taken as its bounding box, which is a shade generous at these angles. */
+function slickHits(o, box){
+  const ca = Math.cos(-o.rot), sa = Math.sin(-o.rot);
+  const dx = box.x - o.x, dy = box.y - o.y;
+  const lx = dx*ca - dy*sa, ly = dx*sa + dy*ca;
+  const hw = Math.abs(box.hw*ca) + Math.abs(box.hh*sa);
+  const hh = Math.abs(box.hw*sa) + Math.abs(box.hh*ca);
+  const sx = 1/o.rx, sy = 1/o.ry;
+  const cx = lx*sx, cy = ly*sy, bw = hw*sx, bh = hh*sy;
+  const nx = clamp(0, cx - bw, cx + bw);
+  const ny = clamp(0, cy - bh, cy + bh);
+  const d = Math.sqrt(nx*nx + ny*ny);
+  if(d === 0) return true;                       /* centre inside the car */
+  return d <= slickFactor(o, Math.atan2(ny, nx));
+}
+
+/* it leaves with whoever drove into it, so throw the oil up as it goes -
+   otherwise a slick vanishing in one frame just reads as a glitch */
+function slickSplash(o){
+  for(let i=0;i<14;i++){
+    const a = rand(0, 6.2832), sp = rand(40, 170);
+    addFx(o.x + Math.cos(a)*o.r*0.5, o.y + Math.sin(a)*o.r*0.35,
+          Math.cos(a)*sp, Math.sin(a)*sp*0.6 - rand(20, 90),
+          rand(.25, .5), rand(2, 4.5),
+          i % 3 === 0 ? "#7A5AA0" : "#14141C");
   }
 }
 
@@ -4641,14 +4734,42 @@ function drawBubbles(){
 function drawSlicks(){
   for(let i=0;i<G.slicks.length;i++){
     const o = G.slicks[i];
-    if(o.y < -60 || o.y > H + 60) continue;
+    if(o.y < -90 || o.y > H + 90) continue;
+    const a = o.fade > 0 ? clamp(o.fade/OIL_FADE, 0, 1) : 1;
     ctx.save();
-    ctx.globalAlpha = Math.min(1, o.life/2);
-    ctx.fillStyle = "rgba(10,10,14,0.86)";
-    blob(o.x, o.y, o.r, o.s);
-    ctx.globalAlpha = Math.min(1, o.life/2)*0.5;
-    ctx.fillStyle = "rgba(120,90,160,0.5)";
-    blob(o.x - o.r*0.2, o.y - o.r*0.15, o.r*0.5, o.s + 0.4);
+
+    /* body, then a darker pool inside it so the edge does not read flat */
+    ctx.globalAlpha = a;
+    slickPath(o, 1);
+    ctx.fillStyle = "rgba(10,10,14,0.86)"; ctx.fill();
+    slickPath(o, 0.6);
+    ctx.fillStyle = "rgba(3,3,6,0.7)"; ctx.fill();
+
+    /* the sheen, thrown off-centre by the seed and clipped to the outline */
+    const ga = o.s*6.2832;
+    const gx = o.x + Math.cos(ga)*o.rx*0.3, gy = o.y + Math.sin(ga)*o.ry*0.28;
+    const gr = Math.max(o.rx, o.ry)*0.95;
+    const gl = ctx.createRadialGradient(gx, gy, 1, gx, gy, gr);
+    gl.addColorStop(0,    "rgba(158,116,206," + (0.52*o.sheen).toFixed(3) + ")");
+    gl.addColorStop(0.45, "rgba(74,138,176,"  + (0.30*o.sheen).toFixed(3) + ")");
+    gl.addColorStop(1,    "rgba(120,90,160,0)");
+    ctx.globalAlpha = a*0.9;
+    slickPath(o, 0.96);
+    ctx.fillStyle = gl; ctx.fill();
+
+    /* droplets flung clear of the main body */
+    ctx.globalAlpha = a*0.82;
+    ctx.fillStyle = "rgba(10,10,14,0.82)";
+    for(let n=0;n<o.spots;n++){
+      const ang = ((o.s*53.7 + n*39.13) % 1)*6.2832;
+      const far = 1.18 + ((o.s*29.3 + n*17.71) % 1)*0.46;
+      const rr  = 1.7 + ((o.s*71.9 + n*23.3) % 1)*3.2;
+      const px = Math.cos(ang)*o.rx*far, py = Math.sin(ang)*o.ry*far;
+      const ca = Math.cos(o.rot), sa2 = Math.sin(o.rot);
+      ctx.beginPath();
+      ctx.arc(o.x + px*ca - py*sa2, o.y + px*sa2 + py*ca, rr, 0, 6.2832);
+      ctx.fill();
+    }
     ctx.globalAlpha = 1;
     ctx.restore();
   }
