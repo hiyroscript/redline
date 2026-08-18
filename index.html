@@ -4726,11 +4726,12 @@ function raceSpan(){
   return { from:0, to:G.meters + secs*pace + FINISH_STRETCH };
 }
 
-/* Where a racer sits on the line. With a finish to run to the line is the whole
-   race: the foot of it is the start, the head of it is the flag, and a dot
-   halfway up is halfway home. With no finish - endless - it falls back to the
-   old rolling window, you in the middle and the field measured against you.
-   The line itself is drawn exactly where it always was either way. */
+/* Where a racer sits on the line. The line is the whole race, so a dot is placed
+   by how far down the race that racer is: the foot of it is the standing start,
+   the head of it is the finish, and a dot halfway up is halfway home. The dots
+   and the fill behind them are the one scale, read off the same numbers. Endless
+   has no finish to measure against, so it falls back to the old rolling window,
+   you in the middle and the field measured against you. */
 function ladderY(m, g, span){
   if(!span) return g.cy - clamp((m - G.meters)/PIP_FAR, -1, 1)*g.half;
   const p = clamp((m - span.from)/Math.max(1, span.to - span.from), 0, 1);
@@ -4742,8 +4743,22 @@ function drawLadder(){
   const g = ladderGeom();
 
   ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2; ctx.lineCap = "round";
-  ctx.beginPath(); ctx.moveTo(g.x, g.cy - g.half); ctx.lineTo(g.x, g.cy + g.half); ctx.stroke();
+  ctx.lineWidth = 2; ctx.lineCap = "round";
+  /* The line is the whole race: its foot is the standing start, its head is the
+     finish. It is drawn between exactly the same two points it always was - what
+     changed is that the stretch you have already covered is lit and the road
+     still to come is left dim, so how far up the lit part reaches is how far
+     through the race you are. Endless has no finish to measure against, so it
+     keeps the plain even line. */
+  const span = raceSpan();
+  const foot = g.cy + g.half, head = g.cy - g.half;
+  ctx.strokeStyle = span ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.5)";
+  ctx.beginPath(); ctx.moveTo(g.x, head); ctx.lineTo(g.x, foot); ctx.stroke();
+  if(span){
+    const p = clamp((G.meters - span.from)/Math.max(1, span.to - span.from), 0, 1);
+    ctx.strokeStyle = "rgba(255,255,255,0.72)";
+    ctx.beginPath(); ctx.moveTo(g.x, foot); ctx.lineTo(g.x, foot - p*g.half*2); ctx.stroke();
+  }
   ctx.strokeStyle = "rgba(255,255,255,0.85)";
   [-1, 1].forEach(function(s2){
     ctx.beginPath();
@@ -4756,7 +4771,6 @@ function drawLadder(){
 
   /* every rival, plus you - placed by how far down the race they are, not by
      how far off you they are, so you climb the line as you close on the flag */
-  const span = raceSpan();
   const marks = [];
   for(let i=0;i<G.rivals.length;i++){
     const R = G.rivals[i];
@@ -4970,44 +4984,83 @@ function drawBubbles(){
   }
 }
 
+/* Tarmac is near enough black on all three tracks - city 16171B, space 0D0D15 -
+   and the slick used to be painted black on top of it, so there was barely a
+   pixel of difference to see. It is lit rather than darkened now: the body stays
+   dark, but a full oil-film rainbow and a bright wet edge do the reading, and
+   light on dark works whatever the road under it is doing. The rim is stroked on
+   the k=1 outline, which is the same curve slickHits tests, so the bright line
+   you swerve around is exactly the line that catches you. */
 function drawSlicks(){
   for(let i=0;i<G.slicks.length;i++){
     const o = G.slicks[i];
     if(o.y < -90 || o.y > H + 90) continue;
     const a = o.fade > 0 ? clamp(o.fade/OIL_FADE, 0, 1) : 1;
+    /* a slow flare across the film, run off the slick's own clock and seed so
+       no two pools shimmer together. It parks once the slick is spent, which is
+       fine - by then the whole thing is fading out anyway. */
+    const shim = 0.85 + 0.15*Math.sin(o.life*3.1 + o.s*6.2832);
     ctx.save();
+
+    /* a soft shadow just proud of the pool, so the bright edge has something to
+       sit against and the pale desert road still separates from it */
+    ctx.globalAlpha = a*0.45;
+    slickPath(o, 1.1);
+    ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fill();
 
     /* body, then a darker pool inside it so the edge does not read flat */
     ctx.globalAlpha = a;
     slickPath(o, 1);
-    ctx.fillStyle = "rgba(10,10,14,0.86)"; ctx.fill();
+    ctx.fillStyle = "rgba(12,12,17,0.94)"; ctx.fill();
     slickPath(o, 0.6);
-    ctx.fillStyle = "rgba(3,3,6,0.7)"; ctx.fill();
+    ctx.fillStyle = "rgba(3,3,6,0.72)"; ctx.fill();
 
-    /* the sheen, thrown off-centre by the seed and clipped to the outline */
+    /* the film: oil on wet tarmac throws a whole rainbow, violet through cyan
+       and green into gold. This is the layer that actually carries the slick on
+       a black road, so it is worth the extra stops. Thrown off-centre by the
+       seed and clipped to the outline. */
     const ga = o.s*6.2832;
     const gx = o.x + Math.cos(ga)*o.rx*0.3, gy = o.y + Math.sin(ga)*o.ry*0.28;
-    const gr = Math.max(o.rx, o.ry)*0.95;
+    const gr = Math.max(o.rx, o.ry)*1.02;
+    const sh = o.sheen*shim;
     const gl = ctx.createRadialGradient(gx, gy, 1, gx, gy, gr);
-    gl.addColorStop(0,    "rgba(158,116,206," + (0.52*o.sheen).toFixed(3) + ")");
-    gl.addColorStop(0.45, "rgba(74,138,176,"  + (0.30*o.sheen).toFixed(3) + ")");
-    gl.addColorStop(1,    "rgba(120,90,160,0)");
-    ctx.globalAlpha = a*0.9;
-    slickPath(o, 0.96);
+    gl.addColorStop(0,    "rgba(232,186,255," + (0.66*sh).toFixed(3) + ")");
+    gl.addColorStop(0.26, "rgba(126,192,255," + (0.54*sh).toFixed(3) + ")");
+    gl.addColorStop(0.50, "rgba(112,236,192," + (0.42*sh).toFixed(3) + ")");
+    gl.addColorStop(0.74, "rgba(244,206,116," + (0.32*sh).toFixed(3) + ")");
+    gl.addColorStop(1,    "rgba(150,110,190,0)");
+    slickPath(o, 0.98);
     ctx.fillStyle = gl; ctx.fill();
 
-    /* droplets flung clear of the main body */
-    ctx.globalAlpha = a*0.82;
-    ctx.fillStyle = "rgba(10,10,14,0.82)";
+    /* the wet edge, right on the outline - what you catch out of the corner of
+       your eye at racing speed, and a fainter one inside it for depth */
+    ctx.lineJoin = "round";
+    ctx.globalAlpha = a*0.72*shim;
+    slickPath(o, 1);
+    ctx.strokeStyle = "rgba(206,222,255,0.9)"; ctx.lineWidth = 1.8;
+    ctx.stroke();
+    ctx.globalAlpha = a*0.3;
+    slickPath(o, 0.78);
+    ctx.strokeStyle = "rgba(180,214,255,0.7)"; ctx.lineWidth = 1.1;
+    ctx.stroke();
+
+    /* droplets flung clear of the main body. The highlight is a crescent on the
+       lit side, not a ring all the way round - a full outline at this size read
+       as a little hollow bubble rather than a spot of oil. */
     for(let n=0;n<o.spots;n++){
       const ang = ((o.s*53.7 + n*39.13) % 1)*6.2832;
-      const far = 1.18 + ((o.s*29.3 + n*17.71) % 1)*0.46;
+      const far = 1.2 + ((o.s*29.3 + n*17.71) % 1)*0.46;
       const rr  = 1.7 + ((o.s*71.9 + n*23.3) % 1)*3.2;
       const px = Math.cos(ang)*o.rx*far, py = Math.sin(ang)*o.ry*far;
       const ca = Math.cos(o.rot), sa2 = Math.sin(o.rot);
-      ctx.beginPath();
-      ctx.arc(o.x + px*ca - py*sa2, o.y + px*sa2 + py*ca, rr, 0, 6.2832);
-      ctx.fill();
+      const dx = o.x + px*ca - py*sa2, dy = o.y + px*sa2 + py*ca;
+      ctx.globalAlpha = a*0.85;
+      ctx.beginPath(); ctx.arc(dx, dy, rr, 0, 6.2832);
+      ctx.fillStyle = "rgba(16,15,22,0.9)"; ctx.fill();
+      ctx.globalAlpha = a*0.7*shim;
+      ctx.beginPath(); ctx.arc(dx, dy, rr*0.86, ga - 1.15, ga + 1.15);
+      ctx.strokeStyle = "rgba(198,216,255,0.9)"; ctx.lineWidth = 1.1;
+      ctx.lineCap = "round"; ctx.stroke();
     }
     ctx.globalAlpha = 1;
     ctx.restore();
