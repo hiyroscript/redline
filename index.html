@@ -1094,6 +1094,13 @@ const MISSILE_LEN  = 1.45;                /* nose to tail, in car heights */
 const MISSILE_BODY = 0.55;                /* body half width, in car widths */
 const MISSILE_FIN  = 0.92;                /* fin reach from centre, in car widths */
 const BUBBLE_R = 21;
+/* A row does not sit there forever. It flashes and goes on whichever comes
+   first: ten seconds on the road, or the last stretch before it drops off the
+   bottom. Both matter, because at racing speed a row crosses the screen in
+   about two seconds and would never see ten - the clock is what clears rows
+   when the road is barely moving, and the run-off is what warns you that one
+   is about to be lost. Either way you get the same flash. */
+const BUBBLE_LIFE = 10, BUBBLE_BLINK = 1.6;
 
 const PIP_FAR = 500;                      /* an off-screen racer only gets an arrow past this */
 const SHOCK_TIME = 10;                    /* Bolt: how long a hit car is pinned */
@@ -2909,7 +2916,7 @@ function leaderOf(who){
 }
 
 function spawnBubbleRow(){
-  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random() });
+  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random(), life:BUBBLE_LIFE, blink:0, ph:0, doomed:false });
 }
 
 function updateBubbles(dt, d, st){
@@ -2926,6 +2933,35 @@ function updateBubbles(dt, d, st){
     row.y += d;
     if(row.y > H + 120){ G.boxes.splice(i,1); continue; }
     if(row.gone === 7){ G.boxes.splice(i,1); continue; }   /* all three collected */
+
+    /* Run the clock down, then flash, then drop it. Only while the race is
+       actually live, so a row does not quietly expire behind a pause screen
+       or during the run-out after the flag. A flashing bubble still counts:
+       it is on the road until it is gone, so taking one is never a gamble on
+       which half of the blink you arrived in. */
+    if(st === "running" && G.finished === null){
+      if(row.doomed){
+        /* the clock ran out: flash it down and take it away */
+        row.blink -= dt;
+        row.ph += dt*(10 + 22*(1 - clamp(row.blink/BUBBLE_BLINK, 0, 1)));
+        if(row.blink <= 0){ G.boxes.splice(i,1); continue; }
+      } else {
+        row.life -= dt;
+        if(row.life <= 0){ row.doomed = true; row.blink = BUBBLE_BLINK; }
+        else {
+          /* Otherwise flash only as a warning that the road is about to take
+             it. Worked out fresh each frame from where it is and how fast the
+             road is running, so easing off the throttle puts the bubble back
+             to solid instead of losing it - a warning must never be the thing
+             that removes something you could still have reached. */
+          const speed = dt > 0 ? d/dt : 0;
+          const leaveIn = speed > 1 ? (H + 120 - row.y)/speed : 1e9;
+          row.blink = leaveIn <= BUBBLE_BLINK ? leaveIn : 0;
+          if(row.blink > 0)
+            row.ph += dt*(10 + 22*(1 - clamp(row.blink/BUBBLE_BLINK, 0, 1)));
+        }
+      }
+    }
     for(let l=0;l<3;l++){
       if(row.gone & (1 << l)) continue;                     /* this one is already gone */
       const bx = laneCX(l), by = row.y + Math.sin(G.scroll*0.01 + l*2 + row.s*6)*6;
@@ -4685,6 +4721,14 @@ function paintItemBox(){
   if(box._shown !== want){ box._shown = want; icon.innerHTML = id ? ITEM_ICON[id] : ""; }
 }
 
+/* the flash on the way out, quickening as the last of it runs down */
+function bubbleFlash(row){
+  return row.blink > 0 && Math.sin(row.ph) <= -0.2 ? 0.14 : 1;
+}
+/* and it draws itself in a little as it goes */
+function bubbleShrink(row){
+  return row.blink > 0 ? 1 - (1 - clamp(row.blink/BUBBLE_BLINK, 0, 1))*0.18 : 1;
+}
 function drawBubbles(){
   for(let n=0;n<G.boxes.length;n++){
     const row = G.boxes[n];
@@ -4694,11 +4738,11 @@ function drawBubbles(){
       const x = laneCX(l);
       const t = G.scroll*0.01 + l*2 + row.s*6;
       const y = row.y + Math.sin(t)*7;
-      const r = BUBBLE_R*(1 + Math.sin(t*1.3)*0.045);     /* it breathes as it drifts */
+      const r = BUBBLE_R*(1 + Math.sin(t*1.3)*0.045)*bubbleShrink(row);  /* breathes, then shrinks away */
       const spent = (row.taken & 1) !== 0;                /* you already took one here */
 
       ctx.save();
-      ctx.globalAlpha = spent ? 0.3 : 1;
+      ctx.globalAlpha = (spent ? 0.3 : 1)*bubbleFlash(row);
 
       const glow = ctx.createRadialGradient(x, y, r*0.6, x, y, r*1.6);
       glow.addColorStop(0, "rgba(180,225,255,0.30)");
