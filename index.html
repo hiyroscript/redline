@@ -478,12 +478,19 @@ body.desk .keys{display:flex}
 .key{font-family:var(--mono);font-size:11px;color:var(--icon);background:var(--gray-050);border:1.5px solid var(--gray-300);border-bottom-width:3px;border-radius:6px;padding:5px 8px;min-width:26px;text-align:center}
 .keys .lbl{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:.06em}
 
-/* On a computer the race runs across the screen instead of down it. */
+/* On a computer the shell keeps the size it has always had, then the whole
+   thing is scaled up to fill the window. Nothing is rotated and nothing is
+   re-laid-out - the road still runs up the screen and every screen keeps its
+   proportions exactly. It only ever grows: --desk-k is floored at 1, so a
+   laptop that already filled its height is left alone, and a tall monitor
+   that used to stop at 900px now goes all the way. */
 body.desk #shell{
   width:min(520px, calc(100dvh * 0.62));
   height:min(100dvh, 900px);
   max-width:none;
   border-radius:18px;
+  transform:scale(var(--desk-k, 1));
+  transform-origin:center center;
 }
 body.desk{display:flex;align-items:center;justify-content:center}
 body.desk .topbar,body.desk .home-head,body.desk .home-foot{width:100%}
@@ -1286,6 +1293,7 @@ if(SPLASH_IMAGE){
 const DESKTOP = !!(window.matchMedia && window.matchMedia("(hover:hover) and (pointer:fine)").matches);
 const LANDSCAPE = false;   /* the road always runs up the screen */
 if(DESKTOP) document.body.classList.add("desk");
+deskFit();
 applyLang();
 paintBest();
 setSound(soundOn);
@@ -1396,10 +1404,33 @@ function layout(){
 }
 function laneCX(i){ return roadX + laneW*(i+0.5); }
 
+/* How much bigger the desktop shell can be drawn than it is laid out. Measured
+   from the shell's own layout box, which a transform does not affect, so there
+   is no feedback loop. Floored at 1 - this only ever makes things larger. */
+function deskFit(){
+  const root = document.documentElement;
+  if(!document.body.classList.contains("desk")){
+    root.style.setProperty("--desk-k", "1");
+    return 1;
+  }
+  const sh = $("#shell");
+  const w = sh.clientWidth, h = sh.clientHeight;
+  if(w < 2 || h < 2) return 1;
+  const k = clamp(Math.min(window.innerWidth/w, window.innerHeight/h), 1, 3);
+  root.style.setProperty("--desk-k", k.toFixed(4));
+  return k;
+}
+
 function resize(){
+  const k = deskFit();
+  /* The rect includes the desktop scale, so divide it back out: the game keeps
+     thinking in the same design coordinates it always has, and every cap in
+     layout() still means exactly what it meant. The backing store is then sized
+     from the on-screen rect, so blowing the shell up stays crisp - cw*DPR comes
+     out at r.width*devicePixelRatio either way. */
   const r = cv.getBoundingClientRect();
-  const cw = Math.max(1, r.width), ch = Math.max(1, r.height);
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const cw = Math.max(1, r.width/k), ch = Math.max(1, r.height/k);
+  DPR = Math.min(Math.min(window.devicePixelRatio || 1, 2)*k, 3);
   cv.width = Math.round(cw*DPR); cv.height = Math.round(ch*DPR);
   {
     W = cw; H = ch;
@@ -1408,6 +1439,7 @@ function resize(){
   layout();
 }
 window.addEventListener("resize", function(){
+  deskFit();                                   /* every screen, not just the race */
   if($("#race").classList.contains("on")) resize();
   paintCarIcons();
 });
@@ -5244,10 +5276,13 @@ document.addEventListener("visibilitychange", function(){
 });
 
 /* Last thing at boot: every constant and model is defined by now, so the
-   select-screen art can safely be painted from CARS and drawCar. */
-paintCarIcons();
-requestAnimationFrame(paintCarIcons);          /* again once fonts and layout settle */
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(paintCarIcons);
+   select-screen art can safely be painted from CARS and drawCar, and the shell
+   can be measured for the desktop scale. Both are repeated once layout has
+   settled, in case the first read landed before the stylesheet applied. */
+function settle(){ deskFit(); paintCarIcons(); }
+settle();
+requestAnimationFrame(settle);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(settle);
 
 })();
 </script>
