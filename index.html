@@ -321,20 +321,53 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 #raceClock.on{display:block}
 #raceClock.final{color:var(--red)}
 #ultPct{
+  position:relative;overflow:hidden;
   display:inline-flex;align-items:center;justify-content:center;
   margin-top:9px;width:46px;height:46px;box-sizing:border-box;
   border-radius:var(--r-sm);border:2px solid rgba(255,255,255,.28);
   background:rgba(11,11,12,.62);
   font-family:var(--mono);font-weight:600;font-size:15px;
   color:rgba(255,255,255,.78);text-shadow:0 1px 6px rgba(0,0,0,.85);
-  transition:background .18s ease,border-color .18s ease,color .18s ease;
+  transition:border-color .18s ease,color .18s ease,box-shadow .18s ease;
 }
-/* charged: the square itself goes light red, the number white */
+/* Charged: the face stays dark - the outline carries it. White border with a
+   light red ring just outside, so the edge reads as both colours at once, and
+   a red light plays over the square: an inset glow that breathes, an outer
+   bloom, and a shine crossing the face. Every resting value lives on .ready
+   itself rather than in the keyframes, so with reduced motion the square still
+   looks charged, it just stops moving. */
 #ultPct.ready{
-  background:var(--red-press);border-color:#fff;color:#fff;text-shadow:none;
-  animation:ultPulse 1.05s ease-in-out infinite;
+  border-color:#fff;color:#fff;
+  text-shadow:0 0 7px rgba(255,122,127,.9);
+  box-shadow:
+    0 0 0 2px var(--red-press),
+    0 0 13px 2px rgba(226,27,34,.55),
+    inset 0 0 13px 2px rgba(255,60,66,.45);
+  animation:ultGlow 1.15s ease-in-out infinite;
 }
-@keyframes ultPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,127,.55)}50%{box-shadow:0 0 0 7px rgba(255,122,127,0)}}
+/* the light sweeping across it */
+#ultPct.ready::after{
+  content:"";position:absolute;top:-60%;left:-140%;
+  width:52%;height:220%;transform:rotate(20deg);pointer-events:none;
+  background:linear-gradient(90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,150,155,.5) 42%,
+    rgba(255,255,255,.85) 52%,
+    rgba(255,190,193,.45) 62%,
+    rgba(255,255,255,0) 100%);
+  animation:ultShine 2.4s ease-in-out infinite;
+}
+@keyframes ultGlow{
+  0%,100%{box-shadow:
+    0 0 0 2px var(--red-press),
+    0 0 12px 2px rgba(226,27,34,.5),
+    inset 0 0 12px 2px rgba(255,60,66,.4)}
+  50%    {box-shadow:
+    0 0 0 3px var(--red-press),
+    0 0 26px 7px rgba(226,27,34,.85),
+    inset 0 0 20px 5px rgba(255,60,66,.7)}
+}
+@keyframes ultShine{0%{left:-140%}60%,100%{left:150%}}
 
 /* ============================================================
    5. Race
