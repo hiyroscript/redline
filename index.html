@@ -1199,12 +1199,19 @@ const MISSILE_BODY = 0.55;                /* body half width, in car widths */
 const MISSILE_FIN  = 0.92;                /* fin reach from centre, in car widths */
 const BUBBLE_R = 21;
 /* A row does not sit there forever. It flashes and goes on whichever comes
-   first: ten seconds on the road, or the last stretch before it drops off the
-   bottom. Both matter, because at racing speed a row crosses the screen in
-   about two seconds and would never see ten - the clock is what clears rows
-   when the road is barely moving, and the run-off is what warns you that one
-   is about to be lost. Either way you get the same flash. */
-const BUBBLE_LIFE = 10, BUBBLE_BLINK = 1.6;
+   first: the clock below, or the last stretch before it drops off the bottom.
+   Both matter, because at racing speed a row crosses the screen in about two
+   seconds and never gets near the clock - the run-off is what warns you that
+   one is about to be lost at speed, and the clock is only what clears rows when
+   the road is barely moving. Either way you get the same flash.
+
+   So the clock is really a question about being stopped: how long should a row
+   wait for a driver who cannot reach it yet? Longer than the longest thing that
+   can hold you still. A stacked Bolt pin caps at SHOCK_MAX, twenty-five seconds,
+   and a freeze or a wreck is shorter than that, so thirty leaves you clear on
+   the worst of them with time in hand. At ten a maxed pin used to take the row
+   off the road while you sat there watching it. */
+const BUBBLE_LIFE = 30, BUBBLE_BLINK = 1.6;
 /* the pickup is drawn and caught at this radius, scaled with everything else */
 function bubbleR(){ return BUBBLE_R*SCENE; }
 
@@ -3064,8 +3071,37 @@ function leaderOf(who){
   return mine >= Math.max.apply(null, all) - 0.01;
 }
 
+/* Rivals live in screen space and are only pinned at 30000px, which is well over
+   two kilometres either way. A row planted at the top of your screen is about
+   fifty metres up the road and swept away twenty-four metres behind you, so the
+   whole bubble world was an eighty metre band strapped to your car: anyone
+   further ahead than that was already past the row before it existed and never
+   met a bubble in their life, and anyone dropped behind lost every row before it
+   reached them. The road has to be the same road for all six, so a row is now
+   planted the same distance ahead of whoever leads and kept until whoever trails
+   is through it. When you are the one in front both come out exactly where they
+   always did. */
+function fieldTopY(){
+  let y = playerY;
+  for(let i=0;i<G.rivals.length;i++){
+    const R = G.rivals[i];
+    if(R.finished === null && R.y < y) y = R.y;
+  }
+  return y;
+}
+function fieldBottomY(){
+  let y = playerY;
+  for(let i=0;i<G.rivals.length;i++){
+    const R = G.rivals[i];
+    if(R.finished === null && R.y > y) y = R.y;
+  }
+  return y;
+}
+function bubbleCullY(){ return fieldBottomY() + (H + 120 - playerY); }
+
 function spawnBubbleRow(){
-  G.boxes.push({ y:-90, taken:0, gone:0, s:Math.random(), life:BUBBLE_LIFE, blink:0, ph:0, doomed:false });
+  G.boxes.push({ y:fieldTopY() - playerY - 90, taken:0, gone:0, s:Math.random(),
+                 life:BUBBLE_LIFE, blink:0, ph:0, doomed:false });
 }
 
 function updateBubbles(dt, d, st){
@@ -3078,10 +3114,11 @@ function updateBubbles(dt, d, st){
   }
   const c = carHit();
   const br2 = bubbleR()*bubbleR();
+  const cull = bubbleCullY();
   for(let i=G.boxes.length-1;i>=0;i--){
     const row = G.boxes[i];
     row.y += d;
-    if(row.y > H + 120){ G.boxes.splice(i,1); continue; }
+    if(row.y > cull){ G.boxes.splice(i,1); continue; }
     if(row.gone === 7){ G.boxes.splice(i,1); continue; }   /* all three collected */
 
     /* Run the clock down, then flash, then drop it. Only while the race is
@@ -3096,7 +3133,16 @@ function updateBubbles(dt, d, st){
         row.ph += dt*(10 + 22*(1 - clamp(row.blink/BUBBLE_BLINK, 0, 1)));
         if(row.blink <= 0){ G.boxes.splice(i,1); continue; }
       } else {
-        row.life -= dt;
+        /* The clock is a stall-breaker now, nothing more: it only runs when the
+           road has all but stopped - frozen, pinned, wrecked - so a row cannot
+           hang about forever with nothing moving. While the race is actually
+           running a row lives until the back of the field is through it, however
+           far the field is strung out. Ageing it in transit was flashing rows
+           away mid-road: a leader half a kilometre up and a tail-ender half a
+           kilometre back is thirty-eight seconds of travel, and thirty seconds
+           of clock took the row off the road before the back half ever saw it. */
+        const roadSpeed = dt > 0 ? d/dt : 0;
+        if(roadSpeed < BASE_SPEED*0.15) row.life -= dt;
         if(row.life <= 0){ row.doomed = true; row.blink = BUBBLE_BLINK; }
         else {
           /* Otherwise flash only as a warning that the road is about to take
@@ -3104,8 +3150,7 @@ function updateBubbles(dt, d, st){
              road is running, so easing off the throttle puts the bubble back
              to solid instead of losing it - a warning must never be the thing
              that removes something you could still have reached. */
-          const speed = dt > 0 ? d/dt : 0;
-          const leaveIn = speed > 1 ? (H + 120 - row.y)/speed : 1e9;
+          const leaveIn = roadSpeed > 1 ? (cull - row.y)/roadSpeed : 1e9;
           row.blink = leaveIn <= BUBBLE_BLINK ? leaveIn : 0;
           if(row.blink > 0)
             row.ph += dt*(10 + 22*(1 - clamp(row.blink/BUBBLE_BLINK, 0, 1)));
