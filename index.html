@@ -4700,8 +4700,41 @@ function ladderGeom(){
   const half = clamp((bottom - top)/2, 60, 150);
   return { x:W - 30, cy:(top + bottom)/2, half:half };
 }
-function ladderY(gap, g){
-  return g.cy - clamp(gap/PIP_FAR, -1, 1)*g.half;   /* ahead is up, behind is down */
+/* How much road the whole race covers - the standing start at one end, the
+   finish line at the other. The flag is only planted on the last of the three
+   closing tracks, so until then the far end is a projection: the driving still
+   to come, at the pace this race has actually been run at, plus the run-in to
+   the line. It creeps rather than jumps, and it snaps to the true number the
+   moment the flag exists. Endless has no line to run to, so it gets no span. */
+function raceSpan(){
+  if(G.mode !== "bots") return null;
+  if(G.finishAt) return { from:0, to:G.finishAt };
+  const cruise = BASE_SPEED*0.075;                 /* metres a second at 1.00x */
+  const pace = G.raceT > 4 ? clamp(G.meters/G.raceT, cruise*0.5, cruise*3) : cruise;
+  let secs;
+  if(G.tracksLeft < 0){
+    /* Still on the clock. Run the track timer forward to the five minute mark
+       so the count picks up exactly where this branch leaves off - otherwise
+       the scale lurches the moment the closing tracks start counting. */
+    const mark = Math.max(0, RACE_MINUTES*60 - G.raceT);
+    const skip = Math.max(0, Math.ceil((mark - G.trackT)/TRACK_SECONDS));  /* switches before the mark */
+    const t2 = G.trackT + skip*TRACK_SECONDS - mark;   /* what the track timer reads at the mark */
+    secs = mark + t2 + (FINAL_TRACKS - 1)*TRACK_SECONDS;
+  } else {
+    secs = G.trackT + Math.max(0, G.tracksLeft - 1)*TRACK_SECONDS;
+  }
+  return { from:0, to:G.meters + secs*pace + FINISH_STRETCH };
+}
+
+/* Where a racer sits on the line. With a finish to run to the line is the whole
+   race: the foot of it is the start, the head of it is the flag, and a dot
+   halfway up is halfway home. With no finish - endless - it falls back to the
+   old rolling window, you in the middle and the field measured against you.
+   The line itself is drawn exactly where it always was either way. */
+function ladderY(m, g, span){
+  if(!span) return g.cy - clamp((m - G.meters)/PIP_FAR, -1, 1)*g.half;
+  const p = clamp((m - span.from)/Math.max(1, span.to - span.from), 0, 1);
+  return (g.cy + g.half) - p*g.half*2;             /* start at the foot, flag at the head */
 }
 
 function drawLadder(){
@@ -4717,21 +4750,23 @@ function drawLadder(){
     ctx.moveTo(g.x - 5, g.cy + s2*g.half); ctx.lineTo(g.x + 5, g.cy + s2*g.half);
     ctx.stroke();
   });
-  ctx.strokeStyle = "rgba(255,255,255,0.3)";      /* the notch level with you */
+  ctx.strokeStyle = "rgba(255,255,255,0.3)";      /* half distance (level with you in endless) */
   ctx.beginPath(); ctx.moveTo(g.x - 3, g.cy); ctx.lineTo(g.x + 3, g.cy); ctx.stroke();
   ctx.restore();
 
-  /* every rival, plus you */
+  /* every rival, plus you - placed by how far down the race they are, not by
+     how far off you they are, so you climb the line as you close on the flag */
+  const span = raceSpan();
   const marks = [];
   for(let i=0;i<G.rivals.length;i++){
     const R = G.rivals[i];
-    const gap = metersOf(R) - G.meters;
+    const rm = metersOf(R);
     marks.push({
-      col: pipColour(R.car), gap: gap, y: ladderY(gap, g),
+      col: pipColour(R.car), gap: rm - G.meters, y: ladderY(rm, g, span),
       off: R.y < -18 || R.y > H + 18, above: R.y < -18, me: false
     });
   }
-  marks.push({ col: pipColour(G.car), gap: 0, y: g.cy, off: false, me: true });
+  marks.push({ col: pipColour(G.car), gap: 0, y: ladderY(G.meters, g, span), off: false, me: true });
 
   /* Only the far field gets a badge: below 500m the dot on the ladder already
      tells you where they are, and six stacked badges buried the HUD. Two at
