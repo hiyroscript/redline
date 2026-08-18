@@ -320,16 +320,29 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 }
 #raceClock.on{display:block}
 #raceClock.final{color:var(--red)}
+/* The square is both the charge readout and the button that spends it. It has to
+   take its own taps, so it opts back into pointer events - the hud around it
+   stays transparent to them, which is what keeps a tap here off the road behind
+   it. Everything from appearance down is undoing what a browser does to a button
+   by default, so it still draws exactly as the readout always did. */
 #ultPct{
-  position:relative;overflow:hidden;pointer-events:none;
+  position:relative;overflow:hidden;pointer-events:auto;
   display:inline-flex;align-items:center;justify-content:center;
   width:54px;height:54px;box-sizing:border-box;flex:0 0 auto;
+  appearance:none;-webkit-appearance:none;padding:0;margin:0;
+  cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
   border-radius:var(--r-sm);border:2px solid rgba(255,255,255,.28);
   background:rgba(11,11,12,.62);
   font-family:var(--mono);font-weight:600;font-size:15px;
   color:rgba(255,255,255,.78);text-shadow:0 1px 6px rgba(0,0,0,.85);
-  transition:border-color .18s ease,color .18s ease,box-shadow .18s ease;
+  transition:border-color .18s ease,color .18s ease,box-shadow .18s ease,transform .09s ease;
 }
+#ultPct::-moz-focus-inner{border:0;padding:0}
+#ultPct:focus{outline:none}
+#ultPct:focus-visible{outline:2px solid #fff;outline-offset:3px}
+/* the press, same as the item box next to it */
+#ultPct:active{transform:scale(.92)}
 /* Charged: the face stays dark - the outline carries it. White border with a
    light red ring just outside, so the edge reads as both colours at once, and
    a red light plays over the square: an inset glow that breathes, an outer
@@ -797,7 +810,7 @@ bubbles</button>
       <div id="immuneTag"></div>
       <div id="cleanseTag"></div>
       <div id="hudActions">
-        <span id="ultPct">0%</span>
+        <button id="ultPct" aria-label="Use ultimate">0%</button>
         <button id="itemBox" aria-label="Use item"><span id="itemIcon"></span></button>
       </div>
       <div id="boostWrap"><div id="boostFill"></div></div>
@@ -1404,6 +1417,16 @@ $("#tabItems").addEventListener("click", function(){ garageTab = "items"; setTab
 $("#tabEffects").addEventListener("click", function(){ garageTab = "effects"; setTab(); });
 $("#carRandom").addEventListener("click", function(){ pickCar(CAR_IDS[randi(0, CAR_IDS.length-1)]); });
 $("#itemBox").addEventListener("click", function(e){ if(e && e.stopPropagation) e.stopPropagation(); useItem("me"); });
+/* Tap the charge square to spend it. fireUlt does all the gating - not running,
+   wrecked, pinned, already finished, not charged yet - so a tap that cannot fire
+   simply does nothing, and the press animation is what says the tap landed.
+   Blurred straight after, or the square keeps keyboard focus and a later Enter
+   would set the ultimate off from across the road. */
+$("#ultPct").addEventListener("click", function(e){
+  if(e && e.stopPropagation) e.stopPropagation();
+  if(this.blur) this.blur();
+  fireUlt();
+});
 $("#btnPause").addEventListener("click", function(){ pause(true); });
 $("#btnResume").addEventListener("click", function(){ pause(false); });
 $("#btnQuit").addEventListener("click", function(){ leave(); });
