@@ -1518,7 +1518,7 @@ const G = {
   traps:[], fx:[], trapGap:0, nextTrap:600,
   tier:0, speedT:30, blind:0, blindPts:[], dead:0, immune:0, slowT:0,
   car:"redd", ult:0, ultOn:false, ultKey:false, ultArmed:true,
-  boostLock:false, rivals:[], stepFlash:0, parkWait:0,
+  boostLock:false, rivals:[], stepFlash:0, parkWait:0, parkRot:0,
   cdT:0, cdStep:-1, wasCounting:false,
   mode:"endless", diff:"medium",
   orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
@@ -1754,7 +1754,7 @@ function spawnRivals(){
       inDanger:false, willReact:true, reactT:0,
       ult:0, ultOn:false, ultWait:rand(1, 3), orbs:0, fireT:0,
       charge:1, boostLock:false, boosting:false,
-      finished:null
+      finished:null, parkM:0
     };
   });
 }
@@ -2040,22 +2040,17 @@ function updateRival(R, dt, st){
     R.y += G.speed*dt;
     return;
   }
-  if(R.finished !== null){                     /* over the line: roll to a stop */
-    R.abs = lerp(R.abs, 0, 1 - Math.pow(0.02, dt));
-    if(R.abs < 2) R.abs = 0;
+  if(R.finished !== null){                     /* over the line: roll out onto the mark */
+    R.abs = 0;
     R.tilt = 0;
-    /* Only tidy up once the whole field is in; parking early can wall off all
-       three lanes and trap someone still on their way to the flag. */
-    const allIn = G.finished !== null && G.rivals.every(function(x){ return x.finished !== null; });
-    if(!allIn){
-      R.y += (G.speed - R.abs)*dt;              /* others still racing: it recedes */
-    } else {
-      const cell = parkCell(R);
-      if(cell){
-        R.lane = cell.lane;
-        R.y = lerp(R.y, playerY - cell.row*carH*1.6, 1 - Math.pow(0.02, dt));
-      }
-    }
+    /* Eased along the road rather than across the screen. Lerping a screen
+       position at a target that is itself sliding away - which it is, for as
+       long as anyone is still racing - leaves a permanent gap the size of the
+       road speed over the easing rate, about a car length. In road distance
+       there is nothing moving to chase, so the car sits exactly on its mark
+       and the camera does the rest. */
+    R.parkM = lerp(R.parkM, parkMeters(R.finished), 1 - Math.pow(0.02, dt));
+    R.y = parkY(R.parkM);
     R.x = lerp(R.x, laneCX(R.lane), 1 - Math.pow(0.00008, dt));
     return;
   }
@@ -2308,55 +2303,59 @@ function updateRivals(dt, st){
   for(let i=0;i<G.rivals.length;i++) updateRival(G.rivals[i], dt, st);
 }
 
-/* who has crossed the flag, and in what order */
-/* A finisher rolls to a stop and tucks into a free lane rather than piling
-   onto whoever stopped first. */
-/* Once everyone is done, the field tidies itself into a 3x2 grid around your
-   car so nothing ends up parked on top of anything else. */
-function parkCell(R){
-  const done = G.rivals.filter(function(x){ return x.finished !== null; })
-                       .sort(function(a, b){ return a.finished - b.finished; });
-  const k = done.indexOf(R);
-  if(k < 0) return null;
-  const cells = [];
-  for(const row of [1, 0])
-    for(const lane of [0, 1, 2])
-      if(!(row === 0 && lane === G.lane)) cells.push({ lane:lane, row:row });
-  return cells[k % cells.length];
-}
-
-function parkLane(skip, y){
-  const busy = [0,0,0];
-  for(let i=0;i<G.rivals.length;i++){
-    const R = G.rivals[i];
-    if(R === skip || R.finished === null) continue;
-    if(Math.abs(R.y - y) < carH*1.4) busy[R.lane] = 1;
+/* who has crossed the flag, and where each of them ends up */
+/* A finisher does not stop where it crossed and it does not get shuffled into
+   a grid afterwards. It is given a mark the moment it crosses - a lane and a
+   distance past the flag, both read straight off its finishing place - and
+   rolls out onto it. First place rolls furthest, and every place behind stops
+   one step earlier, so the field parks in the order it finished and no two
+   cars are ever aimed at the same piece of road. */
+/* The staircase can start in any of the three lanes and still be a staircase,
+   so it starts in whichever one the field is closest to already. Ordering the
+   cars by how far down the road they are guesses the finishing order well
+   enough at the flag, and the rotation that leaves the most of them in the lane
+   they are already in is the one that makes the fewest cars cut across the
+   others on the roll-out. Picked once, when the first car crosses, so every
+   later finisher joins the same staircase. */
+function pickParkRot(){
+  const all = [{ lane:G.lane, m:G.meters }].concat(
+    G.rivals.map(function(R){ return { lane:R.lane, m:metersOf(R) }; }));
+  all.sort(function(a, b){ return b.m - a.m; });
+  let bestRot = 0, bestCost = 1e9;
+  for(let rot=0;rot<3;rot++){
+    let cost = 0;
+    for(let i=0;i<all.length;i++) if(all[i].lane !== (i + rot) % 3) cost++;
+    if(cost < bestCost){ bestCost = cost; bestRot = rot; }
   }
-  if(skip !== "me" && G.finished !== null && Math.abs(playerY - y) < carH*1.4) busy[G.lane] = 1;
-  const here = skip === "me" ? G.lane : skip.lane;
-  if(!busy[here]) return here;
-  for(let d=1;d<=2;d++){
-    if(here - d >= 0 && !busy[here - d]) return here - d;
-    if(here + d <= 2 && !busy[here + d]) return here + d;
-  }
-  return here;
+  return bestRot;
 }
+function parkLaneFor(place){ return (place - 1 + G.parkRot) % 3; }
+function parkMeters(place){
+  const field = G.rivals.length + 1;
+  return G.finishAt + carH*(PARK_BASE + (field - place)*PARK_STEP)*0.075;
+}
+/* The marks are distances along the road, not places on the screen, so a car
+   already parked recedes correctly while the rest of the field is still
+   racing - and lands exactly where it should the moment you stop too. */
+function parkY(m){ return playerY - (m - G.meters)/0.075; }
 
 function checkFinish(){
   if(!G.finishAt || (G.state !== "running" && G.state !== "over")) return;
+  if(!G.results.length) G.parkRot = pickParkRot();   /* set once, by the first car home */
   for(let i=0;i<G.rivals.length;i++){
     const R = G.rivals[i];
     if(R.finished === null && metersOf(R) >= G.finishAt){
       R.finished = G.results.length + 1;
       G.results.push({ me:false, car:R.car, place:R.finished });
-      R.lane = parkLane(R, R.y);                 /* pull into a free lane */
+      R.lane = parkLaneFor(R.finished);          /* the lane its place earned */
+      R.parkM = metersOf(R);                     /* rolls out from where it crossed */
       R.ultOn = false; R.stormOn = false; R.boosting = false; R.orbs = 0;
     }
   }
   if(G.finished === null && G.meters >= G.finishAt){
     G.finished = G.results.length + 1;
     G.results.push({ me:true, car:G.car, place:G.finished });
-    G.lane = parkLane("me", playerY);           /* your car parks too */
+    G.lane = parkLaneFor(G.finished);           /* your car takes its lane too */
     G.ultOn = false; G.orbs = 0; G.boosting = false;
     G.keyBoost = G.ptrBoost = G.ultKey = false;
     killLaunch();                              /* nobody crosses the line mid-flight */
@@ -2447,7 +2446,7 @@ function startRace(){
   G.lastTap = -9; G.tapClock = 0;
   G.freezeOwner = null; G.sirenOwner = null; G.effLog = [];
   G.cdT = 0; G.cdStep = -1; G.wasCounting = false;
-  G.raceT = 0; G.finishAt = 0; G.finished = null; G.results = [];
+  G.raceT = 0; G.finishAt = 0; G.finished = null; G.results = []; G.parkRot = 0;
   G.tracksLeft = -1;
   $("#ovTitle").textContent = t("over");
   $("#ovLead").textContent = t("overLead");
@@ -3106,6 +3105,21 @@ const ORB_COUNT = 3;
 const RACE_MINUTES = 5;                   /* bots mode: then three tracks to the flag */
 const FINAL_TRACKS = 3;
 const FINISH_STRETCH = 900;               /* metres of the last track before the line */
+/* Where each finisher comes to rest, measured past the flag in car lengths.
+   The winner rolls furthest and every place behind it stops one step earlier,
+   so the order the race finished in is the order the field is parked in and
+   nothing has to be untangled afterwards.
+
+   The step is set by the lane cycle: consecutive places sit in different lanes,
+   so the only pair that ever shares a lane is three places apart. Three steps
+   is what has to clear a car length, and 3 x 0.44 leaves a third of a car
+   between them. Any larger and sixth place falls off the bottom of the screen
+   when you win. The base is what the last car home gets, and it is a shade over
+   the distance a car coasts on its own, so nobody has to stop harder than the
+   car would have stopped anyway. */
+const PARK_BASE = 0.60;                   /* car heights past the line for the last car in */
+const PARK_STEP = 0.44;                   /* car heights between one place and the next */
+const PARK_EASE = 3.9;                    /* how hard the roll-out closes on the mark */
 
 function update(dt){
   tickCountdown(dt);
@@ -3116,8 +3130,27 @@ function update(dt){
   /* speed */
   let target, braking = false;
   if(st === "countdown") target = 0;          /* the car holds still on the line */
+  else if(G.finished !== null){
+    /* Over the line: roll out onto the mark your place earned rather than
+       stopping dead on the spot you crossed. Taken outright the way the brake
+       is - it can only ever slow you, so finishing never hands speed back -
+       and the last few pixels are dropped so the car settles instead of
+       creeping. This is checked before the "over" branch because the run-out
+       is the point: "over" is also how a wreck ends, and that one does stop
+       where it stands. */
+    const remPx = Math.max(0, parkMeters(G.finished) - G.meters)/0.075;
+    if(remPx*PARK_EASE < 8){
+      /* An eased approach never quite arrives, and the last of it is below the
+         speed anything can be seen moving at. Close it outright so the car sits
+         on the mark rather than two pixels shy of it - two pixels is nothing to
+         look at, but it is the difference between the field being evenly spaced
+         and being evenly spaced apart from your car. */
+      G.meters = parkMeters(G.finished);
+      target = 0;
+    } else target = remPx*PARK_EASE;
+    braking = true;
+  }
   else if(st === "over") target = Math.max(0, G.speed - 900*dt);
-  else if(G.finished !== null) target = 0;         /* over the line: coast to a halt */
   else if(airborne()){
     /* Off the road entirely: nothing on the ground reaches up to hold you, so
        a pin or a drag waits until the wheels are back down. */
@@ -3147,10 +3180,11 @@ function update(dt){
   if(braking) G.speed = Math.min(G.speed, target);
   else G.speed = lerp(G.speed, target, 1 - Math.pow(0.001, dt));
   G.scroll += G.speed*dt;
-  if(st === "running"){
-    G.meters += G.speed*dt*0.075;
-    engineSet(clamp((G.speed-300)/900, 0, 1));
-  }
+  /* The run-out after the flag is still road covered, so the distance has to
+     keep counting through it - the mark is a distance, and it can only be
+     reached if the meter that measures it is still running. */
+  if(st === "running" || G.finished !== null) G.meters += G.speed*dt*0.075;
+  if(st === "running") engineSet(clamp((G.speed-300)/900, 0, 1));
 
   /* boost charge */
   if(G.boosting){
