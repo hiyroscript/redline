@@ -1270,6 +1270,19 @@ const ITEM_SWAP = 0.34;
 function bubbleR(){ return BUBBLE_R*SCENE; }
 
 const PIP_FAR = 500;                      /* an off-screen racer only gets an arrow past this */
+/* Two kinds of off-screen marker, and the split is PIP_FAR.
+
+   Inside it the car is close enough to matter to you right now, so the marker
+   goes to the edge of the screen it went off, sits in that car's lane, and
+   prints the gap: where it is, which side it is coming from, how far. Past it
+   the number is no use - a car 1200m up is not a car you are about to meet -
+   so the marker collapses to a pair of chevrons and moves to the ladder, where
+   its dot already says how far down the race it is.
+
+   The edge badge only ever prints three digits and an m, because anything
+   larger is a far marker by definition, so it can be sized exactly. */
+const EDGE_W = 58, EDGE_ROW = 32;         /* badge width, and the drop to the next row */
+const FAR_W = 34;                         /* two chevrons and nothing else */
 const SHOCK_TIME = 10;                    /* Bolt: how long a hit car is pinned */
 const SHOCK_STACK = 5;                    /* every further hit adds this */
 const SHOCK_MAX = 25;
@@ -5256,38 +5269,38 @@ function drawLadder(){
     const rm = metersOf(R);
     marks.push({
       col: pipColour(R.car), gap: rm - G.meters, y: ladderY(rm, g, span),
-      off: R.y < -18 || R.y > H + 18, above: R.y < -18, me: false
+      off: R.y < -18 || R.y > H + 18, above: R.y < -18, me: false,
+      ex: clamp(R.x, roadX + 30, roadX + roadW - 30)     /* the lane it is in */
     });
   }
   marks.push({ col: pipColour(G.car), gap: 0, y: ladderY(G.meters, g, span), off: false, me: true });
 
-  /* Only the far field gets a badge: below 500m the dot on the ladder already
-     tells you where they are, and six stacked badges buried the HUD. Two at
-     most, the nearest one up the road and the nearest one back. */
-  let ahead = null, behind = null;
+  /* Every off-screen racer gets a marker now, not just the nearest one each
+     way. Which marker it gets is the only question. */
+  const near = [], far = [];
   for(let i=0;i<marks.length;i++){
     const m = marks[i];
-    /* gate on the number the badge will actually print, so a badge that says
-       500m is a badge that is shown */
-    if(!m.off || Math.round(Math.abs(m.gap)) < PIP_FAR) continue;
-    if(m.gap > 0){ if(!ahead  || m.gap < ahead.gap)  ahead  = m; }
-    else         { if(!behind || m.gap > behind.gap) behind = m; }
+    if(!m.off) continue;
+    /* gate on the number the badge would print, so a badge reading 499m is a
+       badge that is shown and one reading 500m never appears */
+    if(Math.round(Math.abs(m.gap)) < PIP_FAR) near.push(m); else far.push(m);
   }
-  const badges = [];
-  if(ahead)  badges.push(ahead);
-  if(behind) badges.push(behind);
-  badges.sort(function(a, b){ return a.y - b.y; });
 
-  /* keep the pair off each other, then off the bottom of the screen */
+  /* the close ones, at the edge they went off */
+  edgeRows(near.filter(function(m){ return m.above; }), true);
+  edgeRows(near.filter(function(m){ return !m.above; }), false);
+  for(let i=0;i<near.length;i++) drawEdgeMark(near[i]);
+
+  /* the far ones, stacked down the ladder beside their own dots */
+  far.sort(function(a, b){ return a.y - b.y; });
   let last = -1e9;
-  for(let i=0;i<badges.length;i++){
-    badges[i].by = Math.max(badges[i].y, last + 28);
-    last = badges[i].by;
+  for(let i=0;i<far.length;i++){
+    far[i].by = Math.max(far[i].y, last + 28);
+    last = far[i].by;
   }
-  const overflow = badges.length ? Math.max(0, badges[badges.length-1].by - (H - 40)) : 0;
-  for(let i=0;i<badges.length;i++) badges[i].by -= overflow;
-
-  for(let i=0;i<badges.length;i++) drawGapBadge(badges[i], g);
+  const overflow = far.length ? Math.max(0, far[far.length-1].by - (H - 40)) : 0;
+  for(let i=0;i<far.length;i++) far[i].by -= overflow;
+  for(let i=0;i<far.length;i++) drawFarMark(far[i], g);
 
   for(let i=0;i<marks.length;i++){
     const m = marks[i];
@@ -5299,37 +5312,116 @@ function drawLadder(){
   }
 }
 
-/* The distance badge, parked to the left of its dot. Every badge shown is now
-   a far one, so it carries the double chevron for direction and the distance
-   itself - past 500m the dot is pinned at the end of the ladder and no longer
-   tells you anything. */
-function drawGapBadge(m, g){
-  const gap = Math.abs(Math.round(m.gap));
-  const label = gap >= 1000 ? (gap/1000).toFixed(1).replace(/\.0$/, "") + "km" : gap + "m";
-  const w = 62;
-  const right = g.x - 13;
-  const x = right - w/2;
-  const y = m.by;
-  const c = m.col;
+/* How much clear width there is for a row of edge badges at a given height.
+   A badge is painted on the canvas and the HUD is DOM on top of it, so anything
+   the HUD occupies is width this row does not have. Which parts are in the way
+   depends on how high the row sits, so it is asked per row rather than guessed
+   once: the standings only block the top of the screen, the ultimate and item
+   buttons only block the bottom, and the ladder column blocks both. Rows placed
+   clear of a thing get the width back, which is what keeps a badge under the
+   car it belongs to instead of shunted a lane inboard. */
+function edgeBounds(y){
+  const lo = 12 + EDGE_W/2;
+  let hi = W - 12 - EDGE_W/2;
+  hi = Math.min(hi, ladderGeom().x - 13 - FAR_W - 4 - EDGE_W/2);   /* the ladder and its markers */
+  if(y - 13 < 196)     hi = Math.min(hi, W - 122 - EDGE_W/2);      /* the standings, top right */
+  if(y + 13 > H - 88)  hi = Math.min(hi, W - 138 - EDGE_W/2);      /* the two buttons, bottom right */
+  return { lo:lo, hi:Math.max(lo, hi) };
+}
+
+/* Place a set of edge badges. Each one wants to sit under its own car so the
+   lane it is in can be read off at a glance, so they are laid out from those
+   positions and only pushed apart where they would otherwise sit on each other.
+   Five cars off the same edge is ordinary on hard, and five badges do not fit
+   across a phone, so a row that cannot hold them all spills onto a second one
+   set further in - squeezing them into one line instead would put the digits
+   under each other, and the digits are the whole point. Closest first, so the
+   car about to arrive is the one on the outside row.
+
+   The rows sit as far out as the HUD allows rather than hard against the glass:
+   at the top the standings run a fifth of the way down the screen, and at the
+   bottom the ultimate and item buttons stand off the corner, and a badge behind
+   either is a badge you cannot read. */
+function edgeRows(list, above){
+  if(!list.length) return;
+  const anchor = above ? clamp(H*0.25, 104, 230) : H - clamp(H*0.125, 74, 110);
+  list.sort(function(a, b){ return Math.abs(a.gap) - Math.abs(b.gap); });
+  let start = 0, line = 0;
+  while(start < list.length){
+    const y = anchor + (above ? 1 : -1)*line*EDGE_ROW;
+    const b = edgeBounds(y);
+    const perRow = Math.max(1, Math.floor((b.hi - b.lo)/(EDGE_W + 4)) + 1);
+    const row = list.slice(start, start + perRow);
+    for(let i=0;i<row.length;i++) row[i].ey = y;
+    spreadRow(row, b.lo, b.hi);
+    start += perRow; line++;
+  }
+}
+
+/* One row: sort by where the cars actually are, walk left to right pushing each
+   badge clear of the one before, then slide the whole run back if it has run off
+   the end. The spacing is never squeezed below the badge width, so nothing can
+   end up printed on top of anything else. */
+function spreadRow(row, lo, hi){
+  row.sort(function(a, b){ return a.ex - b.ex; });
+  const step = EDGE_W + 4;
+  let x = lo;
+  for(let i=0;i<row.length;i++){
+    row[i].ex = Math.max(row[i].ex, x);
+    x = row[i].ex + step;
+  }
+  const over = row[row.length-1].ex - hi;
+  if(over > 0){
+    x = hi;
+    for(let i=row.length-1;i>=0;i--){
+      row[i].ex = Math.min(row[i].ex, x);
+      x = row[i].ex - step;
+    }
+  }
+}
+
+/* The close marker: which lane, which way, and how far. */
+function drawEdgeMark(m){
+  const x = m.ex, y = m.ey, c = m.col, w = EDGE_W;
+  ctx.save();
+  fillRR(x - w/2, y - 13, w, 26, 13, "rgba(11,11,12,0.78)");
+  rr(x - w/2, y - 13, w, 26, 13);
+  ctx.strokeStyle = c; ctx.lineWidth = 1.5; ctx.stroke();
+
+  const cx = x - w/2 + 14;
+  ctx.strokeStyle = c; ctx.lineWidth = 2.4; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.beginPath();
+  if(m.above){ ctx.moveTo(cx - 4.5, y + 3.5); ctx.lineTo(cx, y - 3.5); ctx.lineTo(cx + 4.5, y + 3.5); }
+  else       { ctx.moveTo(cx - 4.5, y - 3.5); ctx.lineTo(cx, y + 3.5); ctx.lineTo(cx + 4.5, y - 3.5); }
+  ctx.stroke();
+
+  ctx.fillStyle = c;
+  ctx.font = "600 11px ui-monospace, Menlo, Consolas, monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(Math.abs(Math.round(m.gap)) + "m", cx + 20, y + 0.5);
+  ctx.restore();
+}
+
+/* The far marker: no number, because the number would only tell you the car is
+   out of reach, which the pair of chevrons already says. */
+function drawFarMark(m, g){
+  const w = FAR_W;
+  const x = g.x - 13 - w/2;
+  const y = m.by, c = m.col;
   ctx.save();
   fillRR(x - w/2, y - 12, w, 24, 12, "rgba(11,11,12,0.74)");
   rr(x - w/2, y - 12, w, 24, 12);
   ctx.strokeStyle = c; ctx.lineWidth = 1.5; ctx.stroke();
 
   ctx.strokeStyle = c; ctx.lineWidth = 2.2; ctx.lineJoin = "round"; ctx.lineCap = "round";
-  const chevron = function(cx, cy){
+  const chevron = function(cy){
     ctx.beginPath();
-    if(m.above){ ctx.moveTo(cx - 4.5, cy + 3); ctx.lineTo(cx, cy - 3); ctx.lineTo(cx + 4.5, cy + 3); }
-    else       { ctx.moveTo(cx - 4.5, cy - 3); ctx.lineTo(cx, cy + 3); ctx.lineTo(cx + 4.5, cy - 3); }
+    if(m.above){ ctx.moveTo(x - 4.5, cy + 3); ctx.lineTo(x, cy - 3); ctx.lineTo(x + 4.5, cy + 3); }
+    else       { ctx.moveTo(x - 4.5, cy - 3); ctx.lineTo(x, cy + 3); ctx.lineTo(x + 4.5, cy - 3); }
     ctx.stroke();
   };
-  chevron(x - 19, y + (m.above ? 3.5 : -3.5));       /* two, stacked the way they are going */
-  chevron(x - 19, y + (m.above ? -3.5 : 3.5));
-
-  ctx.fillStyle = c;
-  ctx.font = "600 11px ui-monospace, Menlo, Consolas, monospace";
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText(label, x + 7, y + 0.5);
+  chevron(y + (m.above ? 3.5 : -3.5));               /* two, stacked the way it went */
+  chevron(y + (m.above ? -3.5 : 3.5));
   ctx.restore();
 }
 
