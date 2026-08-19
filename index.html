@@ -5312,20 +5312,66 @@ function drawLadder(){
   }
 }
 
-/* How much clear width there is for a row of edge badges at a given height.
-   A badge is painted on the canvas and the HUD is DOM on top of it, so anything
-   the HUD occupies is width this row does not have. Which parts are in the way
-   depends on how high the row sits, so it is asked per row rather than guessed
-   once: the standings only block the top of the screen, the ultimate and item
-   buttons only block the bottom, and the ladder column blocks both. Rows placed
-   clear of a thing get the width back, which is what keeps a badge under the
-   car it belongs to instead of shunted a lane inboard. */
+/* The HUD is DOM painted over the canvas, so whatever it covers is space a
+   badge cannot use, and where a badge can go is a question about the page
+   rather than about this file. Carrying a copy of the stylesheet's numbers here
+   would be wrong the moment a notch inset shifted the block down, the mode
+   dropped the race clock or the six place rows, or the mono font rendered a
+   line taller than assumed - and being wrong means a badge printed under the
+   standings, which is a badge nobody can read.
+
+   So the three blocks that matter are measured off the page: the track name and
+   clock at the top left, the standings at the top right, the ultimate and item
+   buttons at the bottom right. Rects come back in screen pixels while the canvas
+   thinks in design pixels, so the desktop scale is divided back out the way
+   resize() does it. Reading rects forces layout, so it happens twice a second
+   rather than sixty times - none of them move except when a race starts or the
+   window changes - and a box that comes back implausible is dropped rather than
+   believed, which leaves the arithmetic below as the fallback. */
+let hudZoneCache = null, hudZoneTick = 0;
+function hudZones(){
+  if(--hudZoneTick > 0 && hudZoneCache) return hudZoneCache;
+  hudZoneTick = 30;
+  const z = {
+    gaugeBottom: 66 + 12 + (G.mode === "bots" ? 23 : 0),
+    readBottom:  G.mode === "bots" ? 196 : 82,
+    readLeft:    W - 118,
+    actsTop:     H - 84,
+    actsLeft:    W - 134
+  };
+  const c = $("#cv");
+  const cr = c && c.getBoundingClientRect ? c.getBoundingClientRect() : null;
+  if(cr && cr.width > 0){
+    const k = Math.max(0.01, deskFit());
+    const rel = function(sel){
+      const el = $(sel);
+      if(!el || !el.getBoundingClientRect) return null;
+      const b = el.getBoundingClientRect();
+      if(!(b.width > 0) || !(b.height > 0)) return null;
+      if(b.width > W*0.7*k || b.height > H*0.7*k) return null;   /* a stub, or a bad read */
+      return { left:(b.left - cr.left)/k, top:(b.top - cr.top)/k, bottom:(b.bottom - cr.top)/k };
+    };
+    const gauge = rel("#gauges"), read = rel(".readout"), acts = rel("#hudActions");
+    if(gauge) z.gaugeBottom = gauge.bottom;
+    if(read){ z.readBottom = read.bottom; z.readLeft = read.left; }
+    if(acts){ z.actsTop = acts.top; z.actsLeft = acts.left; }
+  }
+  hudZoneCache = z;
+  return z;
+}
+
+/* How much clear width a row of edge badges has at a given height. Which parts
+   of the HUD are in the way depends on how high the row sits, so it is asked per
+   row rather than guessed once: the standings only block the top of the screen,
+   the two buttons only block the bottom, and the ladder column blocks both. A
+   row placed clear of a thing gets that width back, which is what keeps a badge
+   under the car it belongs to instead of shunted a lane inboard. */
 function edgeBounds(y){
+  const z = hudZones();
   const lo = 12 + EDGE_W/2;
-  let hi = W - 12 - EDGE_W/2;
-  hi = Math.min(hi, ladderGeom().x - 13 - FAR_W - 4 - EDGE_W/2);   /* the ladder and its markers */
-  if(y - 13 < 196)     hi = Math.min(hi, W - 122 - EDGE_W/2);      /* the standings, top right */
-  if(y + 13 > H - 88)  hi = Math.min(hi, W - 138 - EDGE_W/2);      /* the two buttons, bottom right */
+  let hi = Math.min(W - 12, ladderGeom().x - 13 - FAR_W - 4) - EDGE_W/2;
+  if(y - 13 < z.readBottom) hi = Math.min(hi, z.readLeft - 4 - EDGE_W/2);
+  if(y + 13 > z.actsTop)    hi = Math.min(hi, z.actsLeft - 4 - EDGE_W/2);
   return { lo:lo, hi:Math.max(lo, hi) };
 }
 
@@ -5344,7 +5390,8 @@ function edgeBounds(y){
    either is a badge you cannot read. */
 function edgeRows(list, above){
   if(!list.length) return;
-  const anchor = above ? clamp(H*0.25, 104, 230) : H - clamp(H*0.125, 74, 110);
+  const z = hudZones();
+  const anchor = above ? z.gaugeBottom + 18 : z.actsTop - 21;
   list.sort(function(a, b){ return Math.abs(a.gap) - Math.abs(b.gap); });
   let start = 0, line = 0;
   while(start < list.length){
