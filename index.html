@@ -2921,10 +2921,10 @@ const AIR_BRAKE = 1.4;                    /* seconds of hold from cruise to a de
 const AIR_WIND = 1.6;                     /* and this much longer again, winding up */
 const AIR_ARM = 0.60;                     /* the meter must get under this to launch */
 const AIR_CD = 10;                        /* seconds before the next launch */
-const AIR_STOP_POW = 0.38;                /* strength at a dead stop, before any wind-up */
-const AIR_MIN_T = 0.8, AIR_MAX_T = 3.2;   /* air time, weakest to strongest */
-const AIR_MIN_K = 1.15, AIR_MAX_K = 2.15; /* road speed while up there */
-const AIR_HOP = 2.0;                      /* peak height at full strength, in car heights */
+const AIR_STOP_POW = 0.42;                /* strength at a dead stop, before any wind-up */
+const AIR_MIN_T = 0.85, AIR_MAX_T = 3.8;  /* air time, weakest to strongest */
+const AIR_MIN_K = 1.18, AIR_MAX_K = 2.80; /* road speed while up there */
+const AIR_HOP = 2.8;                      /* peak height at full strength, in car heights */
 
 /* Nought at the notch, AIR_STOP_POW at a dead stop, one fully wound. Two
    phases, one number: everything downstream - air time, air speed, height,
@@ -3008,15 +3008,27 @@ function launchCar(){
    hazard is not, so the frame after touchdown puts you back in the world and
    the usual collision runs on whatever you landed in. */
 function landCar(){
+  const p = G.airPow;                      /* how hard it came down, before we clear it */
   G.airT = 0; G.airPow = 0; G.airMax = 0;
   dropEffect("launched");
   const under = carAt(G.lane, playerY, "me");
   if(under && !under.me && !safeCar(under.obj)){
     wreckRival(under.obj, "me");
+    G.shake = Math.max(G.shake, 14 + p*14);
   } else {
+    /* Even an empty landing should land. A full-charge touchdown comes down
+       from nearly three car heights, so it throws a ring of dust out to the
+       kerb and hits the screen accordingly; a little hop barely puffs. */
     puffFx(G.x, playerY + carH*0.42);
-    G.shake = Math.max(G.shake, 7);
-    noise(.16, .22); tone(130, .12, "sine", .06);
+    const ring = Math.round(lerp(0, 20, p));
+    for(let i=0;i<ring;i++){
+      const a = rand(0, 6.2832), sp = rand(120, 300)*p;
+      addFx(G.x, playerY + carH*0.3, Math.cos(a)*sp, Math.sin(a)*sp*0.45 - rand(0, 60),
+            rand(.3, .6), rand(2, 5), i % 2 ? "#D9DEE6" : "#B9BEC6");
+    }
+    G.shake = Math.max(G.shake, 6 + p*13);
+    noise(.16 + p*0.2, .22 + p*0.2);
+    tone(130 - p*40, .12 + p*0.1, "sine", .06 + p*0.06);
   }
 }
 
@@ -4963,7 +4975,7 @@ function render(){
     const hop = airHop();
     const squat = airborne() ? 0 : G.airWind;
     const py = playerY - hop*carH*lerp(0.6, AIR_HOP, G.airPow) + squat*carH*0.03;
-    const kk = 1 + hop*lerp(0.18, 0.5, G.airPow) - squat*0.09;
+    const kk = 1 + hop*lerp(0.20, 0.62, G.airPow) - squat*0.09;
     const cw = carW*kk, ch = carH*kk;
     if(hop > 0.002) drawAirShadow(hop);
     if(G.ultOn && car.power === "storm") drawStorm(car, G.x, py);
