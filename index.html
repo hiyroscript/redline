@@ -500,6 +500,18 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;
   background:#FFFFFF;border-radius:1px;box-shadow:0 0 4px rgba(0,0,0,.8);
 }
+/* The wind-up fills the emptied track back up, the other way, in white. Same
+   bar, same question - how much launch have I got - so there is one place to
+   look rather than two. */
+#airWind{
+  position:absolute;left:0;top:0;bottom:0;width:0;
+  background:#FFFFFF;border-radius:3px;box-shadow:0 0 8px rgba(255,255,255,.85);
+}
+#airWrap.winding{box-shadow:0 0 12px rgba(255,255,255,.8)}
+#airWrap.wound{box-shadow:0 0 18px rgba(255,233,168,.95);animation:airFull .6s ease-in-out infinite alternate}
+#airWrap.wound #airWind{background:#FFE9A8;box-shadow:0 0 14px rgba(255,210,74,.95)}
+@keyframes airFull{from{opacity:.78}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#airWrap.wound{animation:none}}
 #airWrap.armed{box-shadow:0 0 10px rgba(47,191,99,.9)}
 #airWrap.armed #airFill{background:#7CF7A6}
 #airWrap.armed #airMark{background:#7CF7A6}
@@ -842,7 +854,7 @@ bubbles</button>
         <button id="ultPct" aria-label="Use ultimate">0%</button>
         <button id="itemBox" aria-label="Use item"><span id="itemIcon"></span></button>
       </div>
-      <div id="airWrap"><div id="airFill"></div><i id="airZone"></i><i id="airMark"></i></div>
+      <div id="airWrap"><div id="airFill"></div><i id="airZone"></i><i id="airWind"></i><i id="airMark"></i></div>
       <div id="boostWrap"><div id="boostFill"></div></div>
     </div>
     <div id="flash"></div>
@@ -1027,8 +1039,8 @@ const STR = {
   efCleansed:   {en:"Cleansed",   fr:"Purifi\u00e9"},
   efSlippery:   {en:"Slippery",   fr:"Glissant"},
   efLaunched:   {en:"Launched",   fr:"Propuls\u00e9"},
-  launchedInfo: {en:"In the air. Grounded traps and cars pass harmlessly underneath, and you wreck whatever you come down on. Ten seconds before you can launch again.",
-                 fr:"En l'air. Les pi\u00e8ges au sol et les voitures passent dessous sans danger, et vous d\u00e9truisez ce sur quoi vous retombez. Dix secondes avant de pouvoir repartir."},
+  launchedInfo: {en:"Hold the brake to shed speed, and keep holding once you have stopped to wind up. The longer you hold, the higher and faster you go. In the air, grounded traps and cars pass harmlessly underneath, and you wreck whatever you come down on. Ten seconds before you can launch again.",
+                 fr:"Freinez pour perdre de la vitesse, et continuez \u00e0 maintenir une fois \u00e0 l'arr\u00eat pour charger. Plus vous maintenez, plus vous montez haut et vite. En l'air, les pi\u00e8ges au sol et les voitures passent dessous sans danger, et vous d\u00e9truisez ce sur quoi vous retombez. Dix secondes avant de pouvoir repartir."},
   k6:           {en:"launch",                      fr:"envol"},
   garage:       {en:"Cars & more",                 fr:"Voitures et plus"},
   tabCars:      {en:"Cars",                        fr:"Voitures"},
@@ -1501,7 +1513,7 @@ const G = {
   mode:"endless", diff:"medium",
   orbs:0, bolts:[], shockT:0, launchT:0, bumpCD:0, ultFast:false,
   frozenT:0, orderedT:0, bloomT:0, cleanseT:0, petals:[], freezeT:0, bloomOwner:null, effLog:[],
-  brakeOn:false, brakeKey:false, brakePtr:false, brakeSpent:false, airMeter:1,
+  brakeOn:false, brakeKey:false, brakePtr:false, brakeSpent:false, airMeter:1, airWind:0,
   airT:0, airMax:0, airPow:0, launchCD:0,
   slipT:0, item:null, boxes:[], slicks:[], missiles:[], boxGap:0, nextRow:6000, canT:0, lastTap:-9, tapClock:0,
   freezeOwner:null, sirenOwner:null,
@@ -2416,7 +2428,8 @@ function startRace(){
   G.dead = 0; G.immune = 0; G.slowT = 0; G.swipeLock = 0;
   G.ult = 0; G.ultOn = false; G.boostLock = false; G.ultArmed = true;
   G.orbs = 0; G.bolts = []; G.shockT = 0; G.launchT = 0; G.bumpCD = 0; G.ultFast = false;
-  G.brakeOn = false; G.brakeKey = false; G.brakePtr = false; G.brakeSpent = false; G.airMeter = 1;
+  G.brakeOn = false; G.brakeKey = false; G.brakePtr = false; G.brakeSpent = false;
+  G.airMeter = 1; G.airWind = 0;
   G.airT = 0; G.airMax = 0; G.airPow = 0; G.launchCD = 0;
   G.frozenT = 0; G.orderedT = 0; G.bloomT = 0; G.cleanseT = 0; G.petals = []; G.slipT = 0;
   G.item = null; G.boxes = []; G.slicks = []; G.missiles = []; G.canT = 0;
@@ -2880,33 +2893,46 @@ const LAUNCH_TIME = 0.8, LAUNCH_BOOST = 1.35;                    /* both cars lo
 
 /* ---------------- the launch ---------------------------------------
    Hold the brake - swipe down and keep your finger there, or hold the down
-   key - and the car sheds speed. AIR_BRAKE is the whole of it: hold that long
-   and you are stopped dead with the meter at nothing. Let go and, if the meter
-   got under the notch, the car goes up.
+   key - and the car sheds speed. AIR_BRAKE is the first phase: hold that long
+   and you are stopped dead with the meter at nothing. Let go any time after
+   the notch and the car goes up.
+
+   Keep holding and the second phase starts. The car is already stopped, so
+   there is no speed left to give: what you are spending now is time, straight
+   up, while the whole field drives past you. AIR_WIND is how long that lasts
+   and it is worth a great deal more than the braking was - a dead stop is
+   AIR_STOP_POW of the way to full, and the wind-up is the rest.
 
    The meter is the speed you have left, one for one: it empties exactly as the
    car stops, so there is never a moment where the bar says one thing and the
-   road says another. AIR_ARM is where the notch sits, and how far past it you
-   got is the whole of the launch strength - nothing else feeds into it.
+   road says another. The wind-up then fills the same track back up in white,
+   because it is the same bar answering the same question - how much launch
+   have I got - just in the other direction.
 
-   Braking is not free, and the air speed is set so that it stays that way.
-   Measured over sixteen seconds against the same run driven straight through,
-   a launch comes out two to three metres down whatever strength it was - the
-   ground given up while stopping is very nearly, but never quite, won back on
-   the way through the air. Flat across the range on purpose: strength buys air
-   time, not pace, so a big launch is not a faster launch, it is a longer one.
-
-   The first pass had this at 1.25 to 1.85 and the launch came out twenty-two
-   metres *ahead* at full charge. That is a dominant strategy rather than a
-   choice - hold, launch, repeat on cooldown, forever. What you are spending
-   ground on is the second and a half where nothing on the road can touch you
-   and anything you land on is written off. It should cost something. */
+   What it costs. Braking is roughly free: a light launch comes out a couple of
+   metres down on driving straight through, so it is an escape, not a shortcut.
+   Winding up is anything but. Every second stopped is thirty-odd metres handed
+   to five cars that are not stopped, and it is thirty-odd metres of sitting
+   still in traffic where anything can barge, pin or order you and take the
+   whole charge with it. A full wind therefore has to pay properly or nobody
+   would ever risk one - so it does, and the curve from one end to the other is
+   the point of the mechanic: how much are you willing to stand still for. */
 const AIR_BRAKE = 1.4;                    /* seconds of hold from cruise to a dead stop */
+const AIR_WIND = 1.6;                     /* and this much longer again, winding up */
 const AIR_ARM = 0.60;                     /* the meter must get under this to launch */
 const AIR_CD = 10;                        /* seconds before the next launch */
-const AIR_MIN_T = 0.7, AIR_MAX_T = 1.8;   /* air time, weakest to strongest */
-const AIR_MIN_K = 1.15, AIR_MAX_K = 1.40; /* road speed while up there */
-const AIR_HOP = 1.15;                     /* peak height at full strength, in car heights */
+const AIR_STOP_POW = 0.38;                /* strength at a dead stop, before any wind-up */
+const AIR_MIN_T = 0.8, AIR_MAX_T = 3.2;   /* air time, weakest to strongest */
+const AIR_MIN_K = 1.15, AIR_MAX_K = 2.15; /* road speed while up there */
+const AIR_HOP = 2.0;                      /* peak height at full strength, in car heights */
+
+/* Nought at the notch, AIR_STOP_POW at a dead stop, one fully wound. Two
+   phases, one number: everything downstream - air time, air speed, height,
+   the size of the bang - reads this and nothing else. */
+function airPower(){
+  const drained = clamp((AIR_ARM - G.airMeter)/AIR_ARM, 0, 1);
+  return clamp(drained*AIR_STOP_POW + G.airWind*(1 - AIR_STOP_POW), 0, 1);
+}
 
 function airborne(){ return G.airT > 0; }
 /* Airborne cars are not on the road: nothing meets them and they meet nothing.
@@ -2938,31 +2964,44 @@ function brakeEngage(){
    no launch, no cooldown, nothing spent. */
 function brakeOff(){
   G.brakeOn = false;
+  G.airWind = 0;                            /* a wind-up not spent is a wind-up lost */
   if(brakeHeld()) G.brakeSpent = true;      /* still down: dead until released */
   if(G.launchCD <= 0) G.airMeter = 1;
 }
 
 function launchCar(){
-  const p = clamp((AIR_ARM - G.airMeter)/AIR_ARM, 0, 1);
+  const p = airPower();
   G.airPow = p;
   G.airMax = G.airT = lerp(AIR_MIN_T, AIR_MAX_T, p);
   G.launchCD = AIR_CD;
   G.brakeOn = false;
+  G.airWind = 0;
   if(brakeHeld()) G.brakeSpent = true;
   G.airMeter = 0;                          /* refills across the cooldown */
   G.boosting = false; G.ptrBoost = false;
   logEffect("launched", G.airMax);
-  /* thrust out of the back as it leaves the road */
-  for(let i=0;i<22;i++){
-    const a = rand(1.1, 2.05), sp = rand(90, 260)*(0.6 + p*0.8);
-    addFx(G.x + rand(-carW*0.34, carW*0.34), playerY + carH*0.42,
-          Math.cos(a)*sp, Math.sin(a)*sp, rand(.3,.7), rand(2,5),
+  /* thrust out of the back as it leaves the road, and the harder it was wound
+     the wider and hotter it comes out - a full charge should look like it
+     cost something */
+  const n = Math.round(lerp(18, 60, p));
+  for(let i=0;i<n;i++){
+    const a = rand(1.1, 2.05), sp = rand(90, 300)*(0.6 + p*1.5);
+    addFx(G.x + rand(-carW*0.4, carW*0.4), playerY + carH*0.42,
+          Math.cos(a)*sp, Math.sin(a)*sp, rand(.3,.9), rand(2,6),
           i % 3 === 0 ? "#7CF7A6" : (i % 3 === 1 ? "#2FBF63" : "#FFFFFF"));
   }
-  G.shake = Math.max(G.shake, 6 + p*6);
-  tone(210, .16, "square", .07);
-  later(function(){ tone(430 + p*260, .22, "sine", .09); }, 90);
-  noise(.18, .2);
+  if(p > 0.5){                             /* a ring of it, for the big ones */
+    const ring = Math.round(lerp(0, 22, (p - 0.5)*2));
+    for(let i=0;i<ring;i++){
+      const a = (i/Math.max(1, ring))*6.2832;
+      addFx(G.x, playerY + carH*0.3, Math.cos(a)*260*p, Math.sin(a)*160*p,
+            rand(.35,.7), rand(3,6), i % 2 ? "#FFFFFF" : "#7CF7A6");
+    }
+  }
+  G.shake = Math.max(G.shake, 6 + p*14);
+  tone(190, .18, "square", .08);
+  later(function(){ tone(400 + p*520, .26, "sine", .10); }, 90);
+  noise(.2 + p*0.2, .22);
 }
 
 /* Coming down. Whatever is under you in this lane is written off; a trap or a
@@ -2994,6 +3033,7 @@ function updateLaunch(dt, st){
     G.launchCD = Math.max(0, G.launchCD - dt);
     /* the meter refilling IS the cooldown, so one bar answers both questions */
     G.airMeter = airborne() ? 0 : clamp(1 - G.launchCD/AIR_CD, 0, 1);
+    G.airWind = 0;
   }
   if(airborne()){
     G.airT = Math.max(0, G.airT - dt);
@@ -3006,17 +3046,30 @@ function updateLaunch(dt, st){
   if(G.brakeOn){
     G.airMeter = clamp(G.airMeter - dt/AIR_BRAKE, 0, 1);
     if(G.airMeter < 1e-9) G.airMeter = 0;    /* land exactly on empty, not on float dust */
-    /* Smoke off the back while it is scrubbing speed, and green once you are
-       under the notch - so the moment it becomes worth letting go is visible
-       on the car as well as on the bar. */
-    if(G.speed > 30 && Math.random() < dt*26){
+    /* Stopped, and still holding: there is no more speed to give up, so the
+       clock itself becomes the charge. */
+    if(G.airMeter === 0) G.airWind = clamp(G.airWind + dt/AIR_WIND, 0, 1);
+    /* Smoke off the back while it is scrubbing speed, green once you are under
+       the notch, and a hard white spray while it winds - so the state of the
+       charge is visible on the car as well as on the bar. */
+    const wind = G.airWind;
+    if(wind > 0){
+      G.shake = Math.max(G.shake, 1.5 + wind*5);
+      if(Math.random() < dt*(30 + wind*90)){
+        const a = rand(0, 6.2832), sp = rand(50, 120 + wind*220);
+        addFx(G.x + rand(-carW*0.4, carW*0.4), playerY + carH*rand(0.1, 0.42),
+              Math.cos(a)*sp, Math.sin(a)*sp*0.6 + rand(10, 90),
+              rand(.2, .5), rand(2, 5 + wind*3),
+              Math.random() < 0.4 + wind*0.4 ? "#FFFFFF" : "#7CF7A6");
+      }
+    } else if(G.speed > 30 && Math.random() < dt*26){
       const armed = G.airMeter <= AIR_ARM;
       addFx(G.x + rand(-carW*0.36, carW*0.36), playerY + carH*0.40,
             rand(-40, 40), rand(30, 130), rand(.25, .5), rand(2, 5),
             armed ? (Math.random() < 0.5 ? "#7CF7A6" : "#2FBF63") : "#B9BEC6");
     }
   } else if(st === "running" && G.launchCD <= 0 && G.airMeter < 1){
-    G.airMeter = 1;
+    G.airMeter = 1; G.airWind = 0;
   }
 }
 
@@ -4904,10 +4957,13 @@ function render(){
     /* Airborne, everything about the player's car moves together: it lifts off
        the road, grows because it is nearer the camera, and leaves a shadow
        behind on the tarmac. The shadow is what actually sells the height -
-       without it a bigger car just reads as a bigger car. */
+       without it a bigger car just reads as a bigger car. On the ground with
+       the brake wound it does the opposite and squats, so the launch reads as
+       a spring going down before it goes up. */
     const hop = airHop();
-    const py = playerY - hop*carH*lerp(0.5, AIR_HOP, G.airPow);
-    const kk = 1 + hop*lerp(0.16, 0.38, G.airPow);
+    const squat = airborne() ? 0 : G.airWind;
+    const py = playerY - hop*carH*lerp(0.6, AIR_HOP, G.airPow) + squat*carH*0.03;
+    const kk = 1 + hop*lerp(0.18, 0.5, G.airPow) - squat*0.09;
     const cw = carW*kk, ch = carH*kk;
     if(hop > 0.002) drawAirShadow(hop);
     if(G.ultOn && car.power === "storm") drawStorm(car, G.x, py);
@@ -4976,9 +5032,10 @@ function airHop(){
 /* The shadow stays on the road where the car would have been, shrinking and
    fading as it climbs, so the height is readable at a glance. */
 function drawAirShadow(hop){
-  const r = carW*0.46*(1 - hop*0.42);
+  const deep = hop*lerp(0.5, 1, G.airPow);        /* a big launch throws a smaller shadow */
+  const r = carW*0.46*(1 - deep*0.52);
   ctx.save();
-  ctx.globalAlpha = 0.42*(1 - hop*0.55);
+  ctx.globalAlpha = 0.44*(1 - deep*0.62);
   ctx.beginPath();
   ctx.ellipse(G.x, playerY + carH*0.16, r, r*0.42, 0, 0, 6.2832);
   ctx.fillStyle = "#000000"; ctx.fill();
@@ -5739,7 +5796,10 @@ function paintHUD(force){
   $("#airMark").style.left = arm;
   $("#airZone").style.width = arm;
   $("#airFill").style.width = (G.airMeter*100).toFixed(1) + "%";
-  aw.classList.toggle("armed", airArmed());
+  $("#airWind").style.width = (G.airWind*100).toFixed(1) + "%";
+  aw.classList.toggle("armed", airArmed() && G.airWind <= 0);
+  aw.classList.toggle("winding", G.airWind > 0 && G.airWind < 1);
+  aw.classList.toggle("wound", G.airWind >= 1);
   aw.classList.toggle("air", airborne());
   aw.classList.toggle("cooling", G.launchCD > 0 && !airborne());
   syncEffects();
