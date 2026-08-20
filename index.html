@@ -307,6 +307,37 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
   text-transform:uppercase;font-size:16px;letter-spacing:.04em;color:var(--black)}
 .info p{margin:4px 0 0;font-size:13px;color:var(--muted);line-height:1.4}
 .info .tagrow{margin-top:6px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+/* ---- local play ---- */
+.seat-chips{width:46px;height:46px;flex:0 0 auto;border-radius:var(--r-sm);background:var(--black);
+  display:flex;align-items:center;justify-content:center;gap:4px}
+.seat-chips i{width:6px;height:22px;border-radius:3px}
+#padList{margin:0 0 14px}
+.pad-row{display:flex;align-items:center;gap:11px;background:var(--gray-100);
+  border-radius:var(--r-md);padding:11px 14px;margin-bottom:7px}
+.pad-row .chip{width:12px;height:22px;border-radius:3px;flex:0 0 auto;opacity:.3}
+.pad-row.on .chip{opacity:1}
+.pad-row .who{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--black);flex:0 0 auto}
+.pad-row .nm{font-size:12px;color:var(--muted);flex:1;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pad-note{margin:0 2px 12px;font-size:12px;font-family:var(--mono);letter-spacing:.06em;color:var(--muted)}
+.btn[disabled],.btn.off{opacity:.4;pointer-events:none}
+#carTurn{display:none;align-items:center;gap:10px;background:var(--gray-100);
+  border-radius:var(--r-md);padding:10px 14px;margin-bottom:12px}
+#carTurn.on{display:flex}
+#carTurn i{width:15px;height:15px;border-radius:4px;flex:0 0 auto}
+#carTurn span{font-family:var(--display);font-variation-settings:'wdth' 118,'wght' 750;
+  text-transform:uppercase;font-size:15px;letter-spacing:.04em;color:var(--black)}
+.car-opt.taken{opacity:.3;pointer-events:none}
+.car-opt.taken .car-art{background:var(--gray-200)}
+.car-opt.cursor{outline:3px solid var(--red);outline-offset:2px}
+.mode.off{opacity:.45;pointer-events:none}
+/* Four sets of instruments are painted on the canvas, so the page's single
+   set has to get out of the way completely. */
+body.local .hud .readout,body.local #hudActions,body.local #airWrap,
+body.local #boostWrap,body.local #effList,body.local #immuneTag,
+body.local #cleanseTag{display:none!important}
+body.local .hud-top{justify-content:flex-end}
 .diff-mark{width:56px;height:70px;flex:0 0 auto;border-radius:var(--r-sm);background:var(--black);
   display:flex;align-items:center;justify-content:center;gap:4px}
 .diff-mark i{width:5px;border-radius:3px;background:var(--red)}
@@ -714,6 +745,16 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
         </span>
         <svg class="ic" viewBox="0 0 24 24" style="flex:0 0 auto"><path d="m9 5 7 7-7 7"/></svg>
       </button>
+      <button class="mode" id="modeLocal" style="margin-top:10px">
+        <span class="mode-mark">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="M12 6v12"/><path d="M7 11.5h2.5"/><path d="M8.25 10.25v2.5"/><circle cx="15.6" cy="11" r="1"/><circle cx="17.4" cy="12.6" r="1"/></svg>
+        </span>
+        <span style="flex:1">
+          <span class="mode-name" data-i18n="local">Local play</span>
+          <span class="mode-desc" data-i18n="localDesc">Two to four of you on one screen, on controllers. Computer only.</span>
+        </span>
+        <svg class="ic" viewBox="0 0 24 24" style="flex:0 0 auto"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
       <button class="mode" id="modeBots" style="margin-top:10px">
         <span class="mode-mark">
           <svg class="ic" viewBox="0 0 24 24"><path d="M5 20V7l7-3 7 3v13"/><path d="M5 20h14"/><path d="M9 20v-5h6v5"/><path d="M9.5 10.5h5"/></svg>
@@ -723,6 +764,66 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
           <span class="mode-desc" data-i18n="botsDesc">Two rivals, five minutes, then three tracks to the flag.</span>
         </span>
         <svg class="ic" viewBox="0 0 24 24" style="flex:0 0 auto"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       3-1. LOCAL: HOW MANY
+       ============================================================ -->
+  <section id="players" class="screen">
+    <div id="modeCard">
+      <div class="sheet-head">
+        <h2 class="display" data-i18n="chooseCount">How many playing?</h2>
+        <button class="icon-btn" id="btnClosePlayers" aria-label="Back">
+          <svg class="ic" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>
+        </button>
+      </div>
+      <p class="lede" data-i18n="countLede">The screen is split evenly between you. Six cars race either way, so the bots fill whatever is left.</p>
+      <button class="mode" id="count2">
+        <span class="seat-chips"><i style="background:#FF3B3B"></i><i style="background:#3B8CFF"></i></span>
+        <span style="flex:1">
+          <span class="mode-name" data-i18n="p2">2 players</span>
+          <span class="mode-desc" data-i18n="p2Desc">Two screens, four bots.</span>
+        </span>
+        <svg class="ic" viewBox="0 0 24 24" style="flex:0 0 auto"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
+      <button class="mode" id="count3" style="margin-top:10px">
+        <span class="seat-chips"><i style="background:#FF3B3B"></i><i style="background:#3B8CFF"></i><i style="background:#35D06B"></i></span>
+        <span style="flex:1">
+          <span class="mode-name" data-i18n="p3">3 players</span>
+          <span class="mode-desc" data-i18n="p3Desc">Three screens, three bots.</span>
+        </span>
+        <svg class="ic" viewBox="0 0 24 24" style="flex:0 0 auto"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
+      <button class="mode" id="count4" style="margin-top:10px">
+        <span class="seat-chips"><i style="background:#FF3B3B"></i><i style="background:#3B8CFF"></i><i style="background:#35D06B"></i><i style="background:#FFCE2B"></i></span>
+        <span style="flex:1">
+          <span class="mode-name" data-i18n="p4">4 players</span>
+          <span class="mode-desc" data-i18n="p4Desc">Four screens, two bots.</span>
+        </span>
+        <svg class="ic" viewBox="0 0 24 24" style="flex:0 0 auto"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       3-2. LOCAL: CONTROLLERS
+       ============================================================ -->
+  <section id="pads" class="screen">
+    <div id="modeCard">
+      <div class="sheet-head">
+        <h2 class="display" data-i18n="checkPads">Controllers</h2>
+        <button class="icon-btn" id="btnClosePads" aria-label="Back">
+          <svg class="ic" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>
+        </button>
+      </div>
+      <p class="lede" data-i18n="padsLede">Pair each controller over Bluetooth, then press a button on it. The browser only sees a pad once it has been used.</p>
+      <div id="padList"></div>
+      <p class="pad-note" id="padCount">0 / 2</p>
+      <button class="btn btn-primary off" id="btnPadsGo">
+        <svg class="ic" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
+        <span data-i18n="padsGo">Continue</span>
       </button>
     </div>
   </section>
@@ -764,6 +865,8 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
           <svg class="ic" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>
         </button>
       </div>
+
+      <div id="carTurn"><i></i><span></span></div>
 
       <button class="btn btn-ghost" id="carRandom">
         <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h5l6 10h5"/><path d="M4 17h5l2.2-3.6"/><path d="M16.5 4.5 20 7l-3.5 2.5"/><path d="M16.5 14.5 20 17l-3.5 2.5"/></svg>
@@ -1123,6 +1226,39 @@ const STR = {
   yourPlace:    {en:"Your place",                  fr:"Votre place"},
   place1:       {en:"1st",                         fr:"1er"},
   place2:       {en:"2nd",                         fr:"2e"},
+
+  /* ---- local play ---- */
+  local:        {en:"Local play",                  fr:"Jeu local"},
+  localDesc:    {en:"Two to four of you on one screen, on controllers. Computer only.",
+                 fr:"De deux \u00e0 quatre sur un m\u00eame \u00e9cran, aux manettes. Ordinateur uniquement."},
+  localDesk:    {en:"Local play needs a computer and a controller for each player.",
+                 fr:"Le jeu local demande un ordinateur et une manette par joueur."},
+  chooseCount:  {en:"How many playing?",           fr:"Combien de joueurs ?"},
+  countLede:    {en:"The screen is split evenly between you. Six cars race either way, so the bots fill whatever is left.",
+                 fr:"L\u2019\u00e9cran est partag\u00e9 \u00e0 parts \u00e9gales. Six voitures courent dans tous les cas : les bots compl\u00e8tent la grille."},
+  p2:           {en:"2 players",                   fr:"2 joueurs"},
+  p3:           {en:"3 players",                   fr:"3 joueurs"},
+  p4:           {en:"4 players",                   fr:"4 joueurs"},
+  p2Desc:       {en:"Two screens, four bots.",     fr:"Deux \u00e9crans, quatre bots."},
+  p3Desc:       {en:"Three screens, three bots.",  fr:"Trois \u00e9crans, trois bots."},
+  p4Desc:       {en:"Four screens, two bots.",     fr:"Quatre \u00e9crans, deux bots."},
+  checkPads:    {en:"Controllers",                 fr:"Manettes"},
+  padsLede:     {en:"Pair each controller over Bluetooth, then press a button on it. The browser only sees a pad once it has been used.",
+                 fr:"Appairez chaque manette en Bluetooth, puis appuyez sur un bouton. Le navigateur ne voit une manette qu\u2019une fois utilis\u00e9e."},
+  padsGo:       {en:"Continue",                    fr:"Continuer"},
+  padWaiting:   {en:"waiting",                     fr:"en attente"},
+  padSpare:     {en:"spare",                       fr:"en r\u00e9serve"},
+  padsNeed:     {en:"controllers found",           fr:"manettes d\u00e9tect\u00e9es"},
+  pRed:         {en:"Red",                         fr:"Rouge"},
+  pBlue:        {en:"Blue",                        fr:"Bleu"},
+  pGreen:       {en:"Green",                       fr:"Vert"},
+  pYellow:      {en:"Yellow",                      fr:"Jaune"},
+  playerN:      {en:"Player",                      fr:"Joueur"},
+  picksCar:     {en:"picks a car",                 fr:"choisit une voiture"},
+  localOver:    {en:"Race over",                   fr:"Course termin\u00e9e"},
+  localWon:     {en:"wins",                        fr:"gagne"},
+  padCtrls:     {en:"Sticks steer and boost \u00b7 L3+L2 ultimate \u00b7 R2 item",
+                 fr:"Sticks : direction et boost \u00b7 L3+L2 ultime \u00b7 R2 objet"},
 };
 let lang = store.get("redline.lang") || null;
 let curTrackKey = "trackCity";
@@ -1144,6 +1280,19 @@ function applyLang(){
     if(s) el.textContent = s[L];
   });
   const tn = $("#trackName"); if(tn) tn.textContent = STR[curTrackKey][L];
+  paintLocalGate();
+  if($("#cars").classList.contains("on")) paintPicks();
+}
+/* Local play is a couch mode: it wants a keyboard-and-mouse machine with pads
+   plugged into it. Rather than hide it on a phone - which reads as a missing
+   feature - it is shown greyed with the reason where its description goes. */
+function paintLocalGate(){
+  const b = $("#modeLocal");
+  if(!b) return;
+  const ok = !!DESKTOP;
+  b.classList.toggle("off", !ok);
+  const d = b.querySelector(".mode-desc");
+  if(d) d.textContent = t(ok ? "localDesc" : "localDesk");
 }
 
 const CARS = {
@@ -1445,12 +1594,17 @@ function buildGarage(){
 }
 
 function show(id){
-  $("#home").classList.toggle("on", id === "home" || id === "modes" || id === "cars" || id === "diffs");
+  const sheet = id === "modes" || id === "cars" || id === "diffs" ||
+                id === "players" || id === "pads";
+  $("#home").classList.toggle("on", id === "home" || sheet);
   $("#modes").classList.toggle("on", id === "modes");
+  $("#players").classList.toggle("on", id === "players");
+  $("#pads").classList.toggle("on", id === "pads");
   $("#diffs").classList.toggle("on", id === "diffs");
   $("#garage").classList.toggle("on", id === "garage");
   $("#cars").classList.toggle("on", id === "cars");
   $("#race").classList.toggle("on", id === "race");
+  if(id === "pads" || (id === "cars" && G.local)) uiStart();
 }
 
 /* ---------------- sound (generated, no files) -------------------- */
@@ -1555,17 +1709,103 @@ $("#btnSound").addEventListener("click", function(){ setSound(!soundOn); if(soun
 $("#btnStart").addEventListener("click", function(){ audio(); show("modes"); });
 $("#btnCloseModes").addEventListener("click", function(){ show("home"); });
 $("#modes").addEventListener("click", function(e){ if(e.target === $("#modes")) show("home"); });
-$("#modeEndless").addEventListener("click", function(){ G.mode = "endless"; G.diff = "medium"; show("cars"); });
-$("#modeBots").addEventListener("click", function(){ G.mode = "bots"; show("diffs"); });
-$("#btnCloseDiffs").addEventListener("click", function(){ show("modes"); });
-$("#diffs").addEventListener("click", function(e){ if(e.target === $("#diffs")) show("modes"); });
+$("#modeEndless").addEventListener("click", function(){ soloMode("endless"); G.diff = "medium"; beginPicks(); });
+$("#modeBots").addEventListener("click", function(){ soloMode("bots"); show("diffs"); });
+$("#modeLocal").addEventListener("click", function(){
+  if(!DESKTOP) return;
+  G.mode = "local"; G.local = true; G.players = 2;
+  show("players");
+});
+$("#btnClosePlayers").addEventListener("click", function(){ show("modes"); });
+$("#players").addEventListener("click", function(e){ if(e.target === $("#players")) show("modes"); });
+[2, 3, 4].forEach(function(n){
+  $("#count" + n).addEventListener("click", function(){ G.players = n; show("pads"); });
+});
+$("#btnClosePads").addEventListener("click", function(){ show("players"); });
+$("#pads").addEventListener("click", function(e){ if(e.target === $("#pads")) show("players"); });
+$("#btnPadsGo").addEventListener("click", function(){
+  if(padPoll().length < G.players) return;      /* the class is the gate; this is the rule */
+  show("diffs");
+});
+$("#btnCloseDiffs").addEventListener("click", function(){ show(G.local ? "pads" : "modes"); });
+$("#diffs").addEventListener("click", function(e){ if(e.target === $("#diffs")) show(G.local ? "pads" : "modes"); });
 ["easy","medium","hard","brutal"].forEach(function(id){   /* wired before DIFFS exists */
   $("#diff" + id.charAt(0).toUpperCase() + id.slice(1))
-    .addEventListener("click", function(){ G.diff = id; show("cars"); });
+    .addEventListener("click", function(){ G.diff = id; beginPicks(); });
 });
-$("#btnCloseCars").addEventListener("click", function(){ show(G.mode === "bots" ? "diffs" : "modes"); });
-$("#cars").addEventListener("click", function(e){ if(e.target === $("#cars")) show("modes"); });
-function pickCar(id){ G.car = id; show("race"); startRace(); }
+function soloMode(m){ G.mode = m; G.local = false; G.players = 1; VIEWS = 1; }
+$("#btnCloseCars").addEventListener("click", function(){ backFromCars(); });
+$("#cars").addEventListener("click", function(e){ if(e.target === $("#cars")) backFromCars(); });
+/* Backing out of the car sheet in local play undoes one pick at a time, so a
+   player who chose the wrong car costs everyone one press rather than the
+   whole run-up. Only an empty board leaves the sheet. */
+function backFromCars(){
+  if(G.local && pickTurn > 0){
+    G.picks.pop(); pickTurn--; paintPicks();
+    return;
+  }
+  show(toFlag() ? "diffs" : "modes");
+}
+
+/* ---- choosing cars, in turns ------------------------------------
+   One car can only be driven once, so a car already spoken for is dead on the
+   sheet for everybody after. The board is the same board single player uses;
+   all that is added is whose turn it is and what is left. */
+let pickTurn = 0, carCur = 0, carKeys = null, carClock = 0;
+function beginPicks(){
+  G.picks = []; pickTurn = 0; carCur = 0; carKeys = newPadKeys(); carClock = 0;
+  paintPicks();
+  show("cars");
+}
+function carEl(id){ return $("#car" + cap(id)); }
+function carTaken(id){ return G.local && G.picks.indexOf(id) >= 0; }
+function paintPicks(){
+  const on = G.local;
+  const row = $("#carTurn");
+  if(row) row.classList.toggle("on", on);
+  for(let i=0;i<CAR_IDS.length;i++){
+    const el = carEl(CAR_IDS[i]);
+    if(!el) continue;
+    el.classList.toggle("taken", carTaken(CAR_IDS[i]));
+    el.classList.toggle("cursor", on && i === carCur);
+  }
+  if(!on || !row) return;
+  const seat = clamp(pickTurn, 0, LOCAL_MAX - 1);
+  row.querySelector("i").style.background = PCOLS[seat];
+  row.querySelector("span").textContent =
+    t("playerN") + " " + (seat + 1) + " \u00b7 " + t(PCOL_KEYS[seat]) + " \u00b7 " + t("picksCar");
+}
+function pickCar(id){
+  if(G.local){
+    if(carTaken(id)) return;
+    G.picks.push(id);
+    pickTurn++;
+    tone(760, .07, "square", .1);
+    if(pickTurn < G.players){
+      carCur = firstFree();
+      carKeys = newPadKeys();          /* the next player starts from nothing held */
+      paintPicks();
+      return;
+    }
+    G.car = G.picks[0];
+    show("race"); startRace();
+    return;
+  }
+  G.car = id; show("race"); startRace();
+}
+function firstFree(){
+  for(let i=0;i<CAR_IDS.length;i++) if(!carTaken(CAR_IDS[i])) return i;
+  return 0;
+}
+function carStep(step){
+  let n = carCur;
+  for(let g=0; g<CAR_IDS.length*2; g++){
+    n = n + step;
+    if(n < 0) n += CAR_IDS.length;
+    if(n >= CAR_IDS.length) n -= CAR_IDS.length;
+    if(!carTaken(CAR_IDS[n])){ carCur = n; paintPicks(); tone(520, .04, "square", .05); return; }
+  }
+}
 $("#carRedd").addEventListener("click", function(){ pickCar("redd"); });
 $("#carPhantom").addEventListener("click", function(){ pickCar("phantom"); });
 $("#carBolt").addEventListener("click", function(){ pickCar("bolt"); });
@@ -1584,7 +1824,91 @@ $("#tabCars").addEventListener("click", function(){ garageTab = "cars"; setTab()
 $("#tabTracks").addEventListener("click", function(){ garageTab = "tracks"; setTab(); });
 $("#tabItems").addEventListener("click", function(){ garageTab = "items"; setTab(); });
 $("#tabEffects").addEventListener("click", function(){ garageTab = "effects"; setTab(); });
-$("#carRandom").addEventListener("click", function(){ pickCar(CAR_IDS[randi(0, CAR_IDS.length-1)]); });
+$("#carRandom").addEventListener("click", function(){
+  const left = CAR_IDS.filter(function(id){ return !carTaken(id); });
+  pickCar(left[randi(0, left.length-1)]);
+});
+
+/* ================================================================
+   THE MENU, ON A PAD
+   ================================================================
+   The controller screen has to keep looking for pads, and the car sheet has to
+   let the player whose turn it is choose with the pad already in their hands.
+   Both are one small loop that runs only while one of those two sheets is up
+   and stops itself the moment neither is. */
+let uiRaf = 0;
+function uiStart(){ if(!uiRaf) uiRaf = requestAnimationFrame(uiTick); }
+function uiTick(ts){
+  const onPads = $("#pads").classList.contains("on");
+  const onCars = G.local && $("#cars").classList.contains("on");
+  if(!onPads && !onCars){ uiRaf = 0; carClock = 0; return; }
+  uiRaf = requestAnimationFrame(uiTick);
+  const now = (ts || 0)/1000;
+  const dt = carClock ? Math.min(Math.max(now - carClock, 0), 0.05) : 0.016;
+  carClock = now;
+  if(onPads) padsRefresh();
+  else carPadTick(dt);
+}
+
+/* A pad's own name, trimmed of the vendor and product ids the browser tacks on. */
+function padName(p){
+  let id = (p && p.id) || "Controller";
+  id = id.replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
+  if(!id) id = "Controller";
+  return id.length > 34 ? id.slice(0, 33) + "\u2026" : id;
+}
+/* One row per seat, filled in the order the pads were seen. The button unlocks
+   only when there is a pad for every player - which is the whole reason this
+   screen exists. */
+function padsRefresh(){
+  const pads = padPoll();
+  const list = $("#padList");
+  let html = "";
+  for(let i=0;i<G.players;i++){
+    const p = pads[i];
+    html += '<div class="pad-row' + (p ? " on" : "") + '">' +
+            '<span class="chip" style="background:' + PCOLS[i] + '"></span>' +
+            '<span class="who">' + t("playerN") + " " + (i + 1) + '</span>' +
+            '<span class="nm">' + (p ? padName(p) : t("padWaiting")) + '</span></div>';
+  }
+  if(list._html !== html){ list._html = html; list.innerHTML = html; }
+  const ok = pads.length >= G.players;
+  const cnt = $("#padCount");
+  const line = pads.length + " / " + G.players + " " + t("padsNeed") + " \u00b7 " + t("padCtrls");
+  if(cnt.textContent !== line) cnt.textContent = line;
+  $("#btnPadsGo").classList.toggle("off", !ok);
+}
+
+/* The car sheet, driven by whoever's turn it is. Their pad and nobody else's:
+   three players cannot all be moving one cursor. */
+function carPadTick(dt){
+  const pads = padPoll();
+  const p = pads[pickTurn];
+  const k = carKeys || (carKeys = newPadKeys());
+  if(!p) return;
+  const lx = padAxis(p, 0), ly = padAxis(p, 1);
+  let dx = 0, dy = 0;
+  if(lx <= -STICK_ON || padBtn(p, PAD_DL)) dx = -1;
+  else if(lx >= STICK_ON || padBtn(p, PAD_DR)) dx = 1;
+  if(ly <= -STICK_ON || padBtn(p, PAD_DU)) dy = -1;
+  else if(ly >= STICK_ON || padBtn(p, PAD_DD)) dy = 1;
+  const step = dy ? dy*3 : dx;              /* the board is three across */
+  if(!step && Math.abs(lx) < STICK_OFF && Math.abs(ly) < STICK_OFF){ k.lane = 0; k.laneT = 0; }
+  if(step){
+    if(k.lane !== step){ k.lane = step; k.laneT = 0.32; carStep(step); }
+    else { k.laneT -= dt; if(k.laneT <= 0){ k.laneT = 0.32; carStep(step); } }
+  }
+  const go = padBtn(p, PAD_CROSS);
+  if(go && !k.item){
+    const id = CAR_IDS[carCur];
+    if(!carTaken(id)) pickCar(id);
+  }
+  k.item = go;
+  /* Circle backs out one pick, the same as the arrow on the sheet. */
+  const back = padBtn(p, PAD_CIRCLE);
+  if(back && !k.ult) backFromCars();
+  k.ult = back;
+}
 $("#itemBox").addEventListener("click", function(e){ if(e && e.stopPropagation) e.stopPropagation(); useItem("me"); });
 /* Tap the charge square to spend it. fireUlt does all the gating - not running,
    wrecked, pinned, already finished, not charged yet - so a tap that cannot fire
@@ -1613,6 +1937,53 @@ let W=0, H=0, DPR=1;
 let roadX=0, roadW=0, laneW=0, sideW=0, carW=0, carH=0, playerY=0, vign=null;
 let SCENE = 1;                            /* scene scale, set by layout() from H */
 
+/* ---- split screen ------------------------------------------------
+   Local play draws the same world once per human, side by side. One world,
+   several windows on to it: the master frame is player one's, and every other
+   view is that frame shifted so its own car sits exactly where player one's
+   sits in theirs.
+
+   W is the width of one view, never of the canvas. Everything the world is
+   built from has always measured off W, so a column is simply a narrower game
+   and not one line of the road, the scenery or the cars has to know how many
+   columns there are. */
+let VIEWS = 1;              /* how many columns the canvas is cut into */
+let FULLW = 0;              /* the whole canvas, in design px */
+let CAMDY = 0;              /* this view's camera shift, in master screen px */
+let CT = 0, CB = 0;         /* what this view can see, in master screen coords */
+let VOWN = "me";            /* whose view is being drawn */
+let VW_TOP = 0, VW_BOT = 0; /* the union of every view: what the world must cover */
+
+/* Player colours, in the order players join. Everything that has to say which
+   player something belongs to says it with one of these four. */
+const PCOLS = ["#FF3B3B", "#3B8CFF", "#35D06B", "#FFCE2B"];
+const PCOL_KEYS = ["pRed", "pBlue", "pGreen", "pYellow"];
+const LOCAL_MAX = 4;
+const FIELD_SIZE = 6;       /* six cars on the road, however they are driven */
+
+/* Where a car's own view sits relative to the master frame. */
+function camDy(who){ return who === "me" ? 0 : playerY - who.y; }
+
+/* The union of every drawn view, in master screen coords. In a single-view
+   game that is exactly the screen. In local play it stretches to cover the
+   leading and the trailing human, so scenery is built and kept for the whole
+   spread rather than for player one's window alone - otherwise a player half a
+   screen up the road drives through an empty white world. */
+function viewBounds(){
+  if(!G.local){ VW_TOP = 0; VW_BOT = H; return; }
+  let lo = 0, hi = H;
+  for(let i=0;i<G.humans.length;i++){
+    const dy = camDy(G.humans[i]);
+    if(-dy < lo) lo = -dy;
+    if(-dy + H > hi) hi = -dy + H;
+  }
+  VW_TOP = lo; VW_BOT = hi;
+}
+/* First y of a road pattern of this period that is at or above the top of the
+   view being drawn. The markings are periodic in the scroll, so shifting the
+   camera is the same as advancing the phase - this is what says by how much. */
+function perTop(off, per){ return off + Math.floor((CT - off)/per)*per; }
+
 const G = {
   state:"idle", lane:1, x:0, tilt:0,
   scroll:0, speed:0, dist:0, meters:0,
@@ -1637,7 +2008,10 @@ const G = {
   airT:0, airMax:0, airPow:0, launchCD:0,
   slipT:0, item:null, swapT:0, boxes:[], slicks:[], missiles:[], boxGap:0, nextRow:6000, canT:0, lastTap:-9, tapClock:0,
   sirenOwner:null,
-  raceT:0, tracksLeft:-1, finishAt:0, finished:null, results:[]
+  raceT:0, tracksLeft:-1, finishAt:0, finished:null, results:[], raceDone:false,
+  /* local play */
+  local:false, players:1, picks:[], humans:[], padBoost:false, padBrake:false,
+  pad:0, pk:null, seat:0
 };
 
 function layout(){
@@ -1693,9 +2067,11 @@ function resize(){
   DPR = Math.min(Math.min(window.devicePixelRatio || 1, 2)*k, 3);
   cv.width = Math.round(cw*DPR); cv.height = Math.round(ch*DPR);
   {
-    W = cw; H = ch;
+    FULLW = cw; H = ch;
+    W = cw/VIEWS;                              /* one column is one game */
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   }
+  CT = 0; CB = H; CAMDY = 0; VW_TOP = 0; VW_BOT = H;
   layout();
 }
 window.addEventListener("resize", function(){
@@ -1847,7 +2223,14 @@ function switchTrack(){
    RACERS  -  two rivals that drive the way a person would
    ================================================================ */
 function spawnRivals(){
-  const others = CAR_IDS.filter(function(id){ return id !== G.car; });
+  /* Whoever is being driven by a person gets the car that person chose, in
+     seat order; the bots take what is left. The field is always six cars, so
+     two players leave four bots, three leave three and four leave two - and
+     every car in the game is on the road in every local race. */
+  const taken = G.local ? G.picks.slice(0, G.players) : [G.car];
+  const spare = CAR_IDS.filter(function(id){ return taken.indexOf(id) < 0; });
+  const seats = G.local ? G.picks.slice(1, G.players) : [];
+  const others = seats.concat(spare).slice(0, FIELD_SIZE - 1);
   /* front row alongside you, the rest lined up behind */
   const front = [0, 1, 2].filter(function(l){ return l !== G.lane; });
   const grid = front.concat([0, 1, 2]);          /* row one beside you, row two behind */
@@ -1857,12 +2240,15 @@ function spawnRivals(){
     const back = rows[i]*carH*1.6;
     return {
       car:id, lane:lane, x:laneCX(lane), y:playerY + back, tilt:0,
+      /* a person on the controls, or the bot mind */
+      human:i < seats.length, seat:i + 1, pad:i + 1, pk:newPadKeys(),
+      wantBoost:false, blindPts:[], petals:[],
       abs:0, changeT:rand(0.2, 0.7),          /* standing start: everyone from zero */
       slow:0, blind:0, dead:0, immune:0, shock:0, launch:0, bumpCD:0,
       chrono:0, ordered:0, orderBy:null, clutter:0, clutterLv:0, cleanse:0,
       orderDir:1, slip:0,
       item:null, itemRow:-1, canT:0, useT:rand(0.6, 2.4), item:null, canT:0, useT:0,
-      inDanger:false, willReact:true, reactT:0,
+      inDanger:false, willReact:true, reactT:0, swapT:0,
       ult:0, ultOn:false, ultT:0, ultMax:ULT_TIME, powered:0,
       ultWait:rand(1, 3), ultHeld:0, orbs:0, fireT:0, orbFireT:0,
       charge:1, boostLock:false, boosting:false,
@@ -1870,7 +2256,8 @@ function spawnRivals(){
       /* the launch, on exactly the player's terms: a brake that sheds speed,
          a wind-up that spends time, a meter that is the speed left in the car,
          and a cooldown that is the meter coming back */
-      brakeOn:false, airMeter:1, airWind:0, airT:0, airMax:0, airPow:0,
+      brakeOn:false, brakeHeld:false, brakeSpent:false,
+      airMeter:1, airWind:0, airT:0, airMax:0, airPow:0,
       launchCD:0, airAim:0, airHold:0, airWhy:null,
       /* the thinking part: who it is currently interested in, what it meant to
          do next, and how long that intention is allowed to stand */
@@ -1878,8 +2265,27 @@ function spawnRivals(){
       hurtBy:null, hurtT:0, itemHold:0
     };
   });
+  /* Player one first, then the seats in order: this is the list the split
+     screen is cut from and the order the colours are handed out in. */
+  G.humans = ["me"];
+  for(let i=0;i<G.rivals.length;i++) if(G.rivals[i].human) G.humans.push(G.rivals[i]);
+  G.pad = 0; G.pk = newPadKeys(); G.seat = 0;
+}
+/* Which player is driving this car, or -1 for a bot. */
+function seatOf(who){
+  if(!G.local) return who === "me" ? 0 : -1;
+  const i = G.humans.indexOf(who);
+  return i;
+}
+function seatCol(who){
+  const i = seatOf(who);
+  return i < 0 ? null : PCOLS[i];
 }
 function diff(){ return DIFFS[G.diff] || DIFFS.medium; }
+/* Both racing modes run to a flag; only endless has no line to reach. Local
+   play is Race against bots with people in some of the cars, so everything
+   that asks "is there a finish?" has to count it. */
+function toFlag(){ return G.mode === "bots" || G.mode === "local"; }
 
 /* distance along the road, in metres, for anyone on it */
 function metersOf(R){ return R ? G.meters + (playerY - R.y)*0.075 : G.meters; }
@@ -1938,7 +2344,7 @@ function scrubBad(who){
     if(G.bloomT > 0){ G.bloomT = 0; G.petals = []; G.clutterLv = 0; }
   } else if(who){
     who.slow = 0; who.shock = 0; who.blind = 0; who.chrono = 0; who.slip = 0;
-    who.clutter = 0; who.clutterLv = 0; who.ordered = 0; who.orderBy = null;
+    who.clutter = 0; who.clutterLv = 0; who.petals = []; who.ordered = 0; who.orderBy = null;
   }
 }
 function immuneScrub(){
@@ -2707,9 +3113,10 @@ function updateRival(R, dt, st){
   if(R.canT > 0) R.canT = Math.max(0, R.canT - dt);
   if(R.clutter > 0){
     R.clutter = Math.max(0, R.clutter - dt);
-    if(R.clutter === 0) R.clutterLv = 0;
+    if(R.clutter === 0){ R.clutterLv = 0; R.petals = []; }
   }
   if(R.launch > 0) R.launch = Math.max(0, R.launch - dt);
+  if(R.swapT > 0) R.swapT = Math.max(0, R.swapT - dt);
   if(R.bumpCD > 0) R.bumpCD = Math.max(0, R.bumpCD - dt);
   if(R.changeT > 0) R.changeT -= dt;
   if(R.reactT > 0)  R.reactT -= dt;
@@ -2747,29 +3154,53 @@ function updateRival(R, dt, st){
      a difficulty buys, and everything below reads the same picture for as long
      as it stands - so a bot can never act on two different versions of the
      road inside one frame. */
+  /* A car with a person in it still sees the road - the picture is what the
+     ladder, the targeting and the contact rules all read - it simply does not
+     act on it. Everything below that decides is skipped; everything that runs
+     the mechanic is not. */
   botLook(R, dt);
   const s = R.sense;
 
   /* The launch, on the player's mechanic and nobody else's. */
   updateRivalLaunch(R, dt, s);
 
-  /* Whatever is in its hand. When to spend it is judgement; what it does when
-     spent is useItem, the same door your own item box opens. */
-  if(R.item && botItemNow(R, s, dt)) useItem(R);
+  if(!R.human){
+    /* Whatever is in its hand. When to spend it is judgement; what it does when
+       spent is useItem, the same door your own item box opens. */
+    if(R.item && botItemNow(R, s, dt)) useItem(R);
+  }
 
   /* Ultimate. Filled off exactly the clock the player's fills off - difficulty
      buys the moment it is spent, never how soon it arrives. */
   if(R.ultOn) tickUlt(R, dt);
   else {
-    R.ult = Math.min(1, R.ult + dt/ULT_CHARGE);
+    /* Wrecked, the meter stops - exactly as the player's does. It used to keep
+       filling for a rival, which was invisible while only bots drove them and
+       is a straight advantage the moment a person does. */
+    if(R.dead <= 0) R.ult = Math.min(1, R.ult + dt/ULT_CHARGE);
     if(R.ult < 1) R.ultHeld = 0;
-    else if(botUltNow(R, s, dt)){ R.ultHeld = 0; startUlt(R); }
+    else if(!R.human && botUltNow(R, s, dt)){ R.ultHeld = 0; startUlt(R); }
   }
 
   /* boost: chase with it, sit on it when comfortably clear, and never burn it
      into a hazard or while standing on the brake waiting to go up */
   const clearAhead = !s.now[R.lane];
-  if(R.boosting){
+  if(R.human){
+    /* The player's boost, one for one: the same drain, the same refill, the
+       same lock-out at nothing and the same refusal to run while the brake is
+       down or the controls have been taken away - settled first and spent
+       second, which is the order the player's own frame runs in. */
+    R.boosting = !!R.wantBoost && !R.boostLock && R.charge > 0 && !R.brakeOn &&
+                 G.state === "running" && R.dead <= 0 && R.finished === null &&
+                 R.shock <= 0 && R.ordered <= 0;
+    if(R.boosting){
+      R.charge = clamp(R.charge - dt*0.4, 0, 1);
+      if(R.charge <= 0.001){ R.charge = 0; R.boostLock = true; R.wantBoost = false; R.boosting = false; }
+    } else {
+      R.charge = clamp(R.charge + dt*0.14, 0, 1);
+      if(R.charge >= 1) R.boostLock = false;
+    }
+  } else if(R.boosting){
     R.charge = clamp(R.charge - dt*0.4, 0, 1);
     if(R.charge <= 0.001){ R.charge = 0; R.boostLock = true; R.boosting = false; }
     else if(R.charge < D.keep) R.boosting = false;     /* good drivers never run it dry */
@@ -2786,6 +3217,7 @@ function updateRival(R, dt, st){
     if(!R.boostLock && !R.brakeOn && R.charge > 0.5 && clearAhead && R.shock <= 0 &&
        R.ordered <= 0 && Math.random() < eager*dt*2) R.boosting = true;
   }
+  if(R.human && R.boosting && (R.brakeOn || R.shock > 0 || R.ordered > 0)) R.boosting = false;
 
   /* pace: identical to everyone else unless something is acting on it */
   let want = BASE_SPEED*speedMult();
@@ -2831,7 +3263,7 @@ function updateRival(R, dt, st){
     R.reactT = rand(D.react[0], D.react[1])*(R.clutter > 0 ? lerp(1.8, 3.4, clutterK(R.clutterLv)) : 1);
   } else if(!inLane) R.inDanger = false;
 
-  if(R.changeT <= 0 && R.blind <= 0 && R.shock <= 0 && R.ordered <= 0){
+  if(!R.human && R.changeT <= 0 && R.blind <= 0 && R.shock <= 0 && R.ordered <= 0){
     R.changeT = rand(D.tick[0], D.tick[1])*(R.clutter > 0 ? lerp(2.2, 4.2, clutterK(R.clutterLv)) : 1);
     botLook(R, dt, true);                       /* look again, then decide */
     rivalThink(R, dt);
@@ -2864,7 +3296,7 @@ function updateRival(R, dt, st){
       clutterUp(R);                                    /* hitting things while blind blinds you more */
       if(warded(R)){ puffFx(o.x, o.y); if(o.kind === "weed") G.traps.splice(i,1); break; }
       if(o.kind === "weed"){ R.slow = SLOW_TIME; puffFx(o.x, o.y); G.traps.splice(i,1); }
-      else { R.blind = BLIND_TIME; puffFx(o.x, o.y); }
+      else { R.blind = BLIND_TIME; R.blindPts = blindSpray(); puffFx(o.x, o.y); }
       break;
     }
   }
@@ -3146,11 +3578,26 @@ function checkFinish(){
     G.lane = parkLaneFor(G.finished);           /* your car takes its lane too */
     if(G.ultOn) endUlt("me");
     G.orbs = 0; G.boosting = false;
-    G.keyBoost = G.ptrBoost = G.ultKey = false;
+    G.keyBoost = G.ptrBoost = G.ultKey = G.padBoost = false;
     scrubBad("me");                             /* Winner: out of play, and clean */
     killLaunch();                              /* nobody crosses the line mid-flight */
+    if(!G.local) finishRace();
+  }
+  /* On one screen the race is over when your car crosses. On four it is over
+     when the last person's does - the board is not settled until everybody has
+     a place on it, and a player still driving must not have the screen taken
+     away mid-corner. Bots left on the road finish behind, as they always do. */
+  if(G.local && G.finished !== null && !G.raceDone && allHumansHome()){
+    G.raceDone = true;
     finishRace();
   }
+}
+function allHumansHome(){
+  for(let i=0;i<G.humans.length;i++){
+    const who = G.humans[i];
+    if((who === "me" ? G.finished : who.finished) === null) return false;
+  }
+  return true;
 }
 
 function finishRace(){
@@ -3166,15 +3613,39 @@ function finishRace(){
   G.parkWait = 2.2;
   later(function(){
     G.state = "over";
-    $("#ovTitle").textContent = t("finished");
-    $("#ovLead").textContent = t("yourPlace") + ": " + placeWord(G.finished);
+    if(G.local){
+      $("#ovTitle").textContent = localWinner();
+      $("#ovLead").textContent = localBoard();
+    } else {
+      $("#ovTitle").textContent = t("finished");
+      $("#ovLead").textContent = t("yourPlace") + ": " + placeWord(G.finished);
+    }
     $("#ovDist").textContent = m;
     $("#ovBest").textContent = best;
-    $("#newBest").classList.toggle("on", isBest);
+    $("#newBest").classList.toggle("on", isBest && !G.local);
     $("#overPanel").classList.add("on");
   }, 700);
 }
 function placeWord(n){ return t("place" + clamp(n, 1, 6)); }
+/* Whoever came first out of the people in the room - and if the whole podium
+   went to bots, the race is simply over. */
+function localWinner(){
+  for(let i=0;i<G.humans.length;i++){
+    const who = G.humans[i];
+    const pl = who === "me" ? G.finished : who.finished;
+    if(pl === 1) return t("playerN") + " " + (i + 1) + " " + t("localWon");
+  }
+  return t("localOver");
+}
+function localBoard(){
+  const out = [];
+  for(let i=0;i<G.humans.length;i++){
+    const who = G.humans[i];
+    const pl = who === "me" ? G.finished : who.finished;
+    out.push("P" + (i + 1) + " " + placeWord(pl || placeOf(who)));
+  }
+  return out.join("   \u00b7   ");
+}
 
 function puffFx(x, y){
   for(let i=0;i<12;i++){
@@ -3221,6 +3692,11 @@ function startRace(){
   $("#pausePanel").classList.remove("on");
   $("#overPanel").classList.remove("on");
   $("#newBest").classList.remove("on");
+  /* How many columns the canvas is cut into has to be settled before anything
+     is measured, because a column is what W means from here on. */
+  VIEWS = G.local ? clamp(G.players, 2, LOCAL_MAX) : 1;
+  document.body.classList.toggle("local", !!G.local);
+  G.humans = [];
   resize();
   G.lane = 1; G.x = laneCX(1); G.tilt = 0;
   G.scroll = 0; G.speed = 0; G.meters = 0; G.dist = 0;      /* standing start */
@@ -3242,12 +3718,14 @@ function startRace(){
   G.orderedT = 0; G.orderBy = null;
   G.bloomT = 0; G.clutterLv = 0; G.cleanseT = 0; G.petals = []; G.slipT = 0;
   G.item = null; G.swapT = 0; G.boxes = []; G.slicks = []; G.missiles = []; G.canT = 0;
+  G.padBoost = false; G.padBrake = false; G.pk = newPadKeys();
   G.boxGap = 0; G.nextRow = rand(2200, 3400);      /* the first row comes a bit sooner */
   G.lastTap = -9; G.tapClock = 0;
   G.sirenOwner = null; G.bloomOwner = null;
   clearEffects();                    /* nothing carries over from the last race */
   G.cdT = 0; G.cdStep = -1; G.wasCounting = false;
   G.raceT = 0; G.finishAt = 0; G.finished = null; G.results = []; G.parkRot = 0;
+  G.raceDone = false;
   G.tracksLeft = -1;
   $("#ovTitle").textContent = t("over");
   $("#ovLead").textContent = t("overLead");
@@ -3306,6 +3784,8 @@ function leave(){
     paintBest();
   }
   G.state = "idle";
+  document.body.classList.remove("local");
+  VIEWS = 1;
   engineStop();
   loopStop();
   $("#pausePanel").classList.remove("on");
@@ -3484,7 +3964,7 @@ function startBloom(owner){
   G.bloomOwner = owner;
   for(let i=0;i<G.rivals.length;i++){
     const R = G.rivals[i];
-    if(R !== owner && !warded(R)){ R.clutter = BLOOM_TIME; R.clutterLv = 1; }
+    if(R !== owner && !warded(R)){ R.clutter = BLOOM_TIME; R.clutterLv = 1; R.petals = bloomPetals(); }
   }
   if(owner !== "me" && !warded("me")){
     G.bloomT = BLOOM_TIME;
@@ -3495,7 +3975,7 @@ function startBloom(owner){
 }
 function clearBloom(){
   G.bloomT = 0; G.petals = []; G.bloomOwner = null; G.clutterLv = 0;
-  for(let i=0;i<G.rivals.length;i++){ G.rivals[i].clutter = 0; G.rivals[i].clutterLv = 0; }
+  for(let i=0;i<G.rivals.length;i++){ G.rivals[i].clutter = 0; G.rivals[i].clutterLv = 0; G.rivals[i].petals = []; }
 }
 /* One more layer of it, for whoever just hit something. */
 function clutterUp(who){
@@ -3761,10 +4241,177 @@ function sirenNoise(who, dt){
 }
 
 function setBoost(){
-  G.boosting = (G.keyBoost || G.ptrBoost) && !G.boostLock && G.charge > 0
+  G.boosting = (G.keyBoost || G.ptrBoost || G.padBoost) && !G.boostLock && G.charge > 0
                && !G.brakeOn
                && G.state === "running" && G.dead <= 0 && G.finished === null
                && G.shockT <= 0 && G.orderedT <= 0;
+}
+
+/* ================================================================
+   CONTROLLERS  -  the whole of local play's input
+   ================================================================
+   Browsers report a "standard" mapping for PlayStation, Xbox and most
+   third-party pads alike: the same control sits at the same index on all of
+   them, so one table covers the lot and nothing here has to ask what is
+   plugged in.
+
+     left stick, left / right    change lane          (d-pad also works)
+     left stick, held down       brake, then launch
+     right stick, held up        boost
+     L3 + L2 together            ultimate             (Xbox: LS + LT)
+     R2, or Circle               mystery bubble item  (Xbox: RT, or B)
+     Options                     pause                (Xbox: Menu)
+
+   Everything is edge-triggered off a per-player snapshot of the last frame,
+   so a held trigger fires once and a held stick walks across the lanes at a
+   readable pace instead of crossing the road in three frames. */
+const PAD_CROSS = 0, PAD_CIRCLE = 1, PAD_L2 = 6, PAD_R2 = 7, PAD_START = 9,
+      PAD_L3 = 10, PAD_DU = 12, PAD_DD = 13, PAD_DL = 14, PAD_DR = 15;
+const STICK_ON = 0.55, STICK_OFF = 0.32;   /* pushed / centred, with a gap between */
+const LANE_REPEAT = 0.26;                  /* how fast a held stick keeps stepping */
+
+let padSnap = [];
+function padPoll(){
+  const raw = navigator.getGamepads ? navigator.getGamepads() : null;
+  padSnap = [];
+  if(!raw) return padSnap;
+  for(let i=0;i<raw.length;i++) if(raw[i] && raw[i].connected) padSnap.push(raw[i]);
+  return padSnap;
+}
+function padCount(){ return padPoll().length; }
+/* Triggers come through as analogue on most pads and as plain booleans on a
+   few, so read both shapes. */
+function padBtn(p, i){
+  const b = p && p.buttons && p.buttons[i];
+  if(b === undefined || b === null) return false;
+  return typeof b === "object" ? (!!b.pressed || b.value > 0.4) : b > 0.4;
+}
+function padAxis(p, i){
+  const v = p && p.axes && p.axes[i];
+  return typeof v === "number" ? v : 0;
+}
+function newPadKeys(){
+  return { lane:0, laneT:0, brake:false, ult:false, item:false, start:false };
+}
+
+/* ---- one frame of one player's pad ------------------------------
+   None of this is a local-play version of the controls: every branch ends in
+   the same call your own finger makes, so a pad barging, launching, boosting
+   or spending an ultimate is running the mechanic and not a copy of it. */
+function padDrive(who, dt){
+  const o = who === "me" ? G : who;
+  const p = padSnap[o.pad];
+  const k = o.pk || (o.pk = newPadKeys());
+  if(!p) return;
+
+  const lx = padAxis(p, 0), ly = padAxis(p, 1), ry = padAxis(p, 3);
+  const dl = padBtn(p, PAD_DL), dr = padBtn(p, PAD_DR);
+
+  let want = 0;
+  if(lx <= -STICK_ON || dl) want = -1;
+  else if(lx >= STICK_ON || dr) want = 1;
+  if(!want && Math.abs(lx) < STICK_OFF){ k.lane = 0; k.laneT = 0; }
+  if(want){
+    if(k.lane !== want){ k.lane = want; k.laneT = LANE_REPEAT; humanSteer(who, want); }
+    else {
+      k.laneT -= dt;
+      if(k.laneT <= 0){ k.laneT = LANE_REPEAT; humanSteer(who, want); }
+    }
+  }
+
+  humanBoost(who, ry <= -STICK_ON || padBtn(p, PAD_DU));
+
+  const br = ly >= STICK_ON || padBtn(p, PAD_DD);
+  if(br !== k.brake){ k.brake = br; humanBrake(who, br); }
+
+  const ult = padBtn(p, PAD_L3) && padBtn(p, PAD_L2);
+  if(ult && !k.ult) humanUlt(who);
+  k.ult = ult;
+
+  const item = padBtn(p, PAD_R2) || padBtn(p, PAD_CIRCLE);
+  if(item && !k.item) useItem(who);
+  k.item = item;
+
+  const start = padBtn(p, PAD_START);
+  if(start && !k.start) pause(G.state === "running" || G.state === "countdown");
+  k.start = start;
+}
+
+/* Paused, or looking at the result: the same two buttons that run the race
+   run the panel in front of it. A pad that can stop the race has to be able to
+   start it again, or the only way out of a pause is the mouse. */
+function padMenuTick(who){
+  if(G.state !== "paused" && G.state !== "over") return;
+  const o = who === "me" ? G : who;
+  const p = padSnap[o.pad];
+  const k = o.pk || (o.pk = newPadKeys());
+  if(!p) return;
+  const go = padBtn(p, PAD_START) || padBtn(p, PAD_CROSS);
+  const back = padBtn(p, PAD_CIRCLE);
+  const wasGo = k.start, wasBack = k.item;
+  k.start = go; k.item = back;
+  if(go && !wasGo){
+    if(G.state === "paused") pause(false);
+    else startRace();
+    return;
+  }
+  if(back && !wasBack) leave();
+}
+
+/* ---- what a person can ask a car to do --------------------------
+   Player one is the car the engine was built around and keeps its own path;
+   players two to four are cars in G.rivals with a person on the controls
+   instead of the bot mind. Both sides of each pair end in the same place. */
+function humanSteer(who, dir){
+  if(who === "me"){ move(dir); return; }
+  const R = who;
+  if(G.state !== "running" || R.dead > 0 || R.shock > 0 ||
+     R.ordered > 0 || R.finished !== null) return;
+  const d = R.slip > 0 ? -dir : dir;         /* no grip: the steering is reversed */
+  const n = clamp(R.lane + d, 0, 2);
+  if(n === R.lane) return;
+  const victim = carAt(n, R.y, R);           /* barge whoever is in the lane you want */
+  if(victim) bumpTarget(victim, d, R);
+  R.lane = n;
+  R.changeT = 0;
+}
+function humanBoost(who, on){
+  if(who === "me"){ G.padBoost = !!on; setBoost(); return; }
+  who.wantBoost = !!on;
+}
+function humanUlt(who){
+  if(who === "me"){ fireUlt(); return; }
+  fireUltRival(who);
+}
+function humanBrake(who, down){
+  if(who === "me"){
+    if(down){ G.padBrake = true; brakeEngage(); }
+    else { G.padBrake = false; if(!G.brakeKey && !G.brakePtr) releaseBrake(); }
+    return;
+  }
+  const R = who;
+  if(down){
+    R.brakeHeld = true;                        /* the latch; the engage is below */
+    R.airWhy = "player";
+  } else {
+    R.brakeHeld = false;
+    if(!R.brakeOn) return;
+    if(R.airMeter <= AIR_ARM) launchRival(R);  /* under the notch: it goes up */
+    else rivalBrakeOff(R);                     /* over it: the meter just comes back */
+  }
+}
+/* The rival side of fireUlt, gate for gate. */
+function fireUltRival(R){
+  if(G.state !== "running" || R.dead > 0 || R.shock > 0 ||
+     R.ordered > 0 || R.finished !== null) return;
+  if(R.ultOn){
+    if(CARS[R.car].power === "storm" && R.orbs > 0){
+      if(fireOrb(R)){ R.orbs--; R.orbFireT = ORB_GAP; }
+    }
+    return;
+  }
+  if(R.ult < 1) return;
+  startUlt(R);
 }
 
 document.addEventListener("keydown", function(e){
@@ -3948,7 +4595,7 @@ function airArmed(){ return G.brakeOn && G.airMeter <= AIR_ARM; }
    quietly come back - key autorepeat would otherwise re-latch a fresh full
    meter every frame without the player ever lifting a finger. brakeSpent is
    that latch, and it only clears when everything is released. */
-function brakeHeld(){ return G.brakeKey || G.brakePtr; }
+function brakeHeld(){ return G.brakeKey || G.brakePtr || G.padBrake; }
 function brakeEngage(){
   if(G.brakeOn || G.brakeSpent || !brakeHeld() || !canBrake()) return;
   G.brakeOn = true; setBoost();
@@ -4105,6 +4752,7 @@ function rivalBrakeOff(R){
   R.brakeOn = false;
   R.airWind = 0;                               /* a wind-up not spent is a wind-up lost */
   R.airWhy = null;
+  if(R.brakeHeld) R.brakeSpent = true;         /* still down: dead until released */
   if(R.launchCD <= 0) R.airMeter = 1;
 }
 function launchRival(R){
@@ -4114,6 +4762,7 @@ function launchRival(R){
   R.launchCD = AIR_CD;
   R.brakeOn = false; R.airWind = 0; R.airMeter = 0;
   R.boosting = false; R.airWhy = null;
+  if(R.brakeHeld) R.brakeSpent = true;         /* one hold, one launch */
   const n = Math.round(lerp(12, 44, p));
   for(let i=0;i<n;i++){
     const a = rand(1.1, 2.05), sp = rand(90, 300)*(0.6 + p*1.5);
@@ -4155,7 +4804,7 @@ function killLaunchRival(R){
 }
 /* Only worth shaking the screen and making a noise for something the player
    can actually see happen. */
-function onScreen(y){ return y > -carH*2 && y < H + carH*2; }
+function onScreen(y){ return y > VW_TOP - carH*2 && y < VW_BOT + carH*2; }
 
 /* One frame of the mechanic for one bot, run before it thinks, so the think
    sees the road it is actually on. */
@@ -4170,11 +4819,34 @@ function updateRivalLaunch(R, dt, s){
     if(R.airT <= 0) landRival(R);
     return;
   }
+  if(R.human){
+    /* Exactly what brakeEngage does for player one: a hold that could not
+       start yet keeps trying until it can, and a hold already spent stays
+       dead until the stick comes back up. */
+    if(!R.brakeHeld) R.brakeSpent = false;
+    if(!R.brakeOn && R.brakeHeld && !R.brakeSpent && canBrakeRival(R)){
+      R.brakeOn = true; R.boosting = false;
+    }
+  }
   if(R.brakeOn && !canBrakeRival(R)){ rivalBrakeOff(R); return; }
   if(R.brakeOn){
     R.airMeter = clamp(R.airMeter - dt/AIR_BRAKE, 0, 1);
     if(R.airMeter < 1e-9) R.airMeter = 0;
     if(R.airMeter === 0) R.airWind = clamp(R.airWind + dt/AIR_WIND, 0, 1);
+    /* A person decides when to let go, exactly as player one does - the
+       stick coming back up is the release and nothing here second-guesses it.
+       The smoke below is the mechanic, not the mind, so it still runs. */
+    if(R.human){
+      if(Math.random() < dt*(12 + R.airWind*40)){
+        const a2 = rand(0, 6.2832), sp2 = rand(50, 120 + R.airWind*200);
+        addFx(R.x + rand(-carW*0.4, carW*0.4), R.y + carH*rand(0.1, 0.42),
+              Math.cos(a2)*sp2, Math.sin(a2)*sp2*0.6 + rand(10, 90),
+              rand(.2, .5), rand(2, 5),
+              R.airWind > 0 && Math.random() < 0.5 ? "#FFFFFF"
+                : (R.airMeter <= AIR_ARM ? "#7CF7A6" : "#B9BEC6"));
+      }
+      return;
+    }
     R.airHold -= dt;
     const armed = R.airMeter <= AIR_ARM;
     const p = rivalAirPower(R);
@@ -4198,7 +4870,9 @@ function updateRivalLaunch(R, dt, s){
     }
     return;
   }
-  /* not braking: is there a reason to start? */
+  /* not braking: is there a reason to start? A person is the reason, and they
+     say so with the stick - nothing decides it for them. */
+  if(R.human) return;
   if(!s || R.launchCD > 0 || !canBrakeRival(R)) return;
   const want = botAirWant(R, s);
   if(!want) return;
@@ -4236,6 +4910,16 @@ const PARK_EASE = 3.9;                    /* how hard the roll-out closes on the
 
 function update(dt){
   tickCountdown(dt);
+  viewBounds();
+  if(G.local){
+    padPoll();
+    const live = G.state === "running" || G.state === "countdown";
+    const seats = G.humans.slice();          /* a menu press can rebuild the list */
+    for(let i=0;i<seats.length;i++){
+      if(live) padDrive(seats[i], dt);
+      else padMenuTick(seats[i]);
+    }
+  }
   const st = G.state;
   if(G.swipeLock > 0) G.swipeLock = Math.max(0, G.swipeLock - dt);
   if(st === "paused" || st === "idle") return;
@@ -4322,33 +5006,41 @@ function update(dt){
 
   /* world scroll */
   const d = G.speed*dt;
+  /* Built and kept for every view at once. On one screen these two numbers are
+     0 and H and this is the code it always was; on four they stretch to cover
+     the whole spread of the field, which is the difference between a leading
+     player driving through scenery and driving through nothing. */
+  const wTop = VW_TOP - 260, wBot = VW_BOT + 60;
   for(let s=0;s<2;s++){
     const arr = G.build[s];
     for(let i=0;i<arr.length;i++) arr[i].y += d;
-    while(arr.length && arr[0].y > H+60) arr.shift();
+    while(arr.length && arr[0].y > wBot) arr.shift();
     let top = arr.length ? arr[arr.length-1] : null;
-    while(!top || top.y > -260){
+    while(!top || top.y > wTop){
       const b = makeBuilding(topBiome());
-      b.y = (top ? top.y : -260) - rand(8,26) - b.h;
+      b.y = (top ? top.y : wTop) - rand(8,26) - b.h;
       arr.push(b); top = b;
     }
   }
   for(let i=G.props.length-1;i>=0;i--){
     G.props[i].y += d;
-    if(G.props[i].y > H+60) G.props.splice(i,1);
+    if(G.props[i].y > wBot) G.props.splice(i,1);
   }
-  if(!G.props.length || G.props[G.props.length-1].y > -140)
-    G.props.push(makeProp(topBiome(), randi(0,1), (G.props.length ? G.props[G.props.length-1].y : 0) - rand(120,260)));
+  while(!G.props.length || G.props[G.props.length-1].y > VW_TOP - 140)
+    G.props.push(makeProp(topBiome(), randi(0,1), (G.props.length ? G.props[G.props.length-1].y : VW_BOT) - rand(120,260)));
   for(let i=G.walks.length-1;i>=0;i--){
     G.walks[i].y += d;
-    if(G.walks[i].y > H+80) G.walks.splice(i,1);
+    if(G.walks[i].y > VW_BOT + 80) G.walks.splice(i,1);
   }
-  let topWalk = 0;
+  let topWalk = VW_BOT;
   for(let i=0;i<G.walks.length;i++) topWalk = Math.min(topWalk, G.walks[i].y);
-  if(!G.walks.length || topWalk > -1300) G.walks.push(makeFeature(topBiome(), topWalk - rand(1500,2600)));
+  while(!G.walks.length || topWalk > VW_TOP - 1300){
+    topWalk = topWalk - rand(1500,2600);
+    G.walks.push(makeFeature(topBiome(), topWalk));
+  }
 
   /* the race clock in bots mode: five minutes, then three tracks to the flag */
-  if(st === "running" && G.mode === "bots" && G.finished === null){
+  if(st === "running" && toFlag() && G.finished === null){
     G.raceT += dt;
     if(G.tracksLeft < 0 && G.raceT >= RACE_MINUTES*60) G.tracksLeft = FINAL_TRACKS;
   }
@@ -4420,7 +5112,7 @@ function update(dt){
   updateFx(dt, d);
   if(G.seam !== null){
     G.seam += d;
-    if(G.seam > H + 60){
+    if(G.seam > VW_BOT + 60){
       G.biome = G.next; G.next = null; G.seam = null;
       G.traps = G.traps.filter(function(o){ return o.b === G.biome; });
       curTrackKey = TRACKS[G.biome].key;
@@ -4433,7 +5125,7 @@ function update(dt){
     const t = G.traffic[i];
     t.y += (G.speed - t.spd)*dt;
     t.x = lerp(t.x, laneCX(t.lane), 1 - Math.pow(0.0002, dt));
-    if(t.y > H+180){ G.traffic.splice(i,1); continue; }
+    if(t.y > VW_BOT+180){ G.traffic.splice(i,1); continue; }
     if(!t.passed && t.y > playerY + carH*0.5){
       t.passed = true;
       if(st === "running" && Math.abs(t.x - G.x) < laneW*1.25){ G.meters += 4; tone(1180, .04, "sine", .05); }
@@ -4660,8 +5352,8 @@ function takeBubble(who, bx, by){
   const holder = me ? G : who;
   const had = !!holder.item;
   holder.item = rollItem(leaderOf(who));
-  if(me){ if(had) G.swapT = ITEM_SWAP; }
-  else {
+  if(had) holder.swapT = ITEM_SWAP;
+  if(!me){
     const roll = rand(0.6, 2.4);
     holder.useT = had && holder.useT > 0 ? Math.min(holder.useT, roll) : roll;
     holder.itemHold = 0;                 /* a fresh item is a fresh decision */
@@ -4869,7 +5561,7 @@ function updateSlicks(dt, d, st){
   for(let i=G.slicks.length-1;i>=0;i--){
     const o = G.slicks[i];
     o.y += d;
-    if(o.y > H + 120){ G.slicks.splice(i,1); continue; }
+    if(o.y > VW_BOT + 120){ G.slicks.splice(i,1); continue; }
 
     if(o.fade > 0){                              /* spent: still visible, harmless */
       o.fade -= dt;
@@ -4963,18 +5655,23 @@ function spawnTrap(){
   if(b === "city"){
     const rx = rand(laneW*0.30, laneW*0.48), ry = rx*rand(0.52, 0.82);
     G.traps.push({ b:b, kind:"puddle", x:onRoad(laneCX(lane) + rand(-laneW*0.16, laneW*0.16), rx),
-                   y:-ry-50, rx:rx, ry:ry, s:Math.random(), hit:0, nm:0 });
+                   y:VW_TOP - ry - 50, rx:rx, ry:ry, s:Math.random(), hit:0, nm:0 });
   } else if(b === "space"){
     /* blast stays under three quarters of a lane so a neighbouring lane is always safe */
     const y = -rand(300, 460);          /* warning first, then the long drop */
+    /* The rock is aimed at a fixed spot on the road, not at a car. On one
+       screen that spot is where you sit; across several it is the same
+       distance in front of whoever is furthest up, so the drop reads the same
+       from every seat and the blast catches whoever is actually under it. */
     G.traps.push({ b:b, kind:"meteor", x:onRoad(laneCX(lane) + rand(-laneW*0.06, laneW*0.06), 6),
-                   y:y, span:playerY - y, r:laneW*rand(0.42, 0.60), mr:rand(13, 21)*SCENE,
+                   y:VW_TOP + y, mark:VW_TOP + playerY,
+                   span:playerY - y, r:laneW*rand(0.42, 0.60), mr:rand(13, 21)*SCENE,
                    s:Math.random(), phase:0, t:0, nm:0 });
   } else {
     const dir = Math.random() < 0.5 ? 1 : -1, r = rand(15, 25)*SCENE;
     G.traps.push({ b:b, kind:"weed", r:r, s:Math.random(), age:0, rot:rand(0, 6.28),
                    x: dir > 0 ? roadX - 46*SCENE : roadX + roadW + 46*SCENE,
-                   y: -70*SCENE, nm:0,
+                   y: VW_TOP - 70*SCENE, nm:0,
                    vx: dir*(roadW + 92*SCENE)/rand(2.1, 3.1),
                    fall: rand(0.48, 0.66) });
   }
@@ -5061,7 +5758,7 @@ function updateTraps(dt, d, st){
       o.x += o.vx*dt*wk;
       o.y += d*lerp(1, o.fall, wk);
       o.rot += o.vx*dt*wk/o.r;
-      if(o.x < roadX-100 || o.x > roadX+roadW+100 || o.y > H+100){ G.traps.splice(i,1); continue; }
+      if(o.x < roadX-100 || o.x > roadX+roadW+100 || o.y > VW_BOT+100){ G.traps.splice(i,1); continue; }
       if((live || smash) && !(o.hit & 1)){
         const wy = sweptY(o, d*o.fall, c.y);
         const p = nearestOnCar(c, o.x, wy);
@@ -5081,7 +5778,7 @@ function updateTraps(dt, d, st){
       const wk = worldRate();
       o.y += d; o.t += dt*wk;
       if(o.phase === 0){
-        const left = playerY - o.y;
+        const left = (o.mark === undefined ? playerY : o.mark) - o.y;
         if(left <= 0) detonate(o, live);
         else if(racing && left < FALL_LEAD){
           const alt = METEOR_ALT*(left/FALL_LEAD);
@@ -5095,12 +5792,12 @@ function updateTraps(dt, d, st){
       } else if(o.phase === 1){
         if(o.t > 0.4){ o.phase = 2; o.t = 0; }
       } else if(o.t > 1.6){ G.traps.splice(i,1); continue; }
-      if(o.y > H + 400) G.traps.splice(i,1);
+      if(o.y > VW_BOT + 400) G.traps.splice(i,1);
       continue;
     }
 
     o.y += d;                                  /* world-fixed: always scrolls with the road */
-    if(o.y > H + 260){ G.traps.splice(i,1); continue; }
+    if(o.y > VW_BOT + 260){ G.traps.splice(i,1); continue; }
     if((!live && !smash) || (o.hit & 1)) continue;
     if(puddleHits(o, c, sweptY(o, d, c.y))){
       o.hit |= 1;
@@ -5139,14 +5836,20 @@ function detonate(o, live){
   }
 }
 
+/* Water thrown over one windscreen. Every car that goes through a puddle gets
+   its own, because in local play every car has a screen of its own to foul. */
+function blindSpray(){
+  const out = [];
+  for(let i=0;i<54;i++)
+    out.push({ x:rand(-0.06, 1.06), y:rand(-0.06, 1.06), r:rand(4, 26), s:Math.random() });
+  return out;
+}
 function hitPuddle(){
   ultDelta("me", ULT_ON_TRAP);
   clutterUp("me");                              /* contact deepens Rose's clutter */
   if(warded("me")) return;
   G.blind = BLIND_TIME;
-  G.blindPts = [];
-  for(let i=0;i<54;i++)
-    G.blindPts.push({ x:rand(-0.06, 1.06), y:rand(-0.06, 1.06), r:rand(4, 26), s:Math.random() });
+  G.blindPts = blindSpray();
   for(let i=0;i<16;i++){
     const a = rand(-2.6, -0.5);
     addFx(G.x + rand(-carW*0.4, carW*0.4), playerY, Math.cos(a)*rand(70,220), Math.sin(a)*rand(70,240),
@@ -5723,7 +6426,7 @@ function starBlock(b, x0, bw){
   for(let i=0;i<9;i++){
     const f = (b.s*97.3 + i*37.77) % 1, g2 = (b.s*53.1 + i*61.31) % 1;
     const x = x0 + 3 + f*(bw-6), y = b.y + g2*b.h;
-    if(y < -4 || y > H+4) continue;
+    if(y < CT-4 || y > CB+4) continue;
     ctx.beginPath(); ctx.arc(x, y, 0.7 + ((f*g2*7) % 1)*1.5, 0, 6.2832);
     ctx.fillStyle = i % 4 === 0 ? "rgba(178,200,255,0.9)" : "rgba(255,255,255," + (0.32 + f*0.5).toFixed(2) + ")";
     ctx.fill();
@@ -5737,7 +6440,7 @@ function drawSide(s, id){
   if(bw <= 2) return;
   for(let i=0;i<arr.length;i++){
     const b = arr[i];
-    if(b.b !== id || b.y > H+10 || b.y + b.h < -10) continue;
+    if(b.b !== id || b.y > CB+10 || b.y + b.h < CT-10) continue;
     if(id === "city") roofBlock(b, x0, bw);
     else if(id === "desert") rockBlock(b, x0, bw);
     else starBlock(b, x0, bw);
@@ -5749,7 +6452,7 @@ function drawProps(id){
   if(id === "space") return;          /* the void stays empty apart from stars */
   for(let i=0;i<G.props.length;i++){
     const p = G.props[i];
-    if(p.b !== id || p.y < -30 || p.y > H+30) continue;
+    if(p.b !== id || p.y < CT-30 || p.y > CB+30) continue;
     const cx = p.side === 0 ? roadX - sideW/2 : roadX + roadW + sideW/2;
     const rad = Math.min(sideW*0.38, 11);
     if(id === "city"){
@@ -5783,27 +6486,27 @@ function drawProps(id){
 
 /* ---- road surface, markings, crossings ---- */
 function drawRoad(id, T){
-  ctx.fillStyle = T.road; ctx.fillRect(roadX, 0, roadW, H);
+  ctx.fillStyle = T.road; ctx.fillRect(roadX, CT, roadW, CB - CT);
   if(id === "space"){
-    const bh = 58, per = bh*RAINBOW.length, base = -(G.scroll % per) - per;
+    const bh = 58, per = bh*RAINBOW.length, base = perTop(-(G.scroll % per), per) - per;
     ctx.globalAlpha = 0.52;
-    for(let i=0; base + i*bh < H; i++){
+    for(let i=0; base + i*bh < CB; i++){
       const y = base + i*bh;
-      if(y + bh < 0) continue;
-      ctx.fillStyle = RAINBOW[i % RAINBOW.length];
+      if(y + bh < CT) continue;
+      ctx.fillStyle = RAINBOW[((i % RAINBOW.length) + RAINBOW.length) % RAINBOW.length];
       ctx.fillRect(roadX, y, roadW, bh+1);
     }
     ctx.globalAlpha = 1;
-    ctx.fillStyle = "rgba(6,6,14,0.36)"; ctx.fillRect(roadX, 0, roadW, H);
+    ctx.fillStyle = "rgba(6,6,14,0.36)"; ctx.fillRect(roadX, CT, roadW, CB - CT);
     return;
   }
   const gap = 190, off = G.scroll % gap;
   ctx.fillStyle = id === "desert" ? "rgba(216,190,146,0.06)" : "rgba(255,255,255,0.028)";
-  for(let y = off - gap; y < H; y += gap) ctx.fillRect(roadX, y, roadW, 2);
+  for(let y = perTop(off, gap) - gap; y < CB; y += gap) ctx.fillRect(roadX, y, roadW, 2);
   if(id === "desert"){
     const p = 330, o2 = G.scroll % p;
     ctx.fillStyle = "rgba(214,188,144,0.14)";
-    for(let y = o2 - p; y < H; y += p){
+    for(let y = perTop(o2, p) - p; y < CB; y += p){
       ctx.fillRect(roadX, y, roadW*0.2, 58);
       ctx.fillRect(roadX + roadW*0.74, y + 150, roadW*0.26, 42);
     }
@@ -5812,15 +6515,16 @@ function drawRoad(id, T){
 
 function drawEdges(id, T){
   if(id === "space"){
+    const vh = CB - CT;
     ctx.fillStyle = "rgba(92,225,230,0.16)";
-    ctx.fillRect(roadX-10, 0, 10, H); ctx.fillRect(roadX+roadW, 0, 10, H);
+    ctx.fillRect(roadX-10, CT, 10, vh); ctx.fillRect(roadX+roadW, CT, 10, vh);
     ctx.fillStyle = T.shoulder;
-    ctx.fillRect(roadX-4, 0, 4, H); ctx.fillRect(roadX+roadW, 0, 4, H);
+    ctx.fillRect(roadX-4, CT, 4, vh); ctx.fillRect(roadX+roadW, CT, 4, vh);
     ctx.fillStyle = "rgba(255,255,255,0.7)";
-    ctx.fillRect(roadX-2.5, 0, 1.5, H); ctx.fillRect(roadX+roadW+1, 0, 1.5, H);
+    ctx.fillRect(roadX-2.5, CT, 1.5, vh); ctx.fillRect(roadX+roadW+1, CT, 1.5, vh);
   } else {
     ctx.fillStyle = T.shoulder;
-    ctx.fillRect(roadX-4, 0, 4, H); ctx.fillRect(roadX+roadW, 0, 4, H);
+    ctx.fillRect(roadX-4, CT, 4, CB - CT); ctx.fillRect(roadX+roadW, CT, 4, CB - CT);
   }
 }
 
@@ -5829,12 +6533,12 @@ function drawMarks(id, T){
   ctx.fillStyle = T.mark;
   for(let l=1;l<3;l++){
     const lx = roadX + laneW*l - 2.5;
-    for(let y = d0 - per; y < H; y += per) ctx.fillRect(lx, y, 5, dash);
+    for(let y = perTop(d0, per) - per; y < CB; y += per) ctx.fillRect(lx, y, 5, dash);
   }
   if(id !== "space"){
     ctx.fillStyle = T.edge;
-    ctx.fillRect(roadX + 7, 0, 3, H);
-    ctx.fillRect(roadX + roadW - 10, 0, 3, H);
+    ctx.fillRect(roadX + 7, CT, 3, CB - CT);
+    ctx.fillRect(roadX + roadW - 10, CT, 3, CB - CT);
   }
 }
 
@@ -5843,7 +6547,7 @@ function drawFeatures(id){
   if(id !== "city") return;
   for(let i=0;i<G.walks.length;i++){
     const f = G.walks[i];
-    if(f.b !== id || f.y < -70 || f.y > H+10) continue;
+    if(f.b !== id || f.y < CT-70 || f.y > CB+10) continue;
     ctx.fillStyle = "rgba(237,238,241,0.82)";
     const n = 7, sw2 = roadW/(n*2-1);
     for(let k=0;k<n;k++) ctx.fillRect(roadX + k*sw2*2, f.y, sw2, 46);
@@ -6017,7 +6721,7 @@ function drawWeed(o){
 function drawTraps(id){
   for(let i=0;i<G.traps.length;i++){
     const o = G.traps[i];
-    if(o.b !== id || o.y < -300 || o.y > H + 300) continue;
+    if(o.b !== id || o.y < CT-300 || o.y > CB+300) continue;
     if(o.kind === "puddle") drawPuddle(o);
     else if(o.kind === "meteor") drawMeteor(o);
     else drawWeed(o);
@@ -6028,7 +6732,7 @@ function drawTraps(id){
 function seamClip(above){
   const p = G.seamPts;
   if(!p.length) buildSeamShape();
-  const n = G.seamPts.length, y = G.seam, far = above ? -900 : H + 900;
+  const n = G.seamPts.length, y = G.seam, far = above ? CT - 900 : CB + 900;
   ctx.beginPath();
   ctx.moveTo(0, far);
   ctx.lineTo(0, y + G.seamPts[0].o);
@@ -6047,7 +6751,7 @@ function drawGroundLayer(id, mode){
   ctx.save();
   if(mode) seamClip(mode === "above");
   ctx.fillStyle = TRACKS[id].ground;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, CT, W, CB - CT);
   ctx.restore();
 }
 
@@ -6084,7 +6788,7 @@ function drawBlend(){
   for(let i=0;i<G.seamBits.length;i++){
     const b = G.seamBits[i];
     const y = G.seam + b.dy;
-    if(y < -50 || y > H+50) continue;
+    if(y < CT-50 || y > CB+50) continue;
     const f = 1 - Math.abs(b.dy)/190;
     if(f <= 0.02) continue;
     ctx.globalAlpha = 0.1 + f*0.85;
@@ -6110,11 +6814,39 @@ function drawRoadFade(){
   ctx.fillStyle = up; ctx.fillRect(roadX, y - d, roadW, d);
 }
 
+/* One frame. In a normal game that is one view of the world; in local play it
+   is one view per person, cut into equal columns and each shifted so its own
+   car sits where player one's sits in theirs. */
 function render(){
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, FULLW || W, H);
+  if(!G.local || G.humans.length < 2){
+    VOWN = "me";
+    renderView(0);
+    return;
+  }
+  for(let i=0;i<G.humans.length;i++){
+    const who = G.humans[i];
+    ctx.save();
+    ctx.beginPath(); ctx.rect(i*W, 0, W, H); ctx.clip();
+    ctx.translate(i*W, 0);
+    VOWN = who;
+    renderView(camDy(who));
+    drawSeatHud(who, i);
+    ctx.restore();
+  }
+  VOWN = "me"; CAMDY = 0; CT = 0; CB = H;
+  drawSplitEdges();
+}
+
+function renderView(dy){
+  CAMDY = dy; CT = -dy; CB = -dy + H;
   ctx.save();
   if(G.shake > 0.2){
     ctx.translate(rand(-G.shake, G.shake)*0.5, rand(-G.shake, G.shake)*0.5);
   }
+  ctx.save();
+  ctx.translate(0, dy);          /* out of the master frame and into this one */
 
   if(G.seam === null){
     drawGroundLayer(G.biome, null);
@@ -6130,7 +6862,7 @@ function render(){
 
   for(let i=0;i<G.traffic.length;i++){
     const t2 = G.traffic[i];
-    if(t2.y < -t2.h*1.5 || t2.y > H+t2.h) continue;
+    if(t2.y < CT-t2.h*1.5 || t2.y > CB+t2.h) continue;
     drawCar(t2.x, t2.y, t2.w, t2.h, t2.paint, 0, false, false);
   }
 
@@ -6149,12 +6881,13 @@ function render(){
     if(RV.ultOn && rc.power === "bloom") drawPetalTrail(rc, RV.x, RV.y);
     drawCar(RV.x + sx, RV.y + sy, carW, carH, rc, RV.tilt, true, RV.boosting || RV.ultOn);
     ctx.globalAlpha = 1;
+    if(G.local && RV.human) drawSeatMark(RV, RV.x + sx, RV.y + sy);
     if(RV.orbs > 0) drawOrbs(RV, RV.x, RV.y);
     if(RV.shock > 0) drawShock(RV.x + sx, RV.y + sy);
   }
 
   const blink = G.immune > 0 && Math.floor(G.immune*9) % 2 === 0;
-  if(G.state !== "idle" && G.dead <= 0 && !blink){
+  if(G.state !== "idle" && G.dead <= 0 && !blink && (!G.local || playerY >= CT - carH*2 && playerY <= CB + carH*2)){
     const car = CARS[G.car];
     const kx = G.shockT > 0 ? rand(-3, 3) : 0, ky = G.shockT > 0 ? rand(-3, 3) : 0;
     /* Airborne, everything about the player's car moves together: it lifts off
@@ -6185,6 +6918,7 @@ function render(){
     }
     drawCar(G.x + kx, py + ky, cw, ch, car, G.tilt, true, G.boosting || G.ultOn || airborne());
     ctx.globalAlpha = 1;
+    if(G.local) drawSeatMark("me", G.x + kx, py + ky);
     if(G.orbs > 0) drawOrbs("me", G.x, py);
     if(G.shockT > 0) drawShock(G.x + kx, py + ky);
   }
@@ -6216,12 +6950,167 @@ function render(){
   drawBubbles();
   drawBolts();
   drawMissiles();
+  ctx.restore();                 /* back to the screen this view is drawn on */
+
+  /* Everything from here is on the glass rather than on the road, so it does
+     not move with the camera - and it belongs to whoever is looking through
+     this particular window. */
+  const o = VOWN === "me" ? G : VOWN;
   ctx.fillStyle = vign; ctx.fillRect(0,0,W,H);
   drawLadder();
-  if(G.blind > 0) drawBlind();
-  if(G.bloomT > 0) drawBloom();
+  const blind = o.blind || 0;
+  if(blind > 0) drawBlind(blind, o.blindPts);
+  const bloom = VOWN === "me" ? G.bloomT : (VOWN.clutter || 0);
+  if(bloom > 0) drawBloom(bloom, o.petals || [], o.clutterLv || 1);
   if(G.chronoWorld > 0) drawChronoWash();
-  if(G.chronoT > 0) drawChronoHeld();
+  const chrono = VOWN === "me" ? G.chronoT : (VOWN.chrono || 0);
+  if(chrono > 0) drawChronoHeld(chrono);
+  ctx.restore();
+}
+
+/* ---- who is driving this one ------------------------------------
+   A ring on the road under every human car and, on the cars that are not
+   yours, a small numbered flag. Two players in identical positions on two
+   columns still have to be told apart, and the car alone will not do it. */
+function drawSeatMark(who, cx, cy){
+  const i = seatOf(who);
+  if(i < 0) return;
+  const col = PCOLS[i];
+  const own = VOWN === who;
+  ctx.save();
+  ctx.globalAlpha = own ? 0.5 : 0.95;
+  ctx.beginPath();
+  if(ctx.ellipse) ctx.ellipse(cx, cy + carH*0.5, carW*0.64, carW*0.22, 0, 0, 6.2832);
+  else ctx.arc(cx, cy + carH*0.5, carW*0.5, 0, 6.2832);
+  ctx.strokeStyle = col; ctx.lineWidth = Math.max(1.6, 2.6*SCENE); ctx.stroke();
+  ctx.globalAlpha = 1;
+  if(!own){
+    const w = 24*SCENE, h = 16*SCENE, ty = cy - carH*0.62 - h;
+    fillRR(cx - w/2, ty, w, h, 4*SCENE, col);
+    ctx.fillStyle = "#0B0B0C";
+    ctx.font = "700 " + Math.max(8, 10*SCENE).toFixed(1) + "px " + HUD_MONO;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("P" + (i + 1), cx, ty + h/2 + 0.5);
+  }
+  ctx.restore();
+}
+
+/* ---- one column's instruments -----------------------------------
+   Painted on the canvas rather than in the page, because four of everything
+   in the DOM would be four stylesheets' worth of layout to keep in step with
+   a road that is already drawn here. Same readings as the phone HUD, in the
+   same order: who you are and where you are, then the distance, then the two
+   meters, then the ultimate and whatever is in your hand. */
+const HUD_MONO = "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace";
+function placeOf(who){
+  const done = who === "me" ? G.finished : who.finished;
+  if(done !== null && done !== undefined) return done;
+  const m = who === "me" ? G.meters : metersOf(who);
+  let n = 1;
+  if(who !== "me" && G.meters > m) n++;
+  for(let i=0;i<G.rivals.length;i++){
+    const R = G.rivals[i];
+    if(R !== who && metersOf(R) > m) n++;
+  }
+  return n;
+}
+function hudBar(x, y, w, h, k, back, fill){
+  fillRR(x, y, w, h, h/2, back);
+  if(k > 0.002) fillRR(x, y, Math.max(h, w*clamp(k, 0, 1)), h, h/2, fill);
+}
+function drawItemGlyph(id, cx, cy, r){
+  ctx.save();
+  ctx.translate(cx, cy);
+  if(id === "can"){
+    fillRR(-r*0.34, -r*0.6, r*0.68, r*1.2, r*0.2, "#FF9A4A");
+    fillRR(-r*0.34, -r*0.6, r*0.68, r*0.3, r*0.15, "#FFE8C0");
+  } else if(id === "oil"){
+    ctx.beginPath();
+    ctx.moveTo(0, -r*0.72);
+    ctx.quadraticCurveTo(r*0.62, r*0.1, 0, r*0.66);
+    ctx.quadraticCurveTo(-r*0.62, r*0.1, 0, -r*0.72);
+    ctx.closePath();
+    ctx.fillStyle = "#4D8BFF"; ctx.fill();
+    ctx.beginPath(); ctx.arc(-r*0.16, r*0.16, r*0.16, 0, 6.2832);
+    ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(0, -r*0.75); ctx.lineTo(r*0.46, r*0.4);
+    ctx.lineTo(0, r*0.12); ctx.lineTo(-r*0.46, r*0.4);
+    ctx.closePath();
+    ctx.fillStyle = "#FFD24A"; ctx.fill();
+  }
+  ctx.restore();
+}
+function drawSeatHud(who, seat){
+  const o = who === "me" ? G : who;
+  const col = PCOLS[seat];
+  const air = o.airT > 0;
+  ctx.save();
+  ctx.textBaseline = "middle";
+
+  /* who, and where */
+  fillRR(10, 9, 34, 19, 5, col);
+  ctx.fillStyle = "#0B0B0C";
+  ctx.font = "700 11px " + HUD_MONO;
+  ctx.textAlign = "center";
+  ctx.fillText("P" + (seat + 1), 27, 19.5);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "750 17px Archivo, Arial Narrow, Helvetica, sans-serif";
+  ctx.fillText(placeWord(placeOf(who)), 50, 20);
+  ctx.font = "600 13px " + HUD_MONO;
+  ctx.fillStyle = "rgba(255,255,255,0.86)";
+  ctx.fillText(Math.floor(who === "me" ? G.meters : metersOf(who)) + " m", 10, 41);
+
+  /* boost, then the launch: the same two meters, in the same order */
+  const barW = Math.max(40, W - 74), bx = 10;
+  hudBar(bx, H - 30, barW, 7, o.charge,
+         "rgba(255,255,255,0.16)",
+         o.boostLock ? "#E21B22" : (o.charge > 0.98 ? "#FFD23B" : "#4FD46B"));
+  hudBar(bx, H - 18, barW, 7, air ? 1 : o.airMeter,
+         "rgba(255,255,255,0.16)",
+         air ? "#FFFFFF" : (o.airMeter <= AIR_ARM ? "#7CF7A6" : "#7FB3E8"));
+  if(o.airWind > 0)
+    fillRR(bx, H - 18, Math.max(4, barW*clamp(o.airWind, 0, 1)), 7, 3.5, "#FFFFFF");
+  ctx.fillStyle = "rgba(255,255,255,0.75)";                 /* the arming notch */
+  ctx.fillRect(bx + barW*AIR_ARM - 1, H - 20, 2, 11);
+
+  /* the ultimate, and whatever is in the hand */
+  const bw = 44, bxr = W - bw - 12;
+  const ready = o.ult >= 1 && !o.ultOn;
+  fillRR(bxr, H - 104, bw, bw, 9, o.ultOn ? "#FFD23B" : (ready ? "#E21B22" : "rgba(11,11,12,0.62)"));
+  ctx.strokeStyle = "rgba(255,255,255,0.34)"; ctx.lineWidth = 1.5;
+  rr(bxr, H - 104, bw, bw, 9); ctx.stroke();
+  ctx.fillStyle = o.ultOn ? "#0B0B0C" : "#FFFFFF";
+  ctx.font = "700 13px " + HUD_MONO;
+  ctx.textAlign = "center";
+  ctx.fillText(Math.round(o.ult*100) + "%", bxr + bw/2, H - 104 + bw/2);
+
+  const rcol = o.item ? RARITY[ITEMS[o.item].rarity].col : "rgba(255,255,255,0.34)";
+  fillRR(bxr, H - 52, bw, bw, 9, "rgba(11,11,12,0.62)");
+  ctx.strokeStyle = rcol; ctx.lineWidth = o.item ? 2.4 : 1.5;
+  rr(bxr, H - 52, bw, bw, 9); ctx.stroke();
+  if(o.item){
+    const flash = clamp((o.swapT || 0)/ITEM_SWAP, 0, 1);
+    const k = 1 + Math.sin(flash*Math.PI)*0.18;
+    drawItemGlyph(o.item, bxr + bw/2, H - 52 + bw/2, 13*k);
+  }
+  ctx.restore();
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+/* A hairline between columns and a band of the owner's colour above each one,
+   so four games on one screen never read as one game. */
+function drawSplitEdges(){
+  const n = G.humans.length;
+  ctx.save();
+  for(let i=0;i<n;i++){
+    ctx.fillStyle = PCOLS[i];
+    ctx.fillRect(i*W, 0, W, 4);
+  }
+  ctx.fillStyle = "rgba(11,11,12,0.92)";
+  for(let i=1;i<n;i++) ctx.fillRect(i*W - 1.5, 0, 3, H);
   ctx.restore();
 }
 
@@ -6298,7 +7187,7 @@ function pipColour(id){ return CARS[id].pip || CARS[id].accent; }
 function ladderGeom(){
   /* Sits below the standings text and above the boost bar, rather than being
      centred on the screen where it would run through the readout. */
-  const top = 226, bottom = H - 100;
+  const top = G.local ? 120 : 226, bottom = H - (G.local ? 88 : 100);
   const half = clamp((bottom - top)/2, 60, 150);
   return { x:W - 30, cy:(top + bottom)/2, half:half };
 }
@@ -6309,7 +7198,7 @@ function ladderGeom(){
    the line. It creeps rather than jumps, and it snaps to the true number the
    moment the flag exists. Endless has no line to run to, so it gets no span. */
 function raceSpan(){
-  if(G.mode !== "bots") return null;
+  if(!toFlag()) return null;
   if(G.finishAt) return { from:0, to:G.finishAt };
   const cruise = BASE_SPEED*0.075;                 /* metres a second at 1.00x */
   const pace = G.raceT > 4 ? clamp(G.meters/G.raceT, cruise*0.5, cruise*3) : cruise;
@@ -6373,17 +7262,27 @@ function drawLadder(){
 
   /* every rival, plus you - placed by how far down the race they are, not by
      how far off you they are, so you climb the line as you close on the flag */
+  /* Gaps are measured from whoever is looking at this ladder, and the dot with
+     the ring on it is theirs. On one screen that is always the player, which is
+     what it always was; in local play each column answers for its own seat. */
+  const mine = VOWN === "me" ? G.meters : metersOf(VOWN);
   const marks = [];
   for(let i=0;i<G.rivals.length;i++){
     const R = G.rivals[i];
     const rm = metersOf(R);
+    const own = VOWN === R;
     marks.push({
-      col: pipColour(R.car), gap: rm - G.meters, y: ladderY(rm, g, span),
-      off: R.y < -18 || R.y > H + 18, above: R.y < -18, me: false,
+      col: pipColour(R.car), pcol: seatCol(R), gap: rm - mine, y: ladderY(rm, g, span),
+      off: !own && (R.y < CT - 18 || R.y > CB + 18), above: R.y < CT - 18, me: own,
       ex: clamp(R.x, roadX + 30, roadX + roadW - 30)     /* the lane it is in */
     });
   }
-  marks.push({ col: pipColour(G.car), gap: 0, y: ladderY(G.meters, g, span), off: false, me: true });
+  const own1 = VOWN === "me";
+  marks.push({ col: pipColour(G.car), pcol: seatCol("me"), gap: G.meters - mine,
+               y: ladderY(G.meters, g, span),
+               off: !own1 && (playerY < CT - 18 || playerY > CB + 18),
+               above: playerY < CT - 18, me: own1,
+               ex: clamp(G.x, roadX + 30, roadX + roadW - 30) });
 
   /* Every off-screen racer gets a marker now, not just the nearest one each
      way. Which marker it gets is the only question. */
@@ -6419,6 +7318,12 @@ function drawLadder(){
     if(m.me){
       ctx.strokeStyle = "rgba(11,11,12,0.8)"; ctx.lineWidth = 1.6; ctx.stroke();
     }
+    /* A dot with a person behind it wears that person's colour, so four
+       columns can all read the same ladder and each find themselves on it. */
+    if(m.pcol){
+      ctx.beginPath(); ctx.arc(g.x, m.y, (m.me ? 5.5 : 4.2) + 2.6, 0, 6.2832);
+      ctx.strokeStyle = m.pcol; ctx.lineWidth = 2; ctx.stroke();
+    }
   }
 }
 
@@ -6443,12 +7348,20 @@ function hudZones(){
   if(--hudZoneTick > 0 && hudZoneCache) return hudZoneCache;
   hudZoneTick = 30;
   const z = {
-    gaugeBottom: 66 + 12 + (G.mode === "bots" ? 23 : 0),
-    readBottom:  G.mode === "bots" ? 196 : 82,
+    gaugeBottom: 66 + 12 + (toFlag() ? 23 : 0),
+    readBottom:  toFlag() ? 196 : 82,
     readLeft:    W - 118,
     actsTop:     H - 84,
     actsLeft:    W - 134
   };
+  if(G.local){
+    /* Nothing is painted over a column but the canvas HUD below, whose
+       footprint is known exactly - so nothing has to be measured. */
+    z.gaugeBottom = 108; z.readBottom = 0; z.readLeft = W;
+    z.actsTop = H - 104; z.actsLeft = W - 58;
+    hudZoneCache = z;
+    return z;
+  }
   const c = $("#cv");
   const cr = c && c.getBoundingClientRect ? c.getBoundingClientRect() : null;
   if(cr && cr.width > 0){
@@ -6667,7 +7580,7 @@ function bubbleShrink(row){
 function drawBubbles(){
   for(let n=0;n<G.boxes.length;n++){
     const row = G.boxes[n];
-    if(row.y < -80 || row.y > H + 80) continue;
+    if(row.y < CT-80 || row.y > CB+80) continue;
     for(let l=0;l<3;l++){
       if(row.gone & (1 << l)) continue;                  /* collected: it is gone */
       const x = laneCX(l);
@@ -6738,7 +7651,7 @@ function drawBubbles(){
 function drawSlicks(){
   for(let i=0;i<G.slicks.length;i++){
     const o = G.slicks[i];
-    if(o.y < -90 || o.y > H + 90) continue;
+    if(o.y < CT-90 || o.y > CB+90) continue;
     const a = o.fade > 0 ? clamp(o.fade/OIL_FADE, 0, 1) : 1;
     /* a slow flare across the film, run off the slick's own clock and seed so
        no two pools shimmer together. It parks once the slick is spent, which is
@@ -7020,9 +7933,9 @@ function drawStorm(car, cx, cy){
 
 /* the flag at the end of the last track */
 function drawFinish(){
-  if(!G.finishAt || G.mode !== "bots") return;
+  if(!G.finishAt || !toFlag()) return;
   const y = playerY - (G.finishAt - G.meters)/0.075;
-  if(y < -80 || y > H + 40) return;
+  if(y < CT-80 || y > CB+40) return;
   const n = 8, cw = roadW/n, rows = 3;
   for(let r=0;r<rows;r++)
     for(let c=0;c<n;c++){
@@ -7075,8 +7988,8 @@ function drawChronoWash(){
 }
 /* And what it looks like from inside: the same green, heavier, with the edges
    of the screen dragging. */
-function drawChronoHeld(){
-  const a = Math.min(1, G.chronoT/0.5);
+function drawChronoHeld(left){
+  const a = Math.min(1, left/0.5);
   ctx.save();
   ctx.globalAlpha = a*0.16;
   ctx.fillStyle = "#1F7A4C"; ctx.fillRect(0, 0, W, H);
@@ -7117,13 +8030,13 @@ function drawChronoFog(cx, cy, left){
   ctx.restore();
 }
 
-function drawBloom(){
-  const a = Math.min(1, G.bloomT/0.6);
+function drawBloom(left, petals, lv){
+  const a = Math.min(1, left/0.6);
   /* The stage decides how much of the stored petal set is actually on screen
      and how heavy the wash behind it is. Stage one is what it always was;
      stage five is the whole screen, which is why the top end goes opaque. */
-  const k = clutterK(G.clutterLv);
-  const shown = Math.round(G.petals.length*lerp(0.42, 1, k));
+  const k = clutterK(lv);
+  const shown = Math.round(petals.length*lerp(0.42, 1, k));
   ctx.save();
   ctx.globalAlpha = a*lerp(0.42, 0.80, k);           /* a much heavier wash */
   ctx.fillStyle = "#5B2A86"; ctx.fillRect(0, 0, W, H);
@@ -7131,7 +8044,7 @@ function drawBloom(){
   ctx.fillStyle = "#FF7ACF"; ctx.fillRect(0, 0, W, H);
 
   for(let i=0;i<shown;i++){
-    const p = G.petals[i];
+    const p = petals[i];
     p.a += p.sp*0.024;
     p.y += p.fall;
     p.x += p.dx + Math.sin(p.a*0.5)*0.0009;          /* drifts sideways as it falls */
@@ -7166,7 +8079,7 @@ function drawBloom(){
   }
   /* The last stage is meant to be the whole screen, and a screen of petals
      still has gaps between them. This closes them. */
-  if(G.clutterLv >= CLUTTER_MAX){
+  if(lv >= CLUTTER_MAX){
     ctx.globalAlpha = a*0.62;
     ctx.fillStyle = "#7B3FA8"; ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = a*0.34;
@@ -7195,13 +8108,14 @@ function drawSirenWash(cx, cy){
 }
 
 /* water thrown over the view, running off as it clears */
-function drawBlind(){
+function drawBlind(left, pts){
   const hold = BLIND_TIME - 0.55;
-  const a = G.blind > hold ? 1 : clamp(G.blind/hold, 0, 1);
+  const a = left > hold ? 1 : clamp(left/hold, 0, 1);
+  pts = pts || [];
   ctx.globalAlpha = a*0.6;
   ctx.fillStyle = "#A8CDEA"; ctx.fillRect(0, 0, W, H);
-  for(let i=0;i<G.blindPts.length;i++){
-    const p = G.blindPts[i];
+  for(let i=0;i<pts.length;i++){
+    const p = pts[i];
     const x = p.x*W, y = p.y*H, r = p.r*(0.75 + a*0.35);
     ctx.globalAlpha = a*0.85;
     ctx.beginPath();
@@ -7254,8 +8168,8 @@ function paintHUD(force){
     row.classList.toggle("mine", board[i].me);        /* which one is you */
   }
   const clock = $("#raceClock");
-  clock.classList.toggle("on", G.mode === "bots");
-  if(G.mode === "bots"){
+  clock.classList.toggle("on", toFlag());
+  if(toFlag()){
     if(G.tracksLeft < 0){
       const left = Math.max(0, RACE_MINUTES*60 - G.raceT);
       clock.textContent = Math.floor(left/60) + ":" + String(Math.floor(left % 60)).padStart(2, "0");
