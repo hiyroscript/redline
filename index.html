@@ -321,6 +321,45 @@ svg.ic{width:22px;height:22px;fill:none;stroke:var(--icon);stroke-width:1.9;stro
 .pad-row .nm{font-size:12px;color:var(--muted);flex:1;text-align:right;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pad-note{margin:0 2px 12px;font-size:12px;font-family:var(--mono);letter-spacing:.06em;color:var(--muted)}
+/* ---- custom setup ---- */
+#customBody{max-height:min(52vh,430px);overflow-y:auto;padding-right:2px}
+.opt{background:var(--gray-100);border-radius:var(--r-md);padding:13px 14px;margin-bottom:8px}
+.opt-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.opt-name{font-family:var(--display);font-variation-settings:'wdth' 118,'wght' 750;
+  text-transform:uppercase;font-size:15px;letter-spacing:.04em;color:var(--black)}
+.opt-val{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--black);
+  background:var(--gray-200);border-radius:5px;padding:2px 8px;flex:0 0 auto}
+.opt-desc{margin:4px 0 0;font-size:12px;line-height:1.4;color:var(--muted)}
+.opt.off{opacity:.4;pointer-events:none}
+.steps{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}
+.step{
+  appearance:none;border:0;cursor:pointer;flex:1 1 0;min-width:40px;
+  background:var(--gray-200);border-radius:var(--r-sm);padding:9px 4px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--icon);transition:background .12s ease,color .12s ease,transform .09s ease;
+}
+.step:active{transform:scale(.95)}
+.step.on{background:var(--red);color:#fff}
+.step:focus-visible{outline:3px solid var(--black);outline-offset:2px}
+.tog{
+  appearance:none;border:0;cursor:pointer;width:100%;text-align:left;
+  background:var(--gray-100);border-radius:var(--r-md);padding:12px 14px;
+  display:flex;align-items:center;gap:12px;margin-bottom:8px;
+  transition:background .12s ease,transform .09s ease;
+}
+.tog:active{transform:scale(.99)}
+.tog:focus-visible{outline:3px solid var(--black);outline-offset:2px}
+.tog .sw{width:40px;height:23px;border-radius:12px;background:var(--gray-300);
+  flex:0 0 auto;position:relative;transition:background .16s ease}
+.tog .sw i{position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;
+  background:#fff;transition:transform .16s cubic-bezier(.2,.8,.25,1)}
+.tog.on .sw{background:var(--green)}
+.tog.on .sw i{transform:translateX(17px)}
+.tog .tx{flex:1}
+.tog .tx b{display:block;font-family:var(--display);
+  font-variation-settings:'wdth' 118,'wght' 750;text-transform:uppercase;
+  font-size:14px;letter-spacing:.04em;color:var(--black);font-weight:400}
+.tog .tx span{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.35}
 .btn[disabled],.btn.off{opacity:.4;pointer-events:none}
 #carTurn{display:none;align-items:center;gap:10px;background:var(--gray-100);
   border-radius:var(--r-md);padding:10px 14px;margin-bottom:12px}
@@ -634,8 +673,8 @@ body.desk .keys{display:flex}
   .topbar,.home-head,.home-foot{width:100%}
   #ribbon{max-width:520px;margin-left:auto;margin-right:auto;width:100%}
   #modeCard,#langCard,.panel-card{max-width:520px;margin-left:auto;margin-right:auto}
-  #modes,#cars,#diffs{align-items:center;justify-content:center}
-  #modes #modeCard,#cars #modeCard,#diffs #modeCard{width:100%}
+  #modes,#cars,#diffs,#style,#custom{align-items:center;justify-content:center}
+  #modes #modeCard,#cars #modeCard,#diffs #modeCard,#style #modeCard,#custom #modeCard{width:100%}
   .tabs,#garageBody{max-width:560px;margin-left:auto;margin-right:auto;width:100%}
   .home-title{font-size:clamp(38px,7vw,60px)}
 }
@@ -647,8 +686,8 @@ body.desk{display:flex;align-items:center;justify-content:center}
 body.desk .topbar,body.desk .home-head,body.desk .home-foot{width:100%}
 body.desk #ribbon{max-width:520px;margin-left:auto;margin-right:auto;width:100%}
 body.desk #modeCard,body.desk #langCard,body.desk .panel-card{max-width:520px;margin-left:auto;margin-right:auto}
-body.desk #modes,body.desk #cars,body.desk #diffs{align-items:center;justify-content:center}
-body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{width:100%}
+body.desk #modes,body.desk #cars,body.desk #diffs,body.desk #style,body.desk #custom{align-items:center;justify-content:center}
+body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard,body.desk #style #modeCard,body.desk #custom #modeCard{width:100%}
 
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
@@ -841,6 +880,75 @@ body.desk #modes #modeCard,body.desk #cars #modeCard,body.desk #diffs #modeCard{
       <button class="btn btn-primary off" id="btnPadsGo">
         <svg class="ic" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
         <span data-i18n="padsGo">Continue</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       3-3. LOCAL: STANDARD OR CUSTOM
+       ============================================================ -->
+  <section id="style" class="screen">
+    <div id="modeCard">
+      <div class="sheet-head">
+        <h2 class="display" data-i18n="chooseStyle">How do you want to race?</h2>
+        <button class="icon-btn" id="btnCloseStyle" aria-label="Back">
+          <svg class="ic" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>
+        </button>
+      </div>
+      <button class="mode" id="styleStandard">
+        <span class="mode-mark">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M4 8h16"/><path d="M6 8v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>
+        </span>
+        <span style="flex:1">
+          <span class="mode-name" data-i18n="standardPlay">Standard play</span>
+          <span class="mode-desc" data-i18n="standardDesc">The full game. Six cars, every trap, every pickup. Pick how hard the bots push and go.</span>
+        </span>
+        <svg class="ic" viewBox="0 0 24 24" style="flex:0 0 auto"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
+      <button class="mode" id="styleCustom" style="margin-top:10px">
+        <span class="mode-mark">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M5 6h14"/><path d="M5 12h14"/><path d="M5 18h14"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></svg>
+        </span>
+        <span style="flex:1">
+          <span class="mode-name" data-i18n="customPlay">Custom play</span>
+          <span class="mode-desc" data-i18n="customDesc">Set the road up your way: how many bots, and which of the toys are on the table.</span>
+        </span>
+        <svg class="ic" viewBox="0 0 24 24" style="flex:0 0 auto"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       3-4. LOCAL: CUSTOM SETUP
+       ============================================================ -->
+  <section id="custom" class="screen">
+    <div id="modeCard">
+      <div class="sheet-head">
+        <h2 class="display" data-i18n="customHead">Set up the race</h2>
+        <button class="icon-btn" id="btnCloseCustom" aria-label="Back">
+          <svg class="ic" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>
+        </button>
+      </div>
+      <div id="customBody">
+        <div class="opt">
+          <div class="opt-head">
+            <span class="opt-name" data-i18n="botCount">Bots</span>
+            <span class="opt-val" id="botCountVal">4</span>
+          </div>
+          <p class="opt-desc" id="botCountDesc" data-i18n="botCountDesc">How many computer cars fill the rest of the grid.</p>
+          <div class="steps" id="botSteps"></div>
+        </div>
+        <div class="opt" id="botDiffOpt">
+          <div class="opt-head">
+            <span class="opt-name" data-i18n="botDiff">How hard they push</span>
+          </div>
+          <div class="steps" id="diffSteps"></div>
+        </div>
+        <div id="toggles"></div>
+      </div>
+      <button class="btn btn-primary" id="btnCustomGo" style="margin-top:16px">
+        <svg class="ic" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
+        <span data-i18n="customGo">Choose cars</span>
       </button>
     </div>
   </section>
@@ -1181,6 +1289,35 @@ const STR = {
                  fr:"Sol sableux et roche stratifi\u00e9e, cactus et broussailles sur les bas-c\u00f4t\u00e9s. Le sable balaie une route sombre aux marquages jaunis."},
   spaceInfo:    {en:"A road of scrolling rainbow bands over near-black, edged with neon cyan rails. Nothing beside it but a drifting starfield.",
                  fr:"Une route de bandes arc-en-ciel d\u00e9filantes sur du presque noir, bord\u00e9e de rails cyan. Autour, seulement un champ d'\u00e9toiles."},
+  /* ---- standard / custom play ---- */
+  chooseStyle:  {en:"How do you want to race?", fr:"Comment voulez-vous courir\u00a0?"},
+  standardPlay: {en:"Standard play",           fr:"Partie standard"},
+  standardDesc: {en:"The full game. Six cars, every trap, every pickup. Pick how hard the bots push and go.",
+                 fr:"Le jeu complet. Six voitures, tous les pi\u00e8ges, tous les bonus. Choisissez le niveau des bots et c'est parti."},
+  customPlay:   {en:"Custom play",             fr:"Partie personnalis\u00e9e"},
+  customDesc:   {en:"Set the road up your way: how many bots, and which of the toys are on the table.",
+                 fr:"La route \u00e0 votre fa\u00e7on\u00a0: combien de bots, et lesquels des gadgets restent en jeu."},
+  customHead:   {en:"Set up the race",         fr:"Configurer la course"},
+  customGo:     {en:"Choose cars",             fr:"Choisir les voitures"},
+  botCount:     {en:"Bots",                    fr:"Bots"},
+  botCountDesc: {en:"How many computer cars fill the rest of the grid.",
+                 fr:"Combien de voitures pilot\u00e9es par l'ordinateur compl\u00e8tent la grille."},
+  botCountFill: {en:"Fill",                    fr:"Plein"},
+  botCountNone: {en:"Players only \u2014 nobody to race but each other.",
+                 fr:"Joueurs seuls \u2014 personne d'autre \u00e0 battre que vous."},
+  botDiff:      {en:"How hard they push",      fr:"Leur niveau"},
+  optTraps:     {en:"Traps",                   fr:"Pi\u00e8ges"},
+  optTrapsDesc: {en:"Puddles, meteors and tumbleweeds on the road.",
+                 fr:"Flaques, m\u00e9t\u00e9ores et virevoltants sur la route."},
+  optBubbles:   {en:"Mystery bubbles",         fr:"Bulles myst\u00e8re"},
+  optBubblesDesc:{en:"Rows of bubbles to drive through for an item.",
+                 fr:"Des rang\u00e9es de bulles \u00e0 traverser pour obtenir un objet."},
+  optBoost:     {en:"Boost and launch",        fr:"Turbo et envol"},
+  optBoostDesc: {en:"The boost meter, and the brake that winds up into a jump.",
+                 fr:"La jauge de turbo, et le frein qui se charge en saut."},
+  optUlts:      {en:"Ultimates",               fr:"Ultimes"},
+  optUltsDesc:  {en:"Each car's own power, once the meter fills.",
+                 fr:"Le pouvoir propre \u00e0 chaque voiture, une fois la jauge pleine."},
   puddleName:   {en:"Puddle",     fr:"Flaque"},
   puddleInfo:   {en:"Drive through it and water is thrown over your screen, leaving you cluttered for a few seconds. Costs 5% of your ultimate.",
                  fr:"Roulez dedans et l'eau vous asperge l'\u00e9cran : encombr\u00e9 quelques secondes. Co\u00fbte 5% de votre ultime."},
@@ -1616,11 +1753,14 @@ function buildGarage(){
 
 function show(id){
   const sheet = id === "modes" || id === "cars" || id === "diffs" ||
-                id === "players" || id === "pads";
+                id === "players" || id === "pads" ||
+                id === "style" || id === "custom";
   $("#home").classList.toggle("on", id === "home" || sheet);
   $("#modes").classList.toggle("on", id === "modes");
   $("#players").classList.toggle("on", id === "players");
   $("#pads").classList.toggle("on", id === "pads");
+  $("#style").classList.toggle("on", id === "style");
+  $("#custom").classList.toggle("on", id === "custom");
   $("#diffs").classList.toggle("on", id === "diffs");
   $("#garage").classList.toggle("on", id === "garage");
   $("#cars").classList.toggle("on", id === "cars");
@@ -1750,15 +1890,42 @@ $("#btnPadsGo").addEventListener("click", function(){
   /* The order they were found in is the order they are handed out in, and each
      seat remembers the slot rather than the position. */
   G.padIds = pads.slice(0, G.players).map(function(p){ return p.index; });
+  show("style");
+});
+/* ---- standard or custom ----
+   Standard play is the game as it stands, so it clears the rules back to the
+   defaults on the way through rather than trusting whatever a custom race left
+   behind - back out of a custom setup, pick standard, and you get standard. */
+$("#btnCloseStyle").addEventListener("click", function(){ show("pads"); });
+$("#style").addEventListener("click", function(e){ if(e.target === $("#style")) show("pads"); });
+$("#styleStandard").addEventListener("click", function(){
+  G.custom = false; G.rules = defaultRules();
   show("diffs");
 });
-$("#btnCloseDiffs").addEventListener("click", function(){ show(G.local ? "pads" : "modes"); });
-$("#diffs").addEventListener("click", function(e){ if(e.target === $("#diffs")) show(G.local ? "pads" : "modes"); });
+$("#styleCustom").addEventListener("click", function(){
+  G.custom = true;
+  if(!G.rules) G.rules = defaultRules();
+  paintCustom();
+  show("custom");
+});
+$("#btnCloseCustom").addEventListener("click", function(){ show("style"); });
+$("#custom").addEventListener("click", function(e){ if(e.target === $("#custom")) show("style"); });
+$("#btnCustomGo").addEventListener("click", function(){ beginPicks(); });
+/* Backing out of the difficulty sheet goes back to whichever sheet sent you
+   there, which in local play is now the style sheet and not the pad list. */
+function backFromDiffs(){ show(G.local ? "style" : "modes"); }
+$("#btnCloseDiffs").addEventListener("click", backFromDiffs);
+$("#diffs").addEventListener("click", function(e){ if(e.target === $("#diffs")) backFromDiffs(); });
 ["easy","medium","hard","brutal"].forEach(function(id){   /* wired before DIFFS exists */
   $("#diff" + id.charAt(0).toUpperCase() + id.slice(1))
     .addEventListener("click", function(){ G.diff = id; beginPicks(); });
 });
-function soloMode(m){ G.mode = m; G.local = false; G.players = 1; VIEWS = 1; }
+/* Endless and Race against bots are the standard game: they never go past the
+   style sheet, so they clear the rules here. */
+function soloMode(m){
+  G.mode = m; G.local = false; G.players = 1; VIEWS = 1;
+  G.custom = false; G.rules = defaultRules();
+}
 $("#btnCloseCars").addEventListener("click", function(){ backFromCars(); });
 $("#cars").addEventListener("click", function(e){ if(e.target === $("#cars")) backFromCars(); });
 /* Backing out of the car sheet in local play undoes one pick at a time, so a
@@ -1769,8 +1936,77 @@ function backFromCars(){
     G.picks.pop(); pickTurn--; paintPicks();
     return;
   }
-  show(toFlag() ? "diffs" : "modes");
+  if(G.local && G.custom) show("custom");
+  else show(toFlag() ? "diffs" : "modes");
 }
+
+/* ---- the custom setup sheet -------------------------------------
+   Painted from G.rules and written straight back into it, so the sheet is
+   never a second copy of the settings that could drift out of step with the
+   race. Rebuilt whole on every change: it is a handful of buttons, and doing
+   it this way means the bot-difficulty row appearing and disappearing with the
+   bot count costs nothing to keep honest. */
+const RULE_TOGGLES = [
+  { k:"traps",   name:"optTraps",   desc:"optTrapsDesc" },
+  { k:"bubbles", name:"optBubbles", desc:"optBubblesDesc" },
+  { k:"boost",   name:"optBoost",   desc:"optBoostDesc" },
+  { k:"ults",    name:"optUlts",    desc:"optUltsDesc" }
+];
+function paintCustom(){
+  const r = G.rules || (G.rules = defaultRules());
+  const fill = FIELD_SIZE - G.players;
+  if(r.bots > fill) r.bots = -1;            /* a seat was added since it was set */
+  const n = botsWanted();
+
+  /* how many bots - nought up to whatever the people leave free */
+  let steps = "";
+  for(let i=0;i<=fill;i++){
+    const on = (r.bots < 0 ? i === fill : i === r.bots);
+    steps += '<button class="step' + (on ? " on" : "") + '" data-bots="' + i + '">' +
+             (i === fill && fill > 0 ? t("botCountFill") : String(i)) + '</button>';
+  }
+  $("#botSteps").innerHTML = steps;
+  $("#botCountVal").textContent = String(n);
+  $("#botCountDesc").textContent = n === 0 ? t("botCountNone") : t("botCountDesc");
+
+  /* how hard they push - nothing to set when there are none */
+  let ds = "";
+  DIFF_IDS.forEach(function(id){
+    ds += '<button class="step' + (G.diff === id ? " on" : "") + '" data-diff="' + id + '">' +
+          t(DIFFS[id].key) + '</button>';
+  });
+  $("#diffSteps").innerHTML = ds;
+  $("#botDiffOpt").classList.toggle("off", n === 0);
+
+  let tg = "";
+  RULE_TOGGLES.forEach(function(o){
+    tg += '<button class="tog' + (r[o.k] ? " on" : "") + '" data-rule="' + o.k + '">' +
+          '<span class="sw"><i></i></span>' +
+          '<span class="tx"><b>' + t(o.name) + '</b><span>' + t(o.desc) + '</span></span>' +
+          '</button>';
+  });
+  $("#toggles").innerHTML = tg;
+}
+/* One listener on the sheet rather than one per button, because the buttons
+   are thrown away and rebuilt on every change. */
+$("#customBody").addEventListener("click", function(e){
+  const el = e.target && e.target.closest ? e.target.closest("[data-bots],[data-diff],[data-rule]") : null;
+  if(!el) return;
+  const r = G.rules || (G.rules = defaultRules());
+  const bots = el.getAttribute("data-bots");
+  const dif = el.getAttribute("data-diff");
+  const rule = el.getAttribute("data-rule");
+  if(bots !== null){
+    const v = parseInt(bots, 10);
+    r.bots = (v === FIELD_SIZE - G.players) ? -1 : v;   /* the top step means "fill" */
+  } else if(dif !== null){
+    G.diff = dif;
+  } else if(rule !== null){
+    r[rule] = !r[rule];
+  }
+  tone(660, .05, "square", .07);
+  paintCustom();
+});
 
 /* ---- choosing cars, in turns ------------------------------------
    One car can only be driven once, so a car already spoken for is dead on the
@@ -2044,8 +2280,33 @@ const G = {
   raceT:0, tracksLeft:-1, finishAt:0, finished:null, results:[], raceDone:false,
   /* local play */
   local:false, players:1, picks:[], humans:[], padBoost:false, padBrake:false,
-  pad:0, padId:null, padIds:[], pk:null, seat:0
+  pad:0, padId:null, padIds:[], pk:null, seat:0,
+  custom:false, rules:null
 };
+
+/* ---------------- what is on the table ---------------------------
+   Every mode runs on a rule set. Standard play and both single-player modes
+   run on this one, which is the game as it has always been - so the rules
+   object is never a special case bolted onto local play, it is the thing the
+   race has always been reading and simply could not be changed before.
+
+   bots is -1 for "fill the grid", which is what six-cars-whatever-happens has
+   always meant; a custom race can name a number instead, down to nobody. */
+function defaultRules(){
+  return { bots:-1, traps:true, bubbles:true, boost:true, ults:true };
+}
+/* How many bots this race actually wants. -1 fills whatever the people leave. */
+function botsWanted(){
+  const fill = FIELD_SIZE - (G.local ? G.players : 1);
+  const r = G.rules || defaultRules();
+  return r.bots < 0 ? fill : clamp(r.bots, 0, fill);
+}
+/* One reader per switch, so nothing downstream has to know a rules object
+   exists or cope with it being missing. */
+function ruleOn(k){
+  const r = G.rules || defaultRules();
+  return r[k] !== false;
+}
 
 function layout(){
   /* Everything the world is built from scales off the height, against a
@@ -2155,12 +2416,32 @@ const MAX_TIER = Math.round((MAX_MULT - 1)/MULT_STEP);
 const BLIND_TIME = 2.6;                   /* puddle: how long the view stays fouled */
 const DEAD_TIME = 3, IMMUNE_TIME = 2;     /* destroy: wreck, then respawn untouchable */
 const SLOW_TIME = 1.7;                    /* tumbleweed: how long it drags you down */
-const FALL_LEAD = 700, METEOR_ALT = 300;  /* meteor: the approach it falls through */
-/* Where this rock is aimed. On one screen that has always been your own row;
-   across several columns it is a fixed spot on the road, stored when the rock
-   is thrown. Both the fall and the drawing of it read it from here, or the
-   ring closes on one mark while the rock lands on another. */
-function meteorMark(o){ return o.mark === undefined ? playerY : o.mark; }
+/* ---- meteor ----------------------------------------------------
+   A rock falls on a clock of its own, and the ring under it is a spot on the
+   road that scrolls with the road like everything else does.
+
+   It used to be neither. The drop was measured in scrolled pixels against a
+   mark that was a fixed row of player one's camera, which made two things
+   wrong at once. The road is not the only thing that moves the scroll: stand
+   on the brake to wind up a launch and the road stops dead, so the rock
+   stopped dead with it and hung in the sky for as long as the hold lasted;
+   go up, and the road runs at nearly three times pace, so the same rock came
+   down in a third of the time. And a mark fixed to one camera is not a spot
+   on the road at all - it never scrolled, so it could not be somewhere the
+   field drives past.
+
+   Both fall out of the same change: the ring is a road position, and how long
+   the rock has left is seconds. Chronokinesis still drags it, because that is
+   the world's clock and it is meant to reach everything on the road. */
+const METEOR_ALT = 300;                   /* how far up the rock comes in */
+const METEOR_MIN_T = 0.9;                 /* never less warning than this */
+const METEOR_MAX_T = 3.2;                 /* and never hanging longer than this */
+const METEOR_ROCK_K = 0.66;               /* the last of the fall, with the rock in view */
+/* Seconds of the fall during which the rock itself is drawn and can be hit. */
+function rockLead(o){ return Math.max(0.2, (o.max || METEOR_MAX_T)*METEOR_ROCK_K); }
+/* How high it still is. The fall, the roof test and the drawing all read this
+   one number, so they cannot disagree about where the rock is. */
+function rockAlt(o){ return METEOR_ALT*clamp(o.fall/rockLead(o), 0, 1); }
 const TRACKS = {
   city:   { key:"trackCity",   ground:"#C9CCD3", shoulder:"#EDEEF1", road:"#16171B",
             mark:"rgba(237,238,241,0.86)", edge:"rgba(237,238,241,0.5)", accent:"#E21B22" },
@@ -2268,7 +2549,11 @@ function spawnRivals(){
   const taken = G.local ? G.picks.slice(0, G.players) : [G.car];
   const spare = CAR_IDS.filter(function(id){ return taken.indexOf(id) < 0; });
   const seats = G.local ? G.picks.slice(1, G.players) : [];
-  const others = seats.concat(spare).slice(0, FIELD_SIZE - 1);
+  /* People first, always; the bots take what is left of the grid. How much is
+     left is the rule, and the standard rule is "all of it" - which is the six
+     cars this has always put on the road. A custom race can ask for fewer, or
+     for none at all, and then the field is just the people. */
+  const others = seats.concat(spare.slice(0, botsWanted())).slice(0, FIELD_SIZE - 1);
   /* front row alongside you, the rest lined up behind */
   const front = [0, 1, 2].filter(function(l){ return l !== G.lane; });
   const grid = front.concat([0, 1, 2]);          /* row one beside you, row two behind */
@@ -3218,7 +3503,7 @@ function updateRival(R, dt, st){
     /* Wrecked, the meter stops - exactly as the player's does. It used to keep
        filling for a rival, which was invisible while only bots drove them and
        is a straight advantage the moment a person does. */
-    if(R.dead <= 0) R.ult = Math.min(1, R.ult + dt/ULT_CHARGE);
+    if(R.dead <= 0 && ruleOn("ults")) R.ult = Math.min(1, R.ult + dt/ULT_CHARGE);
     if(R.ult < 1) R.ultHeld = 0;
     else if(!R.human && botUltNow(R, s, dt)){ R.ultHeld = 0; startUlt(R); }
   }
@@ -3231,7 +3516,8 @@ function updateRival(R, dt, st){
        same lock-out at nothing and the same refusal to run while the brake is
        down or the controls have been taken away - settled first and spent
        second, which is the order the player's own frame runs in. */
-    R.boosting = !!R.wantBoost && !R.boostLock && R.charge > 0 && !R.brakeOn &&
+    R.boosting = ruleOn("boost") &&
+                 !!R.wantBoost && !R.boostLock && R.charge > 0 && !R.brakeOn &&
                  G.state === "running" && R.dead <= 0 && R.finished === null &&
                  R.shock <= 0 && R.ordered <= 0;
     if(R.boosting){
@@ -3255,8 +3541,8 @@ function updateRival(R, dt, st){
        is actually racing, whoever that is. */
     const chase = s.front ? 0.85 : (s.place > 1 ? 0.6 : 0.25);
     const eager = chase*(gapM < -20 ? 1.1 : 1)*D.boost*(0.6 + R.temper.nerve*0.7);
-    if(!R.boostLock && !R.brakeOn && R.charge > 0.5 && clearAhead && R.shock <= 0 &&
-       R.ordered <= 0 && Math.random() < eager*dt*2) R.boosting = true;
+    if(ruleOn("boost") && !R.boostLock && !R.brakeOn && R.charge > 0.5 && clearAhead &&
+       R.shock <= 0 && R.ordered <= 0 && Math.random() < eager*dt*2) R.boosting = true;
   }
   if(R.human && R.boosting && (R.brakeOn || R.shock > 0 || R.ordered > 0)) R.boosting = false;
 
@@ -3764,6 +4050,7 @@ function later(fn, ms){ G.timers.push(setTimeout(fn, ms)); }
 
 function startRace(){
   clearTimers();
+  if(!G.rules) G.rules = defaultRules();   /* the standard game, unless one was set */
   $("#pausePanel").classList.remove("on");
   $("#overPanel").classList.remove("on");
   $("#newBest").classList.remove("on");
@@ -4290,7 +4577,8 @@ function ultBurst(carId, x, y){
 
 /* Anything that has taken the controls away has taken the ultimate with it. */
 function canFireUlt(){
-  return G.state === "running" && G.dead <= 0 && G.shockT <= 0 &&
+  return ruleOn("ults") &&
+         G.state === "running" && G.dead <= 0 && G.shockT <= 0 &&
          G.orderedT <= 0 && G.finished === null;
 }
 function fireUlt(){
@@ -4322,7 +4610,8 @@ function sirenNoise(who, dt){
 }
 
 function setBoost(){
-  G.boosting = (G.keyBoost || G.ptrBoost || G.padBoost) && !G.boostLock && G.charge > 0
+  G.boosting = ruleOn("boost")
+               && (G.keyBoost || G.ptrBoost || G.padBoost) && !G.boostLock && G.charge > 0
                && !G.brakeOn
                && G.state === "running" && G.dead <= 0 && G.finished === null
                && G.shockT <= 0 && G.orderedT <= 0;
@@ -4515,6 +4804,7 @@ function humanBrake(who, down){
 }
 /* The rival side of fireUlt, gate for gate. */
 function fireUltRival(R){
+  if(!ruleOn("ults")) return;
   if(G.state !== "running" || R.dead > 0 || R.shock > 0 ||
      R.ordered > 0 || R.finished !== null) return;
   if(R.ultOn){
@@ -4695,7 +4985,8 @@ function overhead(who){ return who === "me" ? airborne() : (!!who && who.airT > 
 
 /* Anything that takes the controls away also takes the brake away. */
 function canBrake(){
-  return G.state === "running" && G.dead <= 0 && G.finished === null &&
+  return ruleOn("boost") &&
+         G.state === "running" && G.dead <= 0 && G.finished === null &&
          G.shockT <= 0 && G.orderedT <= 0 &&
          G.launchCD <= 0 && !airborne();
 }
@@ -4858,7 +5149,8 @@ function rivalAirPower(R){
 }
 function rivalAirborne(R){ return !!R && R.airT > 0; }
 function canBrakeRival(R){
-  return G.state === "running" && R.dead <= 0 && R.finished === null &&
+  return ruleOn("boost") &&
+         G.state === "running" && R.dead <= 0 && R.finished === null &&
          R.shock <= 0 && R.ordered <= 0 && R.launchCD <= 0 && R.airT <= 0;
 }
 function rivalBrakeOff(R){
@@ -5174,7 +5466,7 @@ function update(dt){
   /* ultimate: charges slowly, then burns down over its five seconds */
   if(st === "running"){
     if(G.ultOn) tickUlt("me", dt);
-    else if(G.ult < 1 && G.dead <= 0) G.ult = Math.min(1, G.ult + dt/ULT_CHARGE);
+    else if(G.ult < 1 && G.dead <= 0 && ruleOn("ults")) G.ult = Math.min(1, G.ult + dt/ULT_CHARGE);
     if(G.ultKey && G.ultArmed){ fireUlt(); G.ultArmed = false; }
     else if(!G.ultKey && !ptr.on) G.ultArmed = true;
     if(ptr.on && !ptr.moved && ptrCount === 1){    /* one finger, held down */
@@ -5366,7 +5658,7 @@ function spawnBubbleRow(){
 }
 
 function updateBubbles(dt, d, st){
-  if(st === "running" && G.finished === null){
+  if(st === "running" && G.finished === null && ruleOn("bubbles")){
     G.boxGap += d;
     if(G.boxGap >= G.nextRow){
       G.boxGap = 0; spawnBubbleRow();
@@ -5764,6 +6056,7 @@ function slickSplash(o){
 }
 
 function spawnTrap(){
+  if(!ruleOn("traps")) return;             /* a race that asked for a clean road */
   if(G.seam !== null) return;              /* leave the handover clear */
   const b = G.biome, lane = randi(0, 2);
   if(b === "city"){
@@ -5772,14 +6065,19 @@ function spawnTrap(){
                    y:VW_TOP - ry - 50, rx:rx, ry:ry, s:Math.random(), hit:0, nm:0 });
   } else if(b === "space"){
     /* blast stays under three quarters of a lane so a neighbouring lane is always safe */
-    const y = -rand(300, 460);          /* warning first, then the long drop */
-    /* The rock is aimed at a fixed spot on the road, not at a car. On one
-       screen that spot is where you sit; across several it is the same
-       distance in front of whoever is furthest up, so the drop reads the same
-       from every seat and the blast catches whoever is actually under it. */
+    /* The ring comes in above the whole field - on one screen that is just
+       above the top of it - and is a spot on the road from there on. How long
+       the rock has is set here, from how long the road would take to carry
+       that spot down to the row it is aimed at at this pace: at a steady pace
+       it lands exactly where it always did, and anything the driver does to
+       the road speed afterwards moves the landing rather than the drop. */
+    const y = VW_TOP - rand(300, 460);  /* warning first, then the long drop */
+    const aim = VW_TOP + playerY;       /* the row it is thrown at */
+    const pace = Math.max(G.speed, BASE_SPEED*speedMult()*0.75);
+    const max = clamp((aim - y)/pace, METEOR_MIN_T, METEOR_MAX_T);
     G.traps.push({ b:b, kind:"meteor", x:onRoad(laneCX(lane) + rand(-laneW*0.06, laneW*0.06), 6),
-                   y:VW_TOP + y, mark:VW_TOP + playerY,
-                   span:playerY - y, r:laneW*rand(0.42, 0.60), mr:rand(13, 21)*SCENE,
+                   y:y, fall:max, max:max,
+                   r:laneW*rand(0.42, 0.60), mr:rand(13, 21)*SCENE,
                    s:Math.random(), phase:0, t:0, nm:0 });
   } else {
     const dir = Math.random() < 0.5 ? 1 : -1, r = rand(15, 25)*SCENE;
@@ -5886,16 +6184,19 @@ function updateTraps(dt, d, st){
       continue;
     }
     if(o.kind === "meteor"){
-      /* Chronokinesis drags the rock's own clock as well, so it hangs longer
-         in the approach; the mark it is aimed at is a fixed spot on the road
-         and keeps scrolling past whoever is still driving either way. */
+      /* The ring is a spot on the road, so it rides the scroll like every
+         other hazard. How far the rock still has to fall is seconds, and the
+         only thing allowed to stretch them is chronokinesis - that is the
+         world's clock, and it is meant to reach a falling rock. Nothing a
+         driver does to their own road speed touches the drop: it lands when
+         it was always going to land, wherever the ring has got to by then. */
       const wk = worldRate();
       o.y += d; o.t += dt*wk;
       if(o.phase === 0){
-        const left = meteorMark(o) - o.y;
-        if(left <= 0) detonate(o, live);
-        else if(racing && left < FALL_LEAD){
-          const alt = METEOR_ALT*(left/FALL_LEAD);
+        o.fall = Math.max(0, o.fall - dt*wk);
+        if(o.fall <= 0) detonate(o, live);
+        else if(racing && o.fall < rockLead(o)){
+          const alt = rockAlt(o);
           if(alt < carH*0.55){                       /* a rock straight on the roof */
             const my = o.y - alt;
             const p2 = nearestOnCar(c, o.x, my);
@@ -6716,8 +7017,7 @@ function drawPuddle(p){
 /* A rock on the way down, the ground it is aimed at, and the crater after. */
 function drawMeteor(o){
   if(o.phase === 0){
-    const left = meteorMark(o) - o.y;
-    const prog = clamp(1 - left/Math.max(1, o.span), 0, 1);
+    const prog = clamp(1 - o.fall/Math.max(0.01, o.max), 0, 1);
     const per = lerp(0.46, 0.13, prog);
     const on = (o.t % per) < per*0.55;
 
@@ -6734,9 +7034,9 @@ function drawMeteor(o){
     ctx.globalAlpha = 1;
     ctx.restore();
 
-    if(left < FALL_LEAD){
-      const k = clamp(left/FALL_LEAD, 0, 1);
-      const alt = METEOR_ALT*k, sc = 1 + k*0.5;
+    if(o.fall < rockLead(o)){
+      const k = clamp(o.fall/rockLead(o), 0, 1);
+      const alt = rockAlt(o), sc = 1 + k*0.5;
       const mx = o.x, my = o.y - alt, mr = o.mr*sc;
 
       ctx.save();
@@ -6832,10 +7132,21 @@ function drawWeed(o){
   ctx.restore();
 }
 
+/* How far above its own mark a trap actually puts ink on the screen. Only the
+   meteor reaches: the rock comes in three hundred pixels up with a fire trail
+   above that again, so a cull that read the ring alone threw the rock away on
+   any screen whose window the landing spot had already left. That is never
+   player one - the mark is always at or above their row - which is the whole
+   reason this only ever showed up on somebody else's half of the split. */
+function trapReach(o){
+  return o.kind === "meteor" ? METEOR_ALT + 190 + o.mr*1.6 : 40;
+}
 function drawTraps(id){
   for(let i=0;i<G.traps.length;i++){
     const o = G.traps[i];
-    if(o.b !== id || o.y < CT-300 || o.y > CB+300) continue;
+    if(o.b !== id) continue;
+    const up = trapReach(o), down = (o.r || o.ry || 0) + 60;
+    if(o.y - up > CB || o.y + down < CT) continue;
     if(o.kind === "puddle") drawPuddle(o);
     else if(o.kind === "meteor") drawMeteor(o);
     else drawWeed(o);
@@ -7159,6 +7470,7 @@ function placeOf(who){
 
 /* ---- the two meters across the foot ---- */
 function hudMeters(o){
+  if(!ruleOn("boost")) return;             /* no launch, no boost, no bars */
   const x = 16, w = Math.max(30, W - 32);
   const air = !!(o.airT > 0), armed = o.airMeter <= AIR_ARM && o.airWind <= 0;
   const wound = o.airWind >= 1, winding = o.airWind > 0 && o.airWind < 1;
@@ -7202,6 +7514,11 @@ function hudMeters(o){
 function hudActions(o){
   const bw = 54, iy = H - 84, ix = W - 70, ux = W - 134;
 
+  /* A switch that is off takes its meter off the screen with it. A dark square
+     that can never fill reads as something broken rather than as something
+     that was not invited, and the item square is the same: no bubbles, no
+     items, nothing to show. */
+  if(ruleOn("ults")){
   const ready = o.ult >= 1 && !o.ultOn;
   ctx.save();
   if(ready){                                    /* #ultPct.ready, breathing */
@@ -7225,7 +7542,9 @@ function hudActions(o){
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillText(Math.round(o.ult*100) + "%", ux + bw/2, iy + bw/2 + 1);
   ctx.restore();
+  }
 
+  if(!ruleOn("bubbles")) return;
   const col = o.item ? RARITY[ITEMS[o.item].rarity].col : null;
   const k = clamp((o.swapT || 0)/ITEM_SWAP, 0, 1);
   const pulse = Math.sin(k*Math.PI);             /* the trade flash, out and back */
@@ -8498,6 +8817,14 @@ function paintHUD(force){
   const up = $("#ultPct");
   up.textContent = Math.round(G.ult*100) + "%";
   up.classList.toggle("ready", G.ult >= 1 && !G.ultOn);   /* the square handles the colour */
+  /* Anything a custom race switched off comes off the HUD with it. A meter
+     that can never fill is worse than no meter: it reads as broken rather
+     than as absent. */
+  up.style.display = ruleOn("ults") ? "" : "none";
+  $("#itemBox").style.display = ruleOn("bubbles") ? "" : "none";
+  const showBars = ruleOn("boost") ? "" : "none";
+  $("#airWrap").style.display = showBars;
+  $("#boostWrap").style.display = showBars;
 }
 
 /* ---------------- loop ------------------------------------------- */
