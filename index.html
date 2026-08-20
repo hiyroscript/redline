@@ -1412,8 +1412,8 @@ const STR = {
   picksCar:     {en:"picks a car",                 fr:"choisit une voiture"},
   localOver:    {en:"Race over",                   fr:"Course termin\u00e9e"},
   localWon:     {en:"wins",                        fr:"gagne"},
-  padCtrls:     {en:"Sticks steer and boost \u00b7 L3+L2 ultimate \u00b7 R2 item",
-                 fr:"Sticks : direction et boost \u00b7 L3+L2 ultime \u00b7 R2 objet"},
+  padCtrls:     {en:"Sticks steer and boost \u00b7 click both sticks for ultimate \u00b7 R2 item",
+                 fr:"Sticks : direction et boost \u00b7 clic des deux sticks pour l\u2019ultime \u00b7 R2 objet"},
   padGone:      {en:"Player {n}\u2019s controller dropped out. Reconnect it to carry on.",
                  fr:"La manette du joueur {n} s\u2019est d\u00e9connect\u00e9e. Reconnectez-la pour continuer."},
   botShort:     {en:"Bot",                         fr:"Bot"},
@@ -4628,7 +4628,7 @@ function setBoost(){
      left stick, left / right    change lane          (d-pad also works)
      left stick, held down       brake, then launch
      right stick, held up        boost
-     L3 + L2 together            ultimate             (Xbox: LS + LT)
+     both sticks clicked in      ultimate             (L3 + R3 / LS + RS)
      R2, or Circle               mystery bubble item  (Xbox: RT, or B)
      Options                     pause                (Xbox: Menu)
 
@@ -4636,7 +4636,7 @@ function setBoost(){
    so a held trigger fires once and a held stick walks across the lanes at a
    readable pace instead of crossing the road in three frames. */
 const PAD_CROSS = 0, PAD_CIRCLE = 1, PAD_L2 = 6, PAD_R2 = 7, PAD_START = 9,
-      PAD_L3 = 10, PAD_DU = 12, PAD_DD = 13, PAD_DL = 14, PAD_DR = 15;
+      PAD_L3 = 10, PAD_R3 = 11, PAD_DU = 12, PAD_DD = 13, PAD_DL = 14, PAD_DR = 15;
 const STICK_ON = 0.55, STICK_OFF = 0.32;   /* pushed / centred, with a gap between */
 const LANE_REPEAT = 0.26;                  /* how fast a held stick keeps stepping */
 
@@ -4703,7 +4703,13 @@ function padDrive(who, dt){
   const br = ly >= STICK_ON || padBtn(p, PAD_DD);
   if(br !== k.brake){ k.brake = br; humanBrake(who, br); }
 
-  const ult = padBtn(p, PAD_L3) && padBtn(p, PAD_L2);
+  /* Both sticks pressed in, and nothing else. It was L3 + L2 before, which put
+     the ultimate under one hand next to a trigger the other thumb is already
+     riding - easy to catch by accident and, worse, easy to miss when you meant
+     it. Two sticks is a deliberate two-handed squeeze that no other control on
+     the pad shares. Clicking a stick does not move its axes, so steering,
+     braking and boosting all keep running underneath it. */
+  const ult = padBtn(p, PAD_L3) && padBtn(p, PAD_R3);
   if(ult && !k.ult) humanUlt(who);
   k.ult = ult;
 
@@ -7300,18 +7306,33 @@ function renderView(dy){
     const rc = CARS[RV.car];
     if(RV.immune > 0 && Math.floor(RV.immune*9) % 2 === 0) continue;
     const sx = RV.shock > 0 ? rand(-3, 3) : 0, sy = RV.shock > 0 ? rand(-3, 3) : 0;
-    if(RV.ultOn && rc.power === "burn") drawBurn(rc, RV.x, RV.y);
-    if(RV.ultOn && rc.power === "phase"){ drawPhase(rc, RV.x, RV.y); ctx.globalAlpha = 0.5; }
-    if(RV.ultOn && rc.power === "storm") drawStorm(rc, RV.x, RV.y);
-    if(RV.chrono > 0) drawChronoFog(RV.x, RV.y, RV.chrono);
-    if(RV.ultOn && rc.power === "siren") drawSirenWash(RV.x, RV.y);
-    if(RV.ultOn && rc.power === "freeze") drawTimeAura(rc, RV.x, RV.y);
-    if(RV.ultOn && rc.power === "bloom") drawPetalTrail(rc, RV.x, RV.y);
-    drawCar(RV.x + sx, RV.y + sy, carW, carH, rc, RV.tilt, true, RV.boosting || RV.ultOn);
+    /* The launch, seen. Every car in the field runs the same mechanic - the
+       same meter, the same wind-up, the same landing that writes off whatever
+       is underneath - but only player one was ever drawn doing it: rivalHop
+       existed and nothing called it, so a bot or a second player left the road
+       for real while staying flat on the tarmac. Same arithmetic as the
+       player's block below, off that car's own numbers, so a launch looks the
+       same whoever spent it. */
+    const rhop = rivalHop(RV);
+    const rpow = RV.airPow || 0;
+    const rsquat = rhop > 0 ? 0 : (RV.airWind || 0);
+    const ry = RV.y - rhop*carH*lerp(0.6, AIR_HOP, rpow) + rsquat*carH*0.03;
+    const rk = 1 + rhop*lerp(0.20, 0.62, rpow) - rsquat*0.09;
+    const rw = carW*rk, rh = carH*rk;
+    if(rhop > 0.002) drawAirShadow(rhop, RV.x, RV.y, rpow);
+    if(RV.ultOn && rc.power === "burn") drawBurn(rc, RV.x, ry);
+    if(RV.ultOn && rc.power === "phase"){ drawPhase(rc, RV.x, ry); ctx.globalAlpha = 0.5; }
+    if(RV.ultOn && rc.power === "storm") drawStorm(rc, RV.x, ry);
+    if(RV.chrono > 0) drawChronoFog(RV.x, ry, RV.chrono);
+    if(RV.ultOn && rc.power === "siren") drawSirenWash(RV.x, ry);
+    if(RV.ultOn && rc.power === "freeze") drawTimeAura(rc, RV.x, ry);
+    if(RV.ultOn && rc.power === "bloom") drawPetalTrail(rc, RV.x, ry);
+    drawCar(RV.x + sx, ry + sy, rw, rh, rc, RV.tilt, true,
+            RV.boosting || RV.ultOn || RV.airT > 0);
     ctx.globalAlpha = 1;
-    if(G.local && RV.human) drawSeatMark(RV, RV.x + sx, RV.y + sy);
-    if(RV.orbs > 0) drawOrbs(RV, RV.x, RV.y);
-    if(RV.shock > 0) drawShock(RV.x + sx, RV.y + sy);
+    if(G.local && RV.human) drawSeatMark(RV, RV.x + sx, ry + sy);
+    if(RV.orbs > 0) drawOrbs(RV, RV.x, ry);
+    if(RV.shock > 0) drawShock(RV.x + sx, ry + sy);
   }
 
   const blink = G.immune > 0 && Math.floor(G.immune*9) % 2 === 0;
@@ -7329,7 +7350,7 @@ function renderView(dy){
     const py = playerY - hop*carH*lerp(0.6, AIR_HOP, G.airPow) + squat*carH*0.03;
     const kk = 1 + hop*lerp(0.20, 0.62, G.airPow) - squat*0.09;
     const cw = carW*kk, ch = carH*kk;
-    if(hop > 0.002) drawAirShadow(hop);
+    if(hop > 0.002) drawAirShadow(hop, G.x, playerY, G.airPow);
     if(G.ultOn && car.power === "storm") drawStorm(car, G.x, py);
     if(G.ultOn && car.power === "siren") drawSirenWash(G.x, py);
     if(G.ultOn && car.power === "freeze") drawTimeAura(car, G.x, py);
@@ -7740,14 +7761,18 @@ function airHop(){
   return Math.sin(clamp(1 - G.airT/G.airMax, 0, 1)*Math.PI);
 }
 /* The shadow stays on the road where the car would have been, shrinking and
-   fading as it climbs, so the height is readable at a glance. */
-function drawAirShadow(hop){
-  const deep = hop*lerp(0.5, 1, G.airPow);        /* a big launch throws a smaller shadow */
+   fading as it climbs, so the height is readable at a glance. It takes the
+   spot and the strength rather than reading the player's, because every car
+   in the field launches and the shadow is what actually sells the height -
+   without it a bigger car just reads as a bigger car. */
+function drawAirShadow(hop, cx, cy, pow){
+  const deep = hop*lerp(0.5, 1, pow);             /* a big launch throws a smaller shadow */
   const r = carW*0.46*(1 - deep*0.52);
   ctx.save();
   ctx.globalAlpha = 0.44*(1 - deep*0.62);
   ctx.beginPath();
-  ctx.ellipse(G.x, playerY + carH*0.16, r, r*0.42, 0, 0, 6.2832);
+  if(ctx.ellipse) ctx.ellipse(cx, cy + carH*0.16, r, r*0.42, 0, 0, 6.2832);
+  else ctx.arc(cx, cy + carH*0.16, r*0.7, 0, 6.2832);
   ctx.fillStyle = "#000000"; ctx.fill();
   ctx.restore();
   ctx.globalAlpha = 1;
